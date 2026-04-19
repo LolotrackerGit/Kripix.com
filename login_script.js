@@ -1,46 +1,93 @@
-// --- LOGICA LOGIN ---
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+// Importiamo gli strumenti Cloud dal nostro script globale
+import { auth, db } from './script.js';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// ==========================================
+// 1. LOGICA LOGIN CLOUD
+// ==========================================
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    // Reset grafico errori
     document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
     document.querySelectorAll('.validation-msg').forEach(el => el.style.display = 'none');
+    
     const userInput = document.getElementById('usernameInput');
     const passInput = document.getElementById('passwordInput');
-    const username = userInput.value.trim();
+    const username = userInput.value.trim().toLowerCase(); // Firebase è case-sensitive sui documenti, forziamo minuscolo
     const password = passInput.value;
-    const userDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-    const foundUser = userDB.find(u => u.username.toLowerCase() === username.toLowerCase());
-    if (!foundUser || foundUser.password !== password) {
+    const btn = this.querySelector('button');
+
+    btn.innerHTML = 'VERIFICA NEL CLOUD...';
+    btn.style.opacity = '0.7';
+    btn.style.pointerEvents = 'none';
+
+    try {
+        // FASE A: Troviamo l'email associata a questo ID Agente nel Database
+        const userDocRef = doc(db, "users", username);
+        const docSnap = await getDoc(userDocRef);
+
+        if (!docSnap.exists()) {
+            throw new Error("user-not-found");
+        }
+
+        const userData = docSnap.data();
+        const userEmail = userData.email;
+
+        // FASE B: Tentiamo il vero Login crittografato sui server Firebase
+        await signInWithEmailAndPassword(auth, userEmail, password);
+
+        // FASE C: SUCCESSO!
+        // Salviamo una "copia temporanea" (cache) dei dati nel localStorage.
+        // Questo serve per non rompere le altre pagine (Libreria, Profilo) che per ora leggono ancora da lì.
+        // Nella Fase 3 collegheremo anche quelle al cloud!
+        localStorage.setItem('kripix_user', userData.username); // Salva col maiuscolo originale
+        localStorage.setItem('kripix_color', userData.color);
+        if(userData.games && userData.games.includes('harrow')) {
+            localStorage.setItem('owned_game_harrow', 'true');
+        } else {
+            localStorage.removeItem('owned_game_harrow');
+        }
+
+        btn.innerHTML = 'ACCESSO CONSENTITO';
+        btn.style.background = '#4caf50';
+        btn.style.color = 'black';
+        btn.style.borderColor = '#4caf50';
+
+        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+
+    } catch (error) {
+        // FASE D: ERRORE (Password errata o ID inesistente)
         userInput.classList.add('input-error');
         passInput.classList.add('input-error');
+        
         const msg = document.getElementById('err-login');
-        msg.innerText = '>> ERRORE: CREDENZIALI NON VALIDE [ACCESS DENIED]';
+        msg.innerText = '>> ERRORE CLOUD: CREDENZIALI NON VALIDE [ACCESS DENIED]';
         msg.style.display = 'block';
+        
         passInput.style.animation = 'none';
         passInput.offsetHeight;
         passInput.style.animation = 'shake 0.3s';
-        return;
+
+        btn.innerHTML = 'VERIFICA CREDENZIALI';
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+        
+        console.error("Dettaglio errore:", error.message);
     }
-    const btn = this.querySelector('button');
-    btn.innerHTML = 'ACCESSO CONSENTITO';
-    btn.style.background = '#4caf50';
-    btn.style.color = 'black';
-    btn.style.borderColor = '#4caf50';
-    localStorage.setItem('kripix_user', foundUser.username);
-    localStorage.setItem('kripix_color', foundUser.color);
-    if(foundUser.games && foundUser.games.includes('harrow')) {
-        localStorage.setItem('owned_game_harrow', 'true');
-    } else {
-        localStorage.removeItem('owned_game_harrow');
-    }
-    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
 });
 
+// Pulisci errore mentre scrivi
 document.querySelectorAll('input').forEach(i => i.addEventListener('input', function(){
     document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
     document.getElementById('err-login').style.display = 'none';
 }));
 
-// --- LOGICA RECUPERO PASSWORD ---
+
+// ==========================================
+// 2. LOGICA RECUPERO PASSWORD (NATIVO FIREBASE)
+// ==========================================
 const resetModal = document.getElementById('reset-modal');
 const forgotLink = document.getElementById('forgot-pass-link');
 
@@ -49,58 +96,41 @@ forgotLink.addEventListener('click', (e) => {
     resetModal.style.display = 'flex';
 });
 
-function closeResetModal() {
+// Reso globale per l'HTML
+window.closeResetModal = function() {
     resetModal.style.display = 'none';
-}
+};
 
-function sendResetCode() {
+window.sendResetCode = async function() {
     const emailInput = document.getElementById('reset-email');
     const email = emailInput.value.trim();
     const msgEl = document.getElementById('reset-msg');
     const btn = document.getElementById('btn-send-code');
 
-    const db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-    const userExists = db.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!email) return;
 
-    if (!userExists) {
-        msgEl.innerText = ">> ERRORE: Email non trovata nel database.";
-        msgEl.style.color = '#ff5555';
-        msgEl.style.display = 'block';
-        return;
-    }
-
-    btn.innerText = "INVIO...";
+    btn.innerText = "CONNESSIONE...";
     btn.disabled = true;
 
-    // Genera e salva il codice
-    const resetCode = Math.floor(100000 + Math.random() * 900000);
-    localStorage.setItem('reset_code_' + email, resetCode);
-    
-    // Scadenza del codice dopo 10 minuti (opzionale ma consigliato)
-    setTimeout(() => {
-        localStorage.removeItem('reset_code_' + email);
-    }, 600000);
-
-    const templateParams = {
-        to_email: email,
-        reset_code: resetCode,
-    };
-
-    // Sostituisci con SERVICE ID e NUOVO TEMPLATE ID
-    emailjs.send('service_4xvl1j1', 'template_160g64a', templateParams)
-        .then(function(response) {
-            msgEl.innerText = ">> Codice inviato. Controlla la tua posta.";
-            msgEl.style.color = '#4caf50';
-            msgEl.style.display = 'block';
-            setTimeout(() => {
-                // Reindirizza alla pagina di reset passando l'email nell'URL
-                window.location.href = `reset.html?email=${encodeURIComponent(email)}`;
-            }, 2000);
-        }, function(error) {
-            msgEl.innerText = ">> Errore di trasmissione. Riprova.";
-            msgEl.style.color = '#ff5555';
-            msgEl.style.display = 'block';
-            btn.innerText = "INVIA CODICE";
+    try {
+        // Chiediamo al server di Google di inviare la mail di reset sicura
+        await sendPasswordResetEmail(auth, email);
+        
+        msgEl.innerText = ">> PROTOCOLLO INVIATO. Controlla la tua posta per il link di ripristino sicuro.";
+        msgEl.style.color = '#4caf50';
+        msgEl.style.display = 'block';
+        
+        setTimeout(() => {
+            closeResetModal();
+            btn.innerText = "INVIA LINK";
             btn.disabled = false;
-        });
-}
+        }, 4000);
+
+    } catch (error) {
+        msgEl.innerText = ">> ERRORE: Sistema non disponibile o email non trovata.";
+        msgEl.style.color = '#ff5555';
+        msgEl.style.display = 'block';
+        btn.innerText = "INVIA LINK";
+        btn.disabled = false;
+    }
+};
