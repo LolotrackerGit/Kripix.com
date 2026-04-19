@@ -3,114 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - Kripix</title>
+    <title>Ripristino Protocollo - Kripix</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="background-grid"></div>
+    
     <nav>
         <div class="logo-text"><a href="index.html">KRIPIX</a></div>
         <a href="login.html" class="back-link">← TORNA AL LOGIN</a>
     </nav>
+
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <h2>REIMPOSTA PASSWORD</h2>
-                <p style="font-family:'Courier Prime'; font-size:0.8rem; color:#888;">Inserisci il codice ricevuto via email.</p>
+                <h2>RIPRISTINO CHIAVE</h2>
+                <!-- Qui scriveremo l'email dell'utente una volta verificato il link -->
+                <p id="status-text" style="font-family:'Courier Prime'; font-size:0.8rem; color:#888;">Verifica del canale crittografato in corso...</p>
             </div>
-            <form id="resetForm" class="terminal-form">
-                <input type="hidden" id="user-email-field">
-                <div class="input-group">
-                    <label>CODICE DI SICUREZZA (6 CIFRE)</label>
-                    <input type="text" id="reset-code-input" required autocomplete="off">
-                </div>
+
+            <!-- Il form all'inizio è nascosto. Lo mostriamo solo se il link della mail è valido -->
+            <form id="resetForm" class="terminal-form" style="display: none;">
+                
                 <div class="input-group">
                     <label>NUOVA PASSWORD (Min 8 car. + 1 Numero)</label>
-                    <input type="password" id="new-pass-input" required>
+                    <input type="password" id="new-pass-input" placeholder="Inserisci nuova password" required>
                 </div>
+                
                 <div class="input-group">
                     <label>CONFERMA NUOVA PASSWORD</label>
-                    <input type="password" id="confirm-pass-input" required>
+                    <input type="password" id="confirm-pass-input" placeholder="Ripeti password" required>
                 </div>
-                <p id="final-reset-msg" class="validation-msg" style="text-align:center;"></p>
-                <button type="submit" class="btn-gold full-width">CONFERMA E ACCEDI</button>
+                
+                <p id="final-reset-msg" class="validation-msg" style="text-align:center; display:none;"></p>
+                
+                <button type="submit" id="btn-submit" class="btn-gold full-width">AGGIORNA CREDENZIALI</button>
             </form>
+
         </div>
     </div>
 
-    <script>
+    <!-- SCRIPT FIREBASE -->
+    <script type="module">
         import { auth } from './script.js';
-import { verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { verifyPasswordResetCode, confirmPasswordReset } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Prendi il codice segreto (oobCode) dall'URL che Firebase ti ha inviato via mail
-    const params = new URLSearchParams(window.location.search);
-    const actionCode = params.get('oobCode');
-    const mode = params.get('mode'); // Dovrebbe essere "resetPassword"
-    
-    if (!actionCode) {
-        document.querySelector('.login-box').innerHTML = '<h3 style="color:#ff5555; text-align:center;">ERRORE: Link di ripristino non valido o mancante.</h3>';
-        return;
-    }
-
-    // 2. Opzionale: Verifica subito se il codice è valido prima che l'utente scriva la password
-    try {
-        const email = await verifyPasswordResetCode(auth, actionCode);
-        document.getElementById('user-email-field').value = email; // Mostra l'email (se vuoi)
-    } catch (error) {
-        document.querySelector('.login-box').innerHTML = '<h3 style="color:#ff5555; text-align:center;">ERRORE: Il link è scaduto o è già stato utilizzato.</h3>';
-        return;
-    }
-
-    // 3. Gestisci l'invio del form
-    document.getElementById('resetForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const newPass = document.getElementById('new-pass-input').value;
-        const confirmPass = document.getElementById('confirm-pass-input').value;
-        const btn = this.querySelector('button');
-        const msgEl = document.getElementById('final-reset-msg');
-        msgEl.style.display = 'none';
-
-        if (newPass.length < 8 || !/\d/.test(newPass)) {
-            showResetError("Password troppo debole (min 8 caratteri + 1 numero).");
-            return;
-        }
-        if (newPass !== confirmPass) {
-            showResetError("Le password non coincidono.");
-            return;
-        }
-
-        btn.innerText = "CRITTOGRAFIA IN CORSO...";
-        btn.disabled = true;
-
-        try {
-            // 4. Cambia la password su Firebase!
-            await confirmPasswordReset(auth, actionCode, newPass);
+        document.addEventListener('DOMContentLoaded', async () => {
+            const statusText = document.getElementById('status-text');
+            const resetForm = document.getElementById('resetForm');
             
-            btn.innerText = "PASSWORD AGGIORNATA!";
-            btn.style.background = '#4caf50';
-            btn.style.color = '#000';
-            
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 2000);
+            // 1. Firebase mette un codice segreto nell'URL quando clicchi la mail. Lo peschiamo:
+            const params = new URLSearchParams(window.location.search);
+            const actionCode = params.get('oobCode');
 
-        } catch (error) {
-            btn.innerText = "CONFERMA E ACCEDI";
-            btn.disabled = false;
-            showResetError("Errore durante l'aggiornamento. Riprova.");
-            console.error(error);
+            // Se uno apre la pagina senza aver cliccato il link della mail:
+            if (!actionCode) {
+                statusText.innerText = ">> ERRORE: Nessun token di ripristino rilevato. Usa il link inviato via email.";
+                statusText.style.color = "#ff5555";
+                return;
+            }
+
+            // 2. Verifichiamo subito se il link è valido (o se è scaduto/già usato)
+            try {
+                // verifyPasswordResetCode restituisce l'email dell'utente se il codice è valido
+                const userEmail = await verifyPasswordResetCode(auth, actionCode);
+                
+                // Link valido! Mostriamo l'email e sblocchiamo il form
+                statusText.innerHTML = `Identità verificata: <span style="color:var(--accent-gold);">${userEmail}</span>`;
+                resetForm.style.display = 'block';
+                
+            } catch (error) {
+                statusText.innerText = ">> ERRORE: Link crittografato scaduto o già utilizzato.";
+                statusText.style.color = "#ff5555";
+                return;
+            }
+
+            // 3. Gestiamo il click sul bottone per cambiare la password
+            resetForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const newPass = document.getElementById('new-pass-input').value;
+                const confirmPass = document.getElementById('confirm-pass-input').value;
+                const btn = document.getElementById('btn-submit');
+                const msgEl = document.getElementById('final-reset-msg');
+                msgEl.style.display = 'none';
+
+                // Controlli base
+                if (newPass.length < 8 || !/\d/.test(newPass)) {
+                    showError(msgEl, "Password troppo debole (min 8 caratteri + 1 numero).");
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    showError(msgEl, "Le password non coincidono.");
+                    return;
+                }
+
+                btn.innerText = "SOVRASCRITTURA IN CORSO...";
+                btn.style.opacity = "0.7";
+                btn.style.pointerEvents = "none";
+
+                try {
+                    // 4. Inviamo la nuova password a Firebase
+                    await confirmPasswordReset(auth, actionCode, newPass);
+                    
+                    // Fatto!
+                    btn.innerText = "PROTOCOLLO COMPLETATO";
+                    btn.style.background = '#4caf50';
+                    btn.style.borderColor = '#4caf50';
+                    btn.style.color = '#000';
+                    btn.style.opacity = "1";
+                    
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+
+                } catch (error) {
+                    btn.innerText = "AGGIORNA CREDENZIALI";
+                    btn.style.opacity = "1";
+                    btn.style.pointerEvents = "auto";
+                    showError(msgEl, "Errore di connessione col server. Riprova.");
+                    console.error(error);
+                }
+            });
+        });
+
+        function showError(element, text) {
+            element.innerText = '>> ' + text;
+            element.style.display = 'block';
         }
-    });
-});
-
-function showResetError(text) {
-    const msgEl = document.getElementById('final-reset-msg');
-    msgEl.innerText = '>> ' + text;
-    msgEl.style.display = 'block';
-}
     </script>
 </body>
 </html>
