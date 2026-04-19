@@ -48,7 +48,7 @@
                     <div class="validation-msg" id="msg-pass2"></div>
                 </div>
 
-                <!-- Nuovo messaggio di errore globale dal Server -->
+                <!-- Messaggio di errore/successo globale dal Server -->
                 <div class="validation-msg" id="msg-server" style="text-align: center; margin-bottom: 15px; font-size: 0.85rem;"></div>
 
                 <button type="submit" class="btn-gold full-width glow-effect">CREA ACCOUNT</button>
@@ -61,12 +61,10 @@
         </div>
     </div>
 
-    <!-- SCRIPT A MODULI PER FIREBASE -->
+    <!-- SCRIPT FIREBASE -->
     <script type="module">
-        // Importiamo gli strumenti dal nostro script.js globale!
         import { auth, db } from './script.js';
-        // Importiamo le funzioni specifiche di Firebase che ci servono per creare l'utente e salvare nel DB
-        import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
@@ -85,7 +83,7 @@
             
             let isValid = true;
 
-            // --- VALIDAZIONE FORMALE (Sintassi) ---
+            // Validazione Formale Locale
             if (!user.value.trim()) { showError(user, 'msg-user', '>> ID RICHIESTO'); isValid = false; }
             
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -94,75 +92,73 @@
             if (pass1.value.length < 8 || !/\d/.test(pass1.value)) { 
                 showError(pass1, 'msg-pass1', '>> MINIMO 8 CARATTERI E 1 NUMERO'); isValid = false; 
             }
-            
             if (pass1.value !== pass2.value) { showError(pass2, 'msg-pass2', '>> PASSWORD NON COINCIDENTI'); isValid = false; }
 
-            // SE CI SONO ERRORI LOCALI, FERMATI
             if (!isValid) return;
 
-            // --- INIZIO CONNESSIONE AL SERVER FIREBASE ---
-            
+            // Avvio Connessione al Server
             btnSubmit.innerHTML = 'CONNESSIONE AL SERVER...';
             btnSubmit.style.opacity = '0.7';
             btnSubmit.style.pointerEvents = 'none';
 
             try {
-                // 1. Prima di creare l'account, controlliamo se l'USERNAME è già preso nel nostro Database
-                // Firestore organizza i dati in "Collezioni" (es. cartelle) e "Documenti" (es. file). 
-                // Creiamo una collezione "users" e usiamo lo username come nome del documento.
+                // Controllo disponibilità Username nel database
                 const usernameValue = user.value.trim();
                 const userDocRef = doc(db, "users", usernameValue.toLowerCase()); 
                 const docSnap = await getDoc(userDocRef);
 
                 if (docSnap.exists()) {
-                    // Lo username esiste già nel database!
                     showError(user, 'msg-user', '>> ERRORE: ID GIA IN USO NEL SISTEMA');
-                    throw new Error("Username-taken"); // Generiamo un errore apposta per saltare alla sezione catch
+                    throw new Error("Username-taken");
                 }
 
-                // 2. Creiamo l'account (Email e Password) nel sistema di Autenticazione di Firebase
+                // Creazione account Google Auth
                 const userCredential = await createUserWithEmailAndPassword(auth, email.value.trim(), pass1.value);
-                const firebaseUser = userCredential.user; // Questo è l'utente appena creato nel cloud
+                const firebaseUser = userCredential.user;
 
-                // 3. Salviamo tutti i dati "estetici" (colore, amici, giochi) nel nostro Database Firestore
+                // Salvataggio Dossier nel Database Firestore
                 const newUserColor = getRandomColor();
-                
                 await setDoc(userDocRef, {
-                    uid: firebaseUser.uid,          // L'ID segreto di Firebase
-                    username: usernameValue,        // Il nome scelto (es. "Yaskino")
-                    email: email.value.trim(),      
-                    color: newUserColor,            
+                    uid: firebaseUser.uid,
+                    username: usernameValue,
+                    email: email.value.trim(),
+                    color: newUserColor,
                     avatar_img: null,
-                    games: [],                      // Lista giochi vuota
-                    friends: [],                    // Rete operativa vuota
-                    requests: [],                   // Richieste vuote
+                    games: [],
+                    friends: [],
+                    requests: [],
                     privacy: { visibility: true, telemetry: false, newsletter: true },
                     createdAt: new Date().toISOString()
                 });
 
-                // 4. SUCCESSO! (Per compatibilità temporanea teniamo anche le info nel localStorage)
-                localStorage.setItem('kripix_user', usernameValue);
-                localStorage.setItem('kripix_color', newUserColor);
+                // INVIO MAIL DI VERIFICA
+                await sendEmailVerification(firebaseUser);
 
-                btnSubmit.innerHTML = 'PROTOCOLLO COMPLETATO!';
-                btnSubmit.style.background = '#4caf50';
-                btnSubmit.style.borderColor = '#4caf50';
+                // DISCONNESSIONE FORZATA (L'utente non può entrare finché non clicca la mail)
+                await signOut(auth);
+
+                // Successo UI
+                btnSubmit.innerHTML = 'PROTOCOLLO INVIATO ALLA TUA MAIL';
+                btnSubmit.style.background = 'var(--accent-gold)';
+                btnSubmit.style.borderColor = 'var(--accent-gold)';
                 btnSubmit.style.color = '#000';
 
-                // Riporta alla home dopo 1 secondo e mezzo
+                serverMsg.innerText = ">> ATTENZIONE: Controlla la tua casella di posta per confermare l'identità.";
+                serverMsg.style.color = "var(--accent-gold)";
+                serverMsg.style.display = 'block';
+
+                // Riporta al login
                 setTimeout(() => {
-                    window.location.href = 'index.html'; 
-                }, 1500);
+                    window.location.href = 'login.html'; 
+                }, 4000);
 
             } catch (error) {
-                // SE QUALCOSA VA STORTO COL SERVER
                 btnSubmit.innerHTML = 'CREA ACCOUNT';
                 btnSubmit.style.opacity = '1';
                 btnSubmit.style.pointerEvents = 'auto';
 
-                // Gestione errori specifici di Firebase
                 if (error.message === "Username-taken") {
-                    // Errore già mostrato sopra
+                    // Errore già mostrato a video
                 } else if (error.code === 'auth/email-already-in-use') {
                     showError(email, 'msg-email', '>> ERRORE: EMAIL GIÀ REGISTRATA');
                 } else {
@@ -173,7 +169,6 @@
             }
         });
 
-        // Funzioni Helper (Uguali a prima)
         function showError(input, msgId, text) {
             input.classList.add('input-error');
             const msg = document.getElementById(msgId);

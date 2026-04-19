@@ -1,10 +1,9 @@
-// Importiamo gli strumenti Cloud dal nostro script globale
 import { auth, db } from './script.js';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // ==========================================
-// 1. LOGICA LOGIN CLOUD
+// 1. LOGICA LOGIN CLOUD CON VERIFICA EMAIL
 // ==========================================
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -15,7 +14,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     
     const userInput = document.getElementById('usernameInput');
     const passInput = document.getElementById('passwordInput');
-    const username = userInput.value.trim().toLowerCase(); // Firebase è case-sensitive sui documenti, forziamo minuscolo
+    const username = userInput.value.trim().toLowerCase();
     const password = passInput.value;
     const btn = this.querySelector('button');
 
@@ -24,7 +23,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     btn.style.pointerEvents = 'none';
 
     try {
-        // FASE A: Troviamo l'email associata a questo ID Agente nel Database
+        // FASE A: Recupero l'email dal Database tramite l'ID Agente
         const userDocRef = doc(db, "users", username);
         const docSnap = await getDoc(userDocRef);
 
@@ -35,14 +34,19 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const userData = docSnap.data();
         const userEmail = userData.email;
 
-        // FASE B: Tentiamo il vero Login crittografato sui server Firebase
-        await signInWithEmailAndPassword(auth, userEmail, password);
+        // FASE B: Login con Firebase Auth
+        const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
+        const firebaseUser = userCredential.user;
 
-        // FASE C: SUCCESSO!
-        // Salviamo una "copia temporanea" (cache) dei dati nel localStorage.
-        // Questo serve per non rompere le altre pagine (Libreria, Profilo) che per ora leggono ancora da lì.
-        // Nella Fase 3 collegheremo anche quelle al cloud!
-        localStorage.setItem('kripix_user', userData.username); // Salva col maiuscolo originale
+        // FASE C: CONTROLLO EMAIL VERIFICATA
+        if (!firebaseUser.emailVerified) {
+            // Sconnettiamo immediatamente l'utente e blocchiamo l'accesso
+            await signOut(auth);
+            throw new Error("email-not-verified");
+        }
+
+        // FASE D: SUCCESSO! (Salvataggio cache e reindirizzamento)
+        localStorage.setItem('kripix_user', userData.username); 
         localStorage.setItem('kripix_color', userData.color);
         if(userData.games && userData.games.includes('harrow')) {
             localStorage.setItem('owned_game_harrow', 'true');
@@ -52,20 +56,27 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
         btn.innerHTML = 'ACCESSO CONSENTITO';
         btn.style.background = '#4caf50';
-        btn.style.color = 'black';
+        btn.style.color = '#000';
         btn.style.borderColor = '#4caf50';
 
         setTimeout(() => { window.location.href = 'index.html'; }, 1000);
 
     } catch (error) {
-        // FASE D: ERRORE (Password errata o ID inesistente)
+        // GESTIONE ERRORI
         userInput.classList.add('input-error');
         passInput.classList.add('input-error');
         
         const msg = document.getElementById('err-login');
-        msg.innerText = '>> ERRORE CLOUD: CREDENZIALI NON VALIDE [ACCESS DENIED]';
-        msg.style.display = 'block';
         
+        if (error.message === "email-not-verified") {
+            msg.innerHTML = '>> ACCESSO NEGATO: CANALE NON VERIFICATO.<br>Controlla la tua email per confermare l\'identità.';
+            msg.style.color = "var(--accent-gold)"; // Giallo
+        } else {
+            msg.innerText = '>> ERRORE CLOUD: CREDENZIALI NON VALIDE [ACCESS DENIED]';
+            msg.style.color = "#ff5555"; // Rosso
+        }
+        
+        msg.style.display = 'block';
         passInput.style.animation = 'none';
         passInput.offsetHeight;
         passInput.style.animation = 'shake 0.3s';
@@ -86,7 +97,7 @@ document.querySelectorAll('input').forEach(i => i.addEventListener('input', func
 
 
 // ==========================================
-// 2. LOGICA RECUPERO PASSWORD (NATIVO FIREBASE)
+// 2. LOGICA RECUPERO PASSWORD
 // ==========================================
 const resetModal = document.getElementById('reset-modal');
 const forgotLink = document.getElementById('forgot-pass-link');
@@ -96,7 +107,6 @@ forgotLink.addEventListener('click', (e) => {
     resetModal.style.display = 'flex';
 });
 
-// Reso globale per l'HTML
 window.closeResetModal = function() {
     resetModal.style.display = 'none';
 };
@@ -113,7 +123,6 @@ window.sendResetCode = async function() {
     btn.disabled = true;
 
     try {
-        // Chiediamo al server di Google di inviare la mail di reset sicura
         await sendPasswordResetEmail(auth, email);
         
         msgEl.innerText = ">> PROTOCOLLO INVIATO. Controlla la tua posta per il link di ripristino sicuro.";
