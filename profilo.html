@@ -12,7 +12,7 @@
         .id-card { background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 30px; text-align: center; position: relative; }
         .id-card::before { content: 'CLASSIFIED'; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; letter-spacing: 3px; color: #444; font-family: 'Courier Prime'; border: 1px solid #444; padding: 2px 5px; }
 
-        .big-avatar { width: 120px; height: 120px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; color: white; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0,0,0,0.5); overflow: hidden; }
+        .big-avatar { width: 120px; height: 120px; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 900; color: white; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 0 30px rgba(0,0,0,0.5); overflow: hidden; transition: all 0.3s ease; }
         .agent-rank { color: var(--accent-gold); font-size: 0.9rem; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
         .agent-name { font-size: 1.8rem; font-weight: 900; color: white; margin-bottom: 20px; line-height: 1; }
         
@@ -38,13 +38,13 @@
         .progress-bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--accent-gold); width: 0%; transition: width 1s ease-out; }
 
-        /* Rete Operativa */
         .network-section { background: rgba(10, 10, 10, 0.8); border: 1px solid #333; border-top: 3px solid var(--accent-gold); padding: 30px; margin-bottom: 40px; position: relative; }
         .network-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
         .network-header h3 { font-size: 1.2rem; color: white; }
 
         .add-friend-box { display: flex; gap: 0; margin-bottom: 15px; border: 1px solid #333; background: #000; padding: 5px; border-radius: 2px; }
         .add-friend-box input { flex: 1; background: transparent; border: none; color: white; padding: 12px 15px; font-family: 'Courier Prime'; font-size: 1rem; }
+        .add-friend-box input:focus { outline: none; border-color: var(--accent-gold); }
         .btn-add { padding: 10px 25px; font-size: 0.8rem; border: 1px solid #444; background: transparent; color: #888; font-weight: bold; font-family: 'Montserrat'; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; }
         .btn-add.ready { background: var(--accent-gold); color: #000; border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(227, 198, 108, 0.3); }
 
@@ -66,7 +66,6 @@
         .btn-danger { display: inline-block; padding: 10px 25px; font-size: 0.8rem; border: 1px solid #8b2323; color: #ff5555; background: transparent; font-weight: bold; cursor: pointer; transition: 0.3s; font-family: 'Montserrat'; text-transform: uppercase; }
         .btn-danger:hover { background: #8b2323; color: white; box-shadow: 0 0 15px rgba(139, 35, 35, 0.5); }
         
-        /* Scheda Dev Access */
         .dev-access-card { background: linear-gradient(45deg, rgba(227, 198, 108, 0.05), transparent); border: 1px dashed var(--accent-gold); padding: 25px; margin-bottom: 40px; display: flex; align-items: center; justify-content: space-between; transition: 0.3s; }
         .dev-access-card:hover { background: rgba(227, 198, 108, 0.1); box-shadow: 0 0 20px rgba(227, 198, 108, 0.1); border-style: solid; }
         .dev-text h4 { color: var(--accent-gold); margin-bottom: 5px; font-size: 1.1rem; letter-spacing: 1px; }
@@ -103,8 +102,7 @@
             
             <!-- SINISTRA: ID CARD -->
             <div class="id-card">
-                <!-- AVATAR (PULITO, SENZA INGRANAGGIO) -->
-                <div class="big-avatar" id="p-avatar">?</div>
+                <div class="big-avatar" id="p-avatar">...</div>
                 <div class="agent-rank" id="p-rank">LIVELLO 1</div>
                 <div class="agent-name" id="p-username">AGENTE</div>
                 
@@ -123,11 +121,10 @@
                     </div>
                     <div class="stat-row">
                         <span style="color:#666">DATA REG.</span>
-                        <span>2026</span>
+                        <span id="p-reg-date">2026</span>
                     </div>
                 </div>
                 
-                <!-- Questo tasto porta alle impostazioni -->
                 <a href="impostazioni.html" class="btn-outline full-width" style="margin-top:30px; font-size:0.8rem;">MODIFICA DATI & AVATAR</a>
             </div>
 
@@ -185,12 +182,13 @@
                     <!-- Richieste in entrata -->
                     <div id="requests-area" style="margin-bottom: 20px;"></div>
 
+                    <!-- Lista Amici -->
                     <div class="friend-list" id="friends-list-container">
                         <!-- Generato via JS -->
                     </div>
                 </div>
 
-                <!-- SEZIONE DEVELOPER (Ripristinata) -->
+                <!-- SEZIONE DEVELOPER -->
                 <div class="section-box dev-access-card">
                     <div class="dev-text">
                         <h4>PROGRAMMA PIXEL OTROS</h4>
@@ -199,12 +197,12 @@
                     <a href="engine.html" class="btn-dev-action">SCARICA DEV-KIT</a>
                 </div>
 
-                <!-- LOG ATTIVITÀ RECENTI (Ripristinato!) -->
+                <!-- LOG ATTIVITÀ RECENTI -->
                 <div class="section-box">
                     <h3 class="box-header">LOG ATTIVITÀ RECENTI</h3>
                     <div style="font-family: 'Courier Prime'; font-size: 0.85rem; color: #888;">
                         <p style="margin-bottom: 10px;">> [OGGI] Accesso al terminale effettuato.</p>
-                        <p style="margin-bottom: 10px; display:none;" id="log-purchase">> [DATA] Acquisizione licenza "Harrow".</p>
+                        <p style="margin-bottom: 10px; display:none;" id="log-purchase">> [SISTEMA] Acquisizione licenza "Harrow".</p>
                         <p>> [SYSTEM] Profilo sincronizzato con il server centrale.</p>
                     </div>
                 </div>
@@ -229,221 +227,313 @@
     </div>
 
     <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    
+    <!-- SCRIPT GLOBALE -->
     <script type="module" src="script.js"></script>
 
-<script type="module">
-    import { db } from './script.js';
-    import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    <!-- LOGICA DELLA PAGINA PROFILO (FIREBASE CLOUD) -->
+    <script type="module">
+        import { db } from './script.js';
+        import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    const currentUser = localStorage.getItem('kripix_user');
-    if (!currentUser) window.location.href = 'login.html';
+        const currentUser = localStorage.getItem('kripix_user');
+        if (!currentUser) window.location.href = 'login.html';
 
-    // Riferimento al documento dell'utente loggato
-    const myDocRef = doc(db, "users", currentUser);
+        // La referenza corretta (minuscola) al mio documento sul Cloud
+        const myDocRef = doc(db, "users", currentUser.toLowerCase());
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        document.getElementById('p-username').innerText = currentUser;
-        document.getElementById('p-id-num').innerText = "#88" + currentUser.length + "X";
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Setup iniziale testi base
+            document.getElementById('p-username').innerText = currentUser;
+            document.getElementById('p-id-num').innerText = "#88" + currentUser.length + "X";
 
-        // Ascolto in TEMPO REALE dei cambiamenti sul mio profilo
-        onSnapshot(myDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const me = docSnap.data();
-                updateAvatarUI(me);
-                updateXP(me);
-                renderNetwork(me);
-            }
+            // LISTENER IN TEMPO REALE SUL CLOUD
+            onSnapshot(myDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const me = docSnap.data();
+                    
+                    // Se abbiamo la data di registrazione, la formattiamo
+                    if(me.createdAt) {
+                        const date = new Date(me.createdAt);
+                        document.getElementById('p-reg-date').innerText = date.getFullYear();
+                    }
+
+                    updateAvatarUI(me);
+                    updateXP(me);
+                    renderNetwork(me);
+                } else {
+                    console.error("ERRORE: Profilo non trovato su Firestore.");
+                }
+            });
         });
-    });
 
-    // AGGIORNA AVATAR GRANDE
-    function updateAvatarUI(me) {
-        const avatar = document.getElementById('p-avatar');
-        if (me.avatar_img) {
-            avatar.innerHTML = `<img src="${me.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
-            avatar.style.backgroundColor = 'transparent';
-            avatar.style.borderColor = 'rgba(255,255,255,0.1)';
-        } else {
-            const color = me.color || '#666';
-            avatar.innerHTML = currentUser.charAt(0).toUpperCase();
-            avatar.style.backgroundColor = color;
-            avatar.style.borderColor = color;
+        // ==========================================
+        // 1. GESTIONE AVATAR E UI
+        // ==========================================
+        function updateAvatarUI(me) {
+            const avatar = document.getElementById('p-avatar');
+            
+            if (me.avatar_img) {
+                // Immagine scelta dall'utente
+                avatar.innerHTML = `<img src="${me.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
+                avatar.style.backgroundColor = 'transparent';
+                avatar.style.borderColor = 'rgba(255,255,255,0.1)';
+            } else {
+                // Colore di default o colore scelto
+                const color = me.color || '#666';
+                avatar.innerHTML = me.username.charAt(0).toUpperCase(); // Usa l'iniziale vera
+                avatar.style.backgroundColor = color;
+                avatar.style.borderColor = color;
+                avatar.style.boxShadow = `0 0 30px ${color}40`; // alone del colore
+            }
         }
-    }
 
-    // AGGIORNA LIVELLO GIOCHI
-    function updateXP(me) {
-        if (me.games && me.games.includes('harrow')) {
-            document.getElementById('badge-investigator').classList.add('unlocked');
-            document.getElementById('p-games-count').innerText = me.games.length;
-            document.getElementById('xp-bar').style.width = "50%";
-            document.getElementById('xp-text').innerText = "500 / 1000 XP (LIVELLO 2)";
-            document.getElementById('p-rank').innerText = "AGENTE SUL CAMPO";
-            document.getElementById('p-rank').style.color = "#4caf50";
-        } else {
-            document.getElementById('xp-bar').style.width = "10%";
+        function updateXP(me) {
+            const gamesCount = me.games ? me.games.length : 0;
+            document.getElementById('p-games-count').innerText = gamesCount;
+
+            if (me.games && me.games.includes('harrow')) {
+                document.getElementById('badge-investigator').classList.add('unlocked');
+                
+                // Animazione barra XP
+                setTimeout(() => { 
+                    document.getElementById('xp-bar').style.width = "50%";
+                    document.getElementById('xp-text').innerText = "500 / 1000 XP (LIVELLO 2)";
+                    document.getElementById('p-rank').innerText = "AGENTE SUL CAMPO";
+                    document.getElementById('p-rank').style.color = "#4caf50";
+                }, 500);
+
+                // Mostra nel log
+                const logPurchase = document.getElementById('log-purchase');
+                if(logPurchase) logPurchase.style.display = 'block';
+
+            } else {
+                // Livello Base
+                setTimeout(() => { document.getElementById('xp-bar').style.width = "10%"; }, 500);
+            }
         }
-    }
 
-    // ==========================================
-    // RETE OPERATIVA CLOUD
-    // ==========================================
-    const inputEl = document.getElementById('friend-id-input');
-    const addBtn = document.getElementById('btn-add-friend');
-    let friendToRemove = null;
+        // ==========================================
+        // 2. RETE OPERATIVA CLOUD
+        // ==========================================
+        const inputEl = document.getElementById('friend-id-input');
+        const addBtn = document.getElementById('btn-add-friend');
+        let friendToRemove = null;
 
-    inputEl.addEventListener('input', () => {
-        if (inputEl.value.trim().length > 0) addBtn.classList.add('ready'); 
-        else addBtn.classList.remove('ready');
-    });
+        // Attiva bottone solo se c'è testo
+        inputEl.addEventListener('input', () => {
+            if (inputEl.value.trim().length > 0) addBtn.classList.add('ready'); 
+            else addBtn.classList.remove('ready');
+        });
 
-    async function renderNetwork(me) {
-        const reqContainer = document.getElementById('requests-area');
-        const listContainer = document.getElementById('friends-list-container');
-        reqContainer.innerHTML = '';
-        listContainer.innerHTML = '';
+        // RENDERIZZA LA RETE (Amici e Richieste)
+        async function renderNetwork(me) {
+            const reqContainer = document.getElementById('requests-area');
+            const listContainer = document.getElementById('friends-list-container');
+            
+            reqContainer.innerHTML = '';
+            listContainer.innerHTML = '';
 
-        // RICHIESTE IN ENTRATA
-        if(me.requests && me.requests.length > 0) {
-            reqContainer.innerHTML += '<div style="font-size:0.8rem; color:var(--accent-gold); margin-bottom:10px; font-family:\'Courier Prime\';">RICHIESTE IN ENTRATA:</div>';
-            me.requests.forEach(reqName => {
-                reqContainer.innerHTML += `
-                    <div class="friend-item" style="border-color: var(--accent-gold); background: rgba(227,198,108,0.05); margin-bottom:10px;">
-                        <div class="friend-info">
-                            <span style="font-weight:bold; color:var(--accent-gold);">${reqName}</span>
+            // A. MOSTRIAMO LE RICHIESTE IN ENTRATA
+            if(me.requests && me.requests.length > 0) {
+                reqContainer.innerHTML += '<div style="font-size:0.8rem; color:var(--accent-gold); margin-bottom:10px; font-family:\'Courier Prime\';">RICHIESTE IN ENTRATA:</div>';
+                
+                me.requests.forEach(reqName => {
+                    reqContainer.innerHTML += `
+                        <div class="friend-item" style="border-color: var(--accent-gold); background: rgba(227,198,108,0.05); margin-bottom:10px;">
+                            <div class="friend-info">
+                                <span style="font-weight:bold; color:var(--accent-gold);">${reqName} <span style="color:#888; font-weight:normal; font-size:0.8rem;">vuole collegarsi.</span></span>
+                            </div>
+                            <div>
+                                <button class="btn-mini btn-accept" onclick="acceptRequest('${reqName}')">ACCETTA</button>
+                                <button class="btn-mini btn-reject" onclick="rejectRequest('${reqName}')">RIFIUTA</button>
+                            </div>
                         </div>
-                        <div>
-                            <button class="btn-mini btn-accept" onclick="acceptRequest('${reqName}')">ACCETTA</button>
-                            <button class="btn-mini btn-reject" onclick="rejectRequest('${reqName}')">RIFIUTA</button>
+                    `;
+                });
+            }
+
+            // B. MOSTRIAMO GLI AMICI GIA CONNESSI
+            if (!me.friends || me.friends.length === 0) {
+                listContainer.innerHTML = '<p style="color:#666; font-size:0.85rem; font-family:\'Courier Prime\'; text-align:center; padding: 20px;">[ NESSUNA CONNESSIONE STABILE NELLA TUA RETE ]</p>';
+                return;
+            }
+
+            // Cicliamo gli amici per recuperare dal Cloud i loro veri Avatar/Colori
+            for (const friendName of me.friends) {
+                // ATTENZIONE: Salviamo gli amici col loro nome originale, ma interroghiamo Firestore col minuscolo
+                const fSnap = await getDoc(doc(db, "users", friendName.toLowerCase()));
+                
+                let avatarHtml = `<div style="width:100%; height:100%; background:#666; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+                let fColor = '#666';
+
+                if(fSnap.exists()) {
+                    const fData = fSnap.data();
+                    if(fData.avatar_img) {
+                        avatarHtml = `<img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
+                    } else if(fData.color) {
+                        fColor = fData.color;
+                        avatarHtml = `<div style="width:100%; height:100%; background:${fColor}; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+                    }
+                }
+
+                const fakeId = "#88" + friendName.length + "X";
+
+                listContainer.innerHTML += `
+                    <div class="friend-item">
+                        <div class="friend-info">
+                            <div class="friend-avatar" style="box-shadow: 0 0 10px ${fColor}80">${avatarHtml}</div>
+                            <div>
+                                <div class="friend-name">${friendName}</div>
+                                <div class="friend-status">● CONNESSIONE STABILE</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <span style="color:#666; font-size:0.8rem; font-family:'Courier Prime';">${fakeId}</span>
+                            <button class="btn-mini btn-reject" title="Interrompi Connessione" onclick="openRemoveModal('${friendName}')">X</button>
                         </div>
                     </div>
                 `;
-            });
+            }
         }
 
-        // LISTA AMICI
-        if (!me.friends || me.friends.length === 0) {
-            listContainer.innerHTML = '<p style="color:#666; font-size:0.85rem; text-align:center;">[ NESSUNA CONNESSIONE STABILE NELLA TUA RETE ]</p>';
-            return;
-        }
+        // ==========================================
+        // 3. AZIONI RETE (ESPONIAMO A WINDOW PER L'HTML)
+        // ==========================================
 
-        // Recuperiamo i dati di ogni amico per mostrare la sua immagine/colore corretto
-        for (const friendName of me.friends) {
-            const fSnap = await getDoc(doc(db, "users", friendName));
-            let avatarHtml = `<div style="width:100%; height:100%; background:#666; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+        // INVIA RICHIESTA AMICIZIA
+        window.sendRequest = async function() {
+            const targetNameOriginal = inputEl.value.trim();
+            const targetNameLower = targetNameOriginal.toLowerCase();
             
-            if(fSnap.exists()) {
-                const fData = fSnap.data();
-                if(fData.avatar_img) {
-                    avatarHtml = `<img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
-                } else if(fData.color) {
-                    avatarHtml = `<div style="width:100%; height:100%; background:${fData.color}; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+            if(!targetNameLower) return;
+
+            // Evita auto-invito
+            if (targetNameLower === currentUser.toLowerCase()) { 
+                window.kripixNotify("ERRORE", "Impossibile autocollegarsi.", "error"); 
+                return; 
+            }
+
+            const btnOriginalText = addBtn.innerText;
+            addBtn.innerText = 'RICERCA IN CORSO...';
+
+            try {
+                // Cerchiamo l'utente nel Cloud
+                const targetRef = doc(db, "users", targetNameLower);
+                const targetSnap = await getDoc(targetRef);
+
+                if (!targetSnap.exists()) {
+                    window.kripixNotify("ERRORE DI RETE", `Agente [${targetNameOriginal}] inesistente.`, "error"); 
+                    addBtn.innerText = btnOriginalText;
+                    return; 
                 }
+
+                const targetData = targetSnap.data();
+
+                // Controllo se siamo già amici o se la richiesta è già in coda
+                if (targetData.friends && targetData.friends.includes(currentUser)) {
+                    window.kripixNotify("RETE", "Agente già presente.", "info"); 
+                    addBtn.innerText = btnOriginalText;
+                    return;
+                }
+                if (targetData.requests && targetData.requests.includes(currentUser)) {
+                    window.kripixNotify("RETE", "Richiesta già in coda.", "info"); 
+                    addBtn.innerText = btnOriginalText;
+                    return;
+                }
+
+                // Inviamo la richiesta (Aggiungiamo noi stessi all'array 'requests' del bersaglio)
+                // NOTA: Inviamo il currentUser originale (con le maiuscole corrette)
+                await updateDoc(targetRef, {
+                    requests: arrayUnion(currentUser)
+                });
+
+                inputEl.value = ''; 
+                addBtn.classList.remove('ready');
+                window.kripixNotify("TRASMESSA", `Richiesta inviata all'Agente ${targetData.username}.`, "success");
+
+            } catch (error) {
+                console.error(error);
+                window.kripixNotify("ERRORE SERVER", "Connessione interrotta.", "error");
             }
+            addBtn.innerText = btnOriginalText;
+        };
 
-            listContainer.innerHTML += `
-                <div class="friend-item">
-                    <div class="friend-info">
-                        <div class="friend-avatar">${avatarHtml}</div>
-                        <div>
-                            <div class="friend-name">${friendName}</div>
-                            <div class="friend-status">● CONNESSIONE STABILE</div>
-                        </div>
-                    </div>
-                    <button class="btn-mini btn-reject" onclick="openRemoveModal('${friendName}')">X</button>
-                </div>
-            `;
-        }
-    }
+        // ACCETTA AMICIZIA
+        window.acceptRequest = async function(sender) {
+            try {
+                // Sender è il nome originale (es: "Mario")
+                const senderRef = doc(db, "users", sender.toLowerCase());
 
-    // INVIA RICHIESTA AL CLOUD
-    window.sendRequest = async function() {
-        const targetName = inputEl.value.trim().toLowerCase(); // Forziamo minuscolo per trovare il doc
-        if(!targetName) return;
+                // 1. Togliamo sender dalle nostre richieste, e lo aggiungiamo agli amici
+                await updateDoc(myDocRef, {
+                    friends: arrayUnion(sender),
+                    requests: arrayRemove(sender)
+                });
 
-        if (targetName === currentUser.toLowerCase()) { 
-            window.kripixNotify("ERRORE", "Impossibile autocollegarsi.", "error"); return; 
-        }
+                // 2. Aggiungiamo noi stessi agli amici del sender
+                await updateDoc(senderRef, {
+                    friends: arrayUnion(currentUser)
+                });
 
-        try {
-            const targetRef = doc(db, "users", targetName);
-            const targetSnap = await getDoc(targetRef);
-
-            if (!targetSnap.exists()) {
-                window.kripixNotify("ERRORE DI RETE", `Agente inesistente.`, "error"); return; 
+                window.kripixNotify("CONNESSIONE STABILITA", `L'Agente ${sender} è ora nella tua rete.`, "success");
+            } catch (error) { 
+                console.error("Errore Accept:", error); 
             }
+        };
 
-            // Inseriamo il nostro nome nell'array "requests" del bersaglio
-            await updateDoc(targetRef, {
-                requests: arrayUnion(currentUser)
-            });
+        // RIFIUTA AMICIZIA
+        window.rejectRequest = async function(sender) {
+            try {
+                // Rimuoviamo il sender dall'array delle richieste
+                await updateDoc(myDocRef, {
+                    requests: arrayRemove(sender)
+                });
+            } catch (e) { 
+                console.error(e); 
+            }
+        };
 
-            inputEl.value = ''; addBtn.classList.remove('ready');
-            window.kripixNotify("TRASMESSA", `Richiesta inviata.`, "success");
-
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    // ACCETTA AMICIZIA
-    window.acceptRequest = async function(sender) {
-        try {
-            const senderRef = doc(db, "users", sender.toLowerCase());
-
-            // Aggiungiamo lui ai miei amici e togliamolo dalle mie richieste
-            await updateDoc(myDocRef, {
-                friends: arrayUnion(sender),
-                requests: arrayRemove(sender)
-            });
-
-            // Aggiungiamo noi ai SUOI amici
-            await updateDoc(senderRef, {
-                friends: arrayUnion(currentUser)
-            });
-
-            window.kripixNotify("CONNESSIONE STABILITA", `Agente connesso.`, "success");
-        } catch (error) { console.error(error); }
-    };
-
-    // RIFIUTA AMICIZIA
-    window.rejectRequest = async function(sender) {
-        try {
-            await updateDoc(myDocRef, {
-                requests: arrayRemove(sender)
-            });
-        } catch (e) { console.error(e); }
-    };
-
-    // RIMOZIONE AMICI
-    window.openRemoveModal = function(targetName) { 
-        friendToRemove = targetName; 
-        document.getElementById('remove-target-name').innerText = targetName; 
-        document.getElementById('remove-friend-modal').style.display = 'flex'; 
-    };
-    window.closeRemoveModal = function() { 
-        friendToRemove = null; 
-        document.getElementById('remove-friend-modal').style.display = 'none'; 
-    };
-
-    window.confirmRemoveFriend = async function() {
-        if(!friendToRemove) return;
+        // RIMOZIONE AMICI
+        window.openRemoveModal = function(targetName) { 
+            friendToRemove = targetName; 
+            document.getElementById('remove-target-name').innerText = targetName; 
+            document.getElementById('remove-friend-modal').style.display = 'flex'; 
+        };
         
-        try {
-            const friendRef = doc(db, "users", friendToRemove.toLowerCase());
+        window.closeRemoveModal = function() { 
+            friendToRemove = null; 
+            document.getElementById('remove-friend-modal').style.display = 'none'; 
+        };
 
-            // Rimuovo lui da me
-            await updateDoc(myDocRef, { friends: arrayRemove(friendToRemove) });
-            // Rimuovo me da lui
-            await updateDoc(friendRef, { friends: arrayRemove(currentUser) });
+        window.confirmRemoveFriend = async function() {
+            if(!friendToRemove) return;
+            
+            try {
+                const friendRef = doc(db, "users", friendToRemove.toLowerCase());
 
-            window.kripixNotify("INTERROTTA", `Agente rimosso.`, "error");
-        } catch (e) { console.error(e); }
-        
-        closeRemoveModal();
-    };
+                // 1. Rimuovo l'amico dalla mia lista
+                await updateDoc(myDocRef, { 
+                    friends: arrayRemove(friendToRemove) 
+                });
+                
+                // 2. Rimuovo me stesso dalla lista dell'amico
+                await updateDoc(friendRef, { 
+                    friends: arrayRemove(currentUser) 
+                });
 
-    inputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendRequest(); });
-</script>
+                window.kripixNotify("CONNESSIONE INTERROTTA", `Agente ${friendToRemove} rimosso.`, "error");
+            } catch (e) { 
+                console.error(e); 
+            }
+            
+            closeRemoveModal();
+        };
+
+        // Permette di inviare richiesta con INVIO sulla tastiera
+        inputEl.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter') sendRequest(); 
+        });
+    </script>
 </body>
 </html>

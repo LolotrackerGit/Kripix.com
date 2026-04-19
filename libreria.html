@@ -29,7 +29,6 @@
     <section class="section-padding">
         <div class="container">
             
-            <!-- Contenitore Griglia Giochi -->
             <div id="library-grid" class="download-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
                 <!-- QUI VERRANNO INSERITI I GIOCHI VIA JAVASCRIPT -->
             </div>
@@ -44,16 +43,13 @@
         </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- MODALE CENTRO DOWNLOAD (Nascosto) -->
-    <!-- ========================================== -->
+    <!-- MODALE CENTRO DOWNLOAD -->
     <div id="dl-modal" class="modal-overlay">
         <div class="modal-box">
             <h3 style="color:var(--accent-gold); margin-bottom:5px;">SCELTA PIATTAFORMA</h3>
             <p style="font-size:0.9rem; opacity:0.7;">Seleziona il sistema operativo per avviare il download.</p>
             
             <div class="mini-dl-grid">
-                <!-- CARD WINDOWS -->
                 <div class="mini-os-card" onclick="simulateDl(this, 'kripix_setup.exe')">
                     <div class="mini-os-icon">
                         <svg viewBox="0 0 88 88"><path d="M0 12.402l35.687-4.86.016 34.423-35.67.203zm35.67 33.329l-.028 34.553-35.66-4.96-.001-29.601zm5.307-39.117L87.814 0v41.527l-46.837.062zm.022 39.294l46.825.264v41.67l-46.825-6.69z"/></svg>
@@ -63,7 +59,6 @@
                     <span class="btn-outline full-width" style="font-size:0.7rem; padding:10px;">SCARICA .EXE</span>
                 </div>
 
-                <!-- CARD MAC -->
                 <div class="mini-os-card" onclick="simulateDl(this, 'kripix_installer.dmg')">
                     <div class="mini-os-icon">
                         <svg viewBox="0 0 384 512"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.4 69.5-34.3z"/></svg>
@@ -80,123 +75,129 @@
 
     <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
 
-    <!-- Script Principale -->
     <script type="module" src="script.js"></script>
 
-    <!-- Script Libreria & Modale -->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Controllo Accesso
-        if (!localStorage.getItem('kripix_user')) {
-            window.location.href = 'login.html';
-            return;
-        }
+    <!-- LOGICA LIBRERIA CLOUD -->
+    <script type="module">
+        import { db } from './script.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Generazione Card Gioco;
-        const currentUser = localStorage.getItem('kripix_user');
-        const db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-        const userData = db.find(u => u.username === currentUser);
-        const hasHarrow = userData && userData.games && userData.games.includes('harrow');
-        const grid = document.getElementById('library-grid');
-        const emptyMsg = document.getElementById('empty-msg');
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Controllo Accesso
+            const currentUser = localStorage.getItem('kripix_user');
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
 
-        if (hasHarrow) {
-            const gameCard = `
-                <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
-                    <div style="height:150px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #333; position:relative;">
-                         <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff;">IL FILO DEL DUBBIO</span>
-                         
-                    </div>
-                    <div style="padding:25px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                            <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
-                            <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.2</span>
-                        </div>
-                        <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
-                        <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
-                            Include gioco completo, Artbook Digitale e Soundtrack Originale.
-                        </p>
-                        
-                        <!-- NOTA: Aggiunta classe 'btn-container-relative' qui sotto -->
-                        <div style="display:flex; gap:10px;" class="btn-container-relative">
-                            <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
-                            
-                            <!-- Tasto Chiave con Nuova Funzione -->
-                            <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" 
-                                    title="Copia Chiave Steam" 
-                                    onclick="copyKey(this, 'KRPX-8821-X99Z')">🔑</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            grid.innerHTML = gameCard;
-        } else {
-            emptyMsg.style.display = 'block';
-        }
-    });
-
-    // --- NUOVA FUNZIONE COPIA CHIAVE ---
-    function copyKey(btn, key) {
-        // 1. Copia nella clipboard
-        navigator.clipboard.writeText(key).then(() => {
+            const grid = document.getElementById('library-grid');
+            const emptyMsg = document.getElementById('empty-msg');
             
-            // 2. Crea il tooltip
-            const container = btn.parentElement; // Il div che li contiene
-            
-            // Rimuovi eventuali tooltip vecchi per non sovrapporli
-            const oldTooltip = container.querySelector('.copy-tooltip');
-            if(oldTooltip) oldTooltip.remove();
+            // Interroghiamo Firestore
+            const userRef = doc(db, "users", currentUser.toLowerCase());
 
-            const tooltip = document.createElement('div');
-            tooltip.className = 'copy-tooltip';
-            tooltip.innerText = 'COPIATO NEL BUFFER';
-            
-            container.appendChild(tooltip);
-
-            // 3. Anima entrata (piccolo ritardo per permettere al CSS di agire)
-            setTimeout(() => {
-                tooltip.classList.add('show');
-            }, 10);
-
-            // 4. Rimuovi dopo 2 secondi
-            setTimeout(() => {
-                tooltip.classList.remove('show');
-                setTimeout(() => tooltip.remove(), 300); // Aspetta la fine della transizione
-            }, 2000);
-
-        }).catch(err => {
-            console.error('Errore copia:', err);
-            alert("Errore nel copiare la chiave (Browser non supportato?)");
+            try {
+                const userSnap = await getDoc(userRef);
+                
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    
+                    // Controlla se l'utente possiede il gioco 'harrow'
+                    if (userData.games && userData.games.includes('harrow')) {
+                        const gameCard = `
+                            <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
+                                <div style="height:150px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #333; position:relative;">
+                                     <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff;">IL FILO DEL DUBBIO</span>
+                                </div>
+                                <div style="padding:25px;">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                                        <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
+                                        <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.2</span>
+                                    </div>
+                                    <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
+                                    <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
+                                        Include gioco completo, Artbook Digitale e Soundtrack Originale.
+                                    </p>
+                                    
+                                    <div style="display:flex; gap:10px;" class="btn-container-relative">
+                                        <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
+                                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" 
+                                                title="Copia Chiave Steam" 
+                                                onclick="copyKey(this, 'KRPX-8821-X99Z')">🔑</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        grid.innerHTML = gameCard;
+                    } else {
+                        // Non ha giochi
+                        emptyMsg.style.display = 'block';
+                    }
+                } else {
+                    // Utente non trovato nel cloud
+                    emptyMsg.style.display = 'block';
+                }
+            } catch (error) {
+                console.error("Errore caricamento libreria:", error);
+                emptyMsg.style.display = 'block';
+            }
         });
-    }
 
-    // --- FUNZIONI MODALE ---
-    function openDlModal() { document.getElementById('dl-modal').style.display = 'flex'; }
-    function closeDlModal() { document.getElementById('dl-modal').style.display = 'none'; }
-    
-    document.getElementById('dl-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeDlModal();
-    });
+        // ----------------------------------------
+        // FUNZIONI UI ESPOSIZIONE GLOBALE
+        // ----------------------------------------
+        
+        window.openDlModal = () => document.getElementById('dl-modal').style.display = 'flex';
+        window.closeDlModal = () => document.getElementById('dl-modal').style.display = 'none';
+        
+        document.getElementById('dl-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeDlModal();
+        });
 
-    function simulateDl(card, filename) {
-        const btn = card.querySelector('.btn-outline');
-        const originalText = btn.innerText;
-        btn.innerText = 'AVVIO...';
-        btn.style.color = 'var(--accent-gold)';
-        btn.style.borderColor = 'var(--accent-gold)';
-        setTimeout(() => {
-            btn.innerText = 'SCARICANDO...';
+        window.simulateDl = function(card, filename) {
+            const btn = card.querySelector('.btn-outline');
+            const originalText = btn.innerText;
+            btn.innerText = 'AVVIO...';
+            btn.style.color = 'var(--accent-gold)';
+            btn.style.borderColor = 'var(--accent-gold)';
+            
             setTimeout(() => {
-                btn.innerText = 'GRAZIE!';
+                btn.innerText = 'SCARICANDO...';
                 setTimeout(() => {
-                    closeDlModal();
-                    btn.innerText = originalText;
-                    btn.style.color = '#888'; 
-                    btn.style.borderColor = '#666';
-                }, 1000);
-            }, 1500);
-        }, 800);
-    }
-</script>
+                    btn.innerText = 'GRAZIE!';
+                    setTimeout(() => {
+                        closeDlModal();
+                        btn.innerText = originalText;
+                        btn.style.color = '#888'; 
+                        btn.style.borderColor = '#666';
+                    }, 1000);
+                }, 1500);
+            }, 800);
+        }
+
+        window.copyKey = function(btn, key) {
+            navigator.clipboard.writeText(key).then(() => {
+                const container = btn.parentElement; 
+                
+                const oldTooltip = container.querySelector('.copy-tooltip');
+                if(oldTooltip) oldTooltip.remove();
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'copy-tooltip';
+                tooltip.innerText = 'COPIATO NEL BUFFER';
+                container.appendChild(tooltip);
+
+                setTimeout(() => { tooltip.classList.add('show'); }, 10);
+                setTimeout(() => {
+                    tooltip.classList.remove('show');
+                    setTimeout(() => tooltip.remove(), 300); 
+                }, 2000);
+
+            }).catch(err => {
+                console.error('Errore copia:', err);
+                alert("Errore nel copiare la chiave.");
+            });
+        }
+    </script>
 </body>
 </html>
