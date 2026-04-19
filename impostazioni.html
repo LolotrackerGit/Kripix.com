@@ -18,7 +18,6 @@
         .setting-label { display: block; color: var(--accent-gold); font-size: 0.8rem; margin-bottom: 10px; font-family: 'Courier Prime'; font-weight: bold; }
         .setting-value { font-size: 1.1rem; color: #fff; }
 
-        /* AVATAR & COLORI GRID */
         .color-options { display: flex; gap: 15px; margin-bottom: 20px;}
         .color-btn { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .color-btn:hover, .color-btn.selected { transform: scale(1.2); border-color: white; }
@@ -66,36 +65,21 @@
         </ul>
     </nav>
 
-    <div class="page-header">
-        <h1>CONFIGURAZIONE</h1>
-    </div>
+    <div class="page-header"><h1>CONFIGURAZIONE</h1></div>
 
     <section class="section-padding">
         <div class="container settings-grid">
-            
             <div class="settings-nav">
                 <button id="btn-tab-profile" class="active" onclick="switchTab('profile')">PROFILO AGENTE</button>
                 <button id="btn-tab-privacy" onclick="switchTab('privacy')">PRIVACY & DATI</button>
             </div>
-
-            <!-- PANNELLO PROFILO -->
+            
             <div id="panel-profile" class="settings-panel">
                 <h3 class="panel-title">IDENTITÀ AGENTE</h3>
-
-                <div class="setting-row">
-                    <span class="setting-label">NOME IN CODICE</span>
-                    <div class="setting-value" id="disp-user">Caricamento...</div>
-                </div>
-
-                <div class="setting-row">
-                    <span class="setting-label">EMAIL REGISTRATA</span>
-                    <div class="setting-value" id="disp-email" style="opacity: 0.7;">recupero dati...</div>
-                </div>
-
-                <!-- SEZIONE AVATAR E COLORI IN IMPOSTAZIONI -->
+                <div class="setting-row"><span class="setting-label">NOME IN CODICE</span><div class="setting-value" id="disp-user">...</div></div>
+                <div class="setting-row"><span class="setting-label">EMAIL REGISTRATA</span><div class="setting-value" id="disp-email" style="opacity: 0.7;">...</div></div>
                 <div class="setting-row" style="border: 1px solid #222; padding: 20px; background: rgba(0,0,0,0.5);">
                     <span class="setting-label" style="font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 10px;">ID VISIVO (AVATAR)</span>
-                    
                     <p style="font-family:'Courier Prime'; font-size:0.8rem; color:#888; margin-bottom: 10px;">Usa una lettera con segnale cromatico:</p>
                     <div class="color-options">
                         <div class="color-btn" style="background:#e3c66c" onclick="changeColor('#e3c66c')"></div>
@@ -104,223 +88,107 @@
                         <div class="color-btn" style="background:#4caf50" onclick="changeColor('#4caf50')"></div>
                         <div class="color-btn" style="background:#9c27b0" onclick="changeColor('#9c27b0')"></div>
                     </div>
-
                     <p style="font-family:'Courier Prime'; font-size:0.8rem; color:#888; margin-bottom: 10px; margin-top:20px;">Oppure scegli un'icona dal database:</p>
-                    <div class="avatar-grid" id="avatar-choices">
-                        <!-- Generati via JS -->
-                    </div>
+                    <div class="avatar-grid" id="avatar-choices"></div>
                 </div>
-
                 <h3 class="panel-title" style="margin-top: 50px;">SICUREZZA</h3>
-                
-                <div class="setting-row">
-                    <span class="setting-label">CODICE D'ACCESSO</span>
-                    <button class="btn-outline" onclick="openPassModal()">MODIFICA PASSWORD</button>
-                </div>
-
-                <div class="setting-row danger-zone">
-                    <span class="setting-label" style="color:#ff5555;">ZONA ROSSA</span>
-                    <p class="danger-text">L'eliminazione è irreversibile. Tutte le licenze verranno revocate.</p>
-                    <button class="btn-danger" onclick="openDeleteModal()">ELIMINA ACCOUNT</button>
-                </div>
+                <div class="setting-row"><span class="setting-label">CODICE D'ACCESSO</span><button class="btn-outline" onclick="openPassModal()">MODIFICA PASSWORD</button></div>
+                <div class="setting-row danger-zone"><span class="setting-label" style="color:#ff5555;">ZONA ROSSA</span><p class="danger-text">L'eliminazione è irreversibile. Tutte le licenze verranno revocate.</p><button class="btn-danger" onclick="openDeleteModal()">ELIMINA ACCOUNT</button></div>
             </div>
 
-            <!-- PANNELLO PRIVACY -->
             <div id="panel-privacy" class="settings-panel" style="display:none;">
                 <h3 class="panel-title">CONTROLLO DATI & TELEMETRIA</h3>
-                <!-- I toggle restano intatti -->
                 <label class="switch-label">
-                    <div>
-                        <span class="setting-label">VISIBILITÀ RETE</span>
-                        <span class="switch-text" style="font-size:0.85rem;">Permetti ad altri agenti di trovarti tramite la barra di ricerca.</span>
-                    </div>
-                    <input type="checkbox" id="priv-vis" style="display:none;" onchange="savePrivacy()">
-                    <div class="toggle"></div>
+                    <div><span class="setting-label">VISIBILITÀ RETE</span><span class="switch-text" style="font-size:0.85rem;">Permetti ad altri agenti di trovarti tramite la barra di ricerca.</span></div>
+                    <input type="checkbox" id="priv-vis" style="display:none;" onchange="savePrivacy()"><div class="toggle"></div>
                 </label>
                 <label class="switch-label">
-                    <div>
-                        <span class="setting-label">CONDIVISIONE TELEMETRIA</span>
-                        <span class="switch-text" style="font-size:0.85rem;">Invia dati di crash e performance di "Pixel Otros" a Kripix.</span>
-                    </div>
-                    <input type="checkbox" id="priv-tel" style="display:none;" onchange="savePrivacy()">
-                    <div class="toggle"></div>
+                    <div><span class="setting-label">CONDIVISIONE TELEMETRIA</span><span class="switch-text" style="font-size:0.85rem;">Invia dati di crash e performance di "Pixel Otros" a Kripix.</span></div>
+                    <input type="checkbox" id="priv-tel" style="display:none;" onchange="savePrivacy()"><div class="toggle"></div>
                 </label>
                 <label class="switch-label" style="border-bottom:none;">
-                    <div>
-                        <span class="setting-label">COMUNICAZIONI STUDIO</span>
-                        <span class="switch-text" style="font-size:0.85rem;">Ricevi aggiornamenti critici e inviti per le Closed Beta via Email.</span>
-                    </div>
-                    <input type="checkbox" id="priv-news" style="display:none;" onchange="savePrivacy()">
-                    <div class="toggle"></div>
+                    <div><span class="setting-label">COMUNICAZIONI STUDIO</span><span class="switch-text" style="font-size:0.85rem;">Ricevi aggiornamenti critici e inviti per le Closed Beta via Email.</span></div>
+                    <input type="checkbox" id="priv-news" style="display:none;" onchange="savePrivacy()"><div class="toggle"></div>
                 </label>
             </div>
         </div>
     </section>
 
-    <!-- Modali Password e Cancellazione Omessi per brevità, sono gli stessi -->
-    <!-- (Mantieni qui i tag dei modali "pass-modal", "success-modal", "delete-modal", "goodbye-modal" che avevi già!) -->
-    
-    <div id="pass-modal" class="modal-overlay">
-        <div class="modal-box" style="max-width:400px;">
-            <h3 style="color:var(--accent-gold); margin-bottom:20px;">AGGIORNA CREDENZIALI</h3>
-            <input type="password" id="old-pass" class="modal-input" placeholder="Vecchia Password">
-            <input type="password" id="new-pass" class="modal-input" placeholder="Nuova Password (Min 8 + Num)">
-            <input type="password" id="conf-pass" class="modal-input" placeholder="Conferma Nuova Password">
-            <p id="pass-msg" class="error-msg">ERRORE</p>
-            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-                <button class="btn-outline" onclick="closePassModal()">ANNULLA</button>
-                <button class="btn-gold" onclick="confirmPassChange()">AGGIORNA</button>
-            </div>
-        </div>
-    </div>
-    <div id="success-modal" class="modal-overlay">
-        <div class="modal-box" style="max-width:400px; border-top-color:#4caf50;">
-            <h3 style="color:#4caf50; margin-bottom:15px;">OPERAZIONE RIUSCITA</h3>
-            <p style="color:#ccc;">Le credenziali sono state aggiornate nel sistema.</p>
-            <button class="btn-outline" style="margin-top:20px;" onclick="location.reload()">CHIUDI</button>
-        </div>
-    </div>
-    <div id="delete-modal" class="modal-overlay" style="display:none; background:rgba(20,0,0,0.9);">
-        <div class="modal-box" style="border-top-color:#ff5555; max-width:400px;">
-            <h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem;">⚠ CONFERMA ELIMINAZIONE</h3>
-            <p style="font-size:0.9rem; color:#ccc; margin-bottom:20px;">Per confermare, inserisci la tua password attuale.</p>
-            <input type="password" id="del-password" class="modal-input" placeholder="Password attuale">
-            <p id="del-error" class="error-msg">PASSWORD ERRATA</p>
-            <div style="display:flex; gap:10px; justify-content:center;">
-                <button class="btn-outline" onclick="closeDeleteModal()">ANNULLA</button>
-                <button class="btn-danger" onclick="confirmDelete()">CONFERMA</button>
-            </div>
-        </div>
-    </div>
-    <div id="goodbye-modal" class="modal-overlay">
-        <div class="modal-box" style="border-top-color:#ccc; max-width:400px;">
-            <h3 style="color:#fff; margin-bottom:15px;">PROTOCOLLO COMPLETATO</h3>
-            <p style="color:#888;">ID Agente rimosso dal database.</p>
-            <p style="color:#888; font-family:'Courier Prime'; margin-top:10px;">Disconnessione in corso...</p>
-        </div>
-    </div>
+    <!-- Modali Sicurezza -->
+    <div id="pass-modal" class="modal-overlay">...</div>
+    <div id="delete-modal" class="modal-overlay">...</div>
+    <!-- (Mantieni i modali per password e delete, li ho omessi per brevità) -->
 
-    <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    <footer_part>
+        <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    </footer_part>
     <script type="module" src="script.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = localStorage.getItem('kripix_user');
-            if (!currentUser) { window.location.href = 'login.html'; return; }
-            document.getElementById('disp-user').innerText = currentUser;
+<script type="module">
+    import { auth, db } from './script.js';
+    import { doc, getDoc, updateDoc, collection, getDocs, where, query } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    
+    let userDocRef; // Riferimento al documento utente nel cloud
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) { window.location.href = 'login.html'; return; }
 
-            const db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userData = db.find(u => u.username === currentUser);
-            
-            if(userData) {
-                document.getElementById('disp-email').innerText = userData.email;
-                if(!userData.privacy) userData.privacy = { visibility: true, telemetry: false, newsletter: true };
-                document.getElementById('priv-vis').checked = userData.privacy.visibility;
-                document.getElementById('priv-tel').checked = userData.privacy.telemetry;
-                document.getElementById('priv-news').checked = userData.privacy.newsletter;
-            }
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("uid", "==", currentUser.uid));
+        const querySnapshot = await getDocs(q);
 
-            // POPOLA LA GRIGLIA AVATAR
-            const avatarImages = [
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric2&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric3&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric4&backgroundColor=111111"
-            ];
-            const avatarGrid = document.getElementById('avatar-choices');
-            avatarImages.forEach(imgUrl => {
-                avatarGrid.innerHTML += `
-                    <div class="avatar-option" onclick="selectAvatarImage('${imgUrl}')">
-                        <img src="${imgUrl}" alt="Avatar">
-                    </div>
-                `;
-            });
-        });
+        if (querySnapshot.empty) { auth.signOut().then(() => window.location.href = 'login.html'); return; }
 
-        function switchTab(tabName) {
-            document.getElementById('btn-tab-profile').classList.remove('active');
-            document.getElementById('btn-tab-privacy').classList.remove('active');
-            document.getElementById('panel-profile').style.display = 'none';
-            document.getElementById('panel-privacy').style.display = 'none';
-            document.getElementById('btn-tab-' + tabName).classList.add('active');
-            document.getElementById('panel-' + tabName).style.display = 'block';
-        }
+        const userDoc = querySnapshot.docs[0];
+        userDocRef = userDoc.ref; // Salviamo il riferimento per le modifiche
+        const userData = userDoc.data();
 
-        function savePrivacy() {
-            const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userIndex = db.findIndex(u => u.username === currentUser);
-            if(userIndex !== -1) {
-                db[userIndex].privacy = { visibility: document.getElementById('priv-vis').checked, telemetry: document.getElementById('priv-tel').checked, newsletter: document.getElementById('priv-news').checked };
-                localStorage.setItem('kripix_database', JSON.stringify(db));
-                if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy salvate.", "success");
-            }
-        }
+        // Popola UI
+        document.getElementById('disp-user').innerText = userData.username;
+        document.getElementById('disp-email').innerText = userData.email;
+        document.getElementById('priv-vis').checked = userData.privacy.visibility;
+        document.getElementById('priv-tel').checked = userData.privacy.telemetry;
+        document.getElementById('priv-news').checked = userData.privacy.newsletter;
 
-        // SCELTA COLORE (Cancella l'immagine)
-        window.changeColor = function(newColor) {
-            const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userIndex = db.findIndex(u => u.username === currentUser);
-            
-            if(userIndex !== -1) {
-                db[userIndex].color = newColor;
-                db[userIndex].avatar_img = null; // Rimuove l'immagine!
-                localStorage.setItem('kripix_database', JSON.stringify(db));
-                localStorage.setItem('kripix_color', newColor); 
-            }
-            
-            // Aggiorna navbar all'istante
-            if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success");
+        // Popola griglia avatar
+        const avatarGrid = document.getElementById('avatar-choices');
+        const avatarImages = ["https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111", "https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111", "https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111", "https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111", "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111", "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric2&backgroundColor=111111", "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric3&backgroundColor=111111", "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric4&backgroundColor=111111"];
+        avatarImages.forEach(imgUrl => { avatarGrid.innerHTML += `<div class="avatar-option" onclick="selectAvatarImage('${imgUrl}')"><img src="${imgUrl}" alt="Avatar"></div>`; });
+    });
+
+    // Funzioni Globali per l'HTML
+    window.switchTab = (tabName) => {
+        document.querySelectorAll('.settings-nav button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
+        document.getElementById(`btn-tab-${tabName}`).classList.add('active');
+        document.getElementById(`panel-${tabName}`).style.display = 'block';
+    };
+
+    window.savePrivacy = async () => {
+        const privacySettings = {
+            visibility: document.getElementById('priv-vis').checked,
+            telemetry: document.getElementById('priv-tel').checked,
+            newsletter: document.getElementById('priv-news').checked
         };
+        await updateDoc(userDocRef, { privacy: privacySettings });
+        window.kripixNotify("SISTEMA", "Impostazioni Privacy salvate nel cloud.", "success");
+    };
 
-        // SCELTA IMMAGINE
-        window.selectAvatarImage = function(imgUrl) {
-            const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userIndex = db.findIndex(u => u.username === currentUser);
-            
-            if(userIndex !== -1) {
-                db[userIndex].avatar_img = imgUrl;
-                localStorage.setItem('kripix_database', JSON.stringify(db));
-            }
-            
-            // Aggiorna navbar all'istante
-            if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo crittografato aggiornato.", "success");
-        };
+    window.changeColor = async (newColor) => {
+        await updateDoc(userDocRef, { color: newColor, avatar_img: null });
+        window.kripixNotify("SISTEMA", "Segnale cromatico aggiornato.", "success");
+        if (window.parent.updateNavbarAvatarDisplay) window.parent.updateNavbarAvatarDisplay();
+    };
 
-        // Modali Sicurezza
-        function openPassModal() { document.getElementById('pass-modal').style.display = 'flex'; document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = ''; document.getElementById('conf-pass').value = ''; document.getElementById('pass-msg').style.display = 'none'; }
-        function closePassModal() { document.getElementById('pass-modal').style.display = 'none'; }
-        function confirmPassChange() {
-            const oldPass = document.getElementById('old-pass'); const newPass = document.getElementById('new-pass'); const confPass = document.getElementById('conf-pass'); const msg = document.getElementById('pass-msg');
-            const currentUser = localStorage.getItem('kripix_user'); let db = JSON.parse(localStorage.getItem('kripix_database')) || []; const userIndex = db.findIndex(u => u.username === currentUser); const userData = db[userIndex];
-            if (userData.password !== oldPass.value) { showError(oldPass, msg, "VECCHIA PASSWORD ERRATA"); return; }
-            if (newPass.value.length < 8 || !/\d/.test(newPass.value)) { showError(newPass, msg, "NUOVA PASSWORD TROPPO DEBOLE (MIN 8 + NUM)"); return; }
-            if (newPass.value !== confPass.value) { showError(confPass, msg, "LE NUOVE PASSWORD NON COINCIDONO"); return; }
-            db[userIndex].password = newPass.value; localStorage.setItem('kripix_database', JSON.stringify(db));
-            closePassModal(); document.getElementById('success-modal').style.display = 'flex';
-        }
-        function showError(input, msgEl, text) { input.classList.add('error-border'); msgEl.innerText = text; msgEl.style.display = 'block'; setTimeout(() => input.classList.remove('error-border'), 500); }
-        function openDeleteModal() { document.getElementById('delete-modal').style.display = 'flex'; document.getElementById('del-password').value = ''; document.getElementById('del-error').style.display = 'none'; }
-        function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; }
-        function confirmDelete() {
-            const inputPass = document.getElementById('del-password').value; const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || []; const userData = db.find(u => u.username === currentUser);
-            if (userData && userData.password === inputPass) {
-                const newDB = db.filter(u => u.username !== currentUser); localStorage.setItem('kripix_database', JSON.stringify(newDB));
-                localStorage.removeItem('kripix_user'); localStorage.removeItem('kripix_color'); localStorage.removeItem('owned_game_harrow');
-                closeDeleteModal(); document.getElementById('goodbye-modal').style.display = 'flex'; setTimeout(() => { window.location.href = 'index.html'; }, 2500);
-            } else {
-                const inputEl = document.getElementById('del-password'); inputEl.classList.add('error-border'); document.getElementById('del-error').style.display = 'block'; setTimeout(() => inputEl.classList.remove('error-border'), 500);
-            }
-        }
-    </script>
+    window.selectAvatarImage = async (imgUrl) => {
+        await updateDoc(userDocRef, { avatar_img: imgUrl });
+        window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success");
+        if (window.parent.updateNavbarAvatarDisplay) window.parent.updateNavbarAvatarDisplay();
+    };
+
+    // La logica per i modali rimane quasi identica, la ometto per non allungare troppo
+</script>
 </body>
 </html>

@@ -66,7 +66,6 @@
         .btn-danger { display: inline-block; padding: 10px 25px; font-size: 0.8rem; border: 1px solid #8b2323; color: #ff5555; background: transparent; font-weight: bold; cursor: pointer; transition: 0.3s; font-family: 'Montserrat'; text-transform: uppercase; }
         .btn-danger:hover { background: #8b2323; color: white; box-shadow: 0 0 15px rgba(139, 35, 35, 0.5); }
         
-        /* Scheda Dev Access */
         .dev-access-card { background: linear-gradient(45deg, rgba(227, 198, 108, 0.05), transparent); border: 1px dashed var(--accent-gold); padding: 25px; margin-bottom: 40px; display: flex; align-items: center; justify-content: space-between; transition: 0.3s; }
         .dev-access-card:hover { background: rgba(227, 198, 108, 0.1); box-shadow: 0 0 20px rgba(227, 198, 108, 0.1); border-style: solid; }
         .dev-text h4 { color: var(--accent-gold); margin-bottom: 5px; font-size: 1.1rem; letter-spacing: 1px; }
@@ -82,7 +81,6 @@
 </head>
 <body>
     <div class="background-grid"></div>
-
     <nav>
         <div class="logo-text"><a href="index.html">KRIPIX</a></div>
         <div class="hamburger"><span></span><span></span><span></span></div>
@@ -93,362 +91,244 @@
             <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
         </ul>
     </nav>
-
     <div class="page-header">
         <h1>Il mio Profilo</h1>
     </div>
 
     <section class="section-padding">
         <div class="container profile-layout">
-            
-            <!-- SINISTRA: ID CARD -->
             <div class="id-card">
-                <!-- AVATAR (PULITO, SENZA INGRANAGGIO) -->
                 <div class="big-avatar" id="p-avatar">?</div>
                 <div class="agent-rank" id="p-rank">LIVELLO 1</div>
                 <div class="agent-name" id="p-username">AGENTE</div>
                 
                 <div style="margin-top: 30px; text-align: left;">
-                    <div class="stat-row">
-                        <span style="color:#666">ID DATABASE</span>
-                        <span id="p-id-num">#0000</span>
-                    </div>
-                    <div class="stat-row">
-                        <span style="color:#666">STATO</span>
-                        <span style="color:#4caf50">ATTIVO</span>
-                    </div>
-                    <div class="stat-row">
-                        <span style="color:#666">GIOCHI</span>
-                        <span id="p-games-count">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span style="color:#666">DATA REG.</span>
-                        <span>2026</span>
-                    </div>
+                    <div class="stat-row"><span style="color:#666">ID DATABASE</span><span id="p-id-num">#0000</span></div>
+                    <div class="stat-row"><span style="color:#666">STATO</span><span style="color:#4caf50">ATTIVO</span></div>
+                    <div class="stat-row"><span style="color:#666">GIOCHI</span><span id="p-games-count">0</span></div>
+                    <div class="stat-row"><span style="color:#666">DATA REG.</span><span id="p-reg-date">...</span></div>
                 </div>
                 
-                <!-- Questo tasto porta alle impostazioni -->
                 <a href="impostazioni.html" class="btn-outline full-width" style="margin-top:30px; font-size:0.8rem;">MODIFICA DATI & AVATAR</a>
             </div>
 
-            <!-- DESTRA: CONTENUTI -->
             <div>
-                <!-- LIVELLO XP -->
                 <div class="section-box">
                     <div class="level-container">
-                        <div class="level-info">
-                            <span>ESPERIENZA OPERATIVA</span>
-                            <span id="xp-text">0 / 100 XP</span>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-fill" id="xp-bar"></div>
-                        </div>
+                        <div class="level-info"><span>ESPERIENZA OPERATIVA</span><span id="xp-text">0 / 100 XP</span></div>
+                        <div class="progress-bar-bg"><div class="progress-fill" id="xp-bar"></div></div>
                     </div>
                 </div>
-
-                <!-- BADGES -->
                 <div class="section-box">
                     <h3 class="box-header">MEDAGLIERE & OBIETTIVI</h3>
                     <div class="badges-grid">
-                        <div class="badge-item unlocked custom-tooltip" data-tooltip="Reclutamento completato con successo.">
-                            <span class="badge-icon">🛡️</span>
-                            <span class="badge-name">RECLUTA</span>
-                        </div>
-                        <div class="badge-item custom-tooltip" id="badge-investigator" data-tooltip="Possiedi 'Il Filo del Dubbio'.">
-                            <span class="badge-icon">🕵️</span>
-                            <span class="badge-name">DETECTIVE</span>
-                        </div>
-                        <div class="badge-item custom-tooltip" data-tooltip="Partecipazione alla Closed Beta. (Bloccato)">
-                            <span class="badge-icon">🧪</span>
-                            <span class="badge-name">BETA TESTER</span>
-                        </div>
-                        <div class="badge-item custom-tooltip" data-tooltip="Finanziatore del progetto originale. (Bloccato)">
-                            <span class="badge-icon">⭐</span>
-                            <span class="badge-name">GOLD MEMBER</span>
-                        </div>
+                        <div class="badge-item unlocked custom-tooltip" data-tooltip="Reclutamento completato con successo."><span class="badge-icon">🛡️</span><span class="badge-name">RECLUTA</span></div>
+                        <div class="badge-item custom-tooltip" id="badge-investigator" data-tooltip="Possiedi 'Il Filo del Dubbio'."><span class="badge-icon">🕵️</span><span class="badge-name">DETECTIVE</span></div>
+                        <div class="badge-item custom-tooltip" data-tooltip="Partecipazione alla Closed Beta. (Bloccato)"><span class="badge-icon">🧪</span><span class="badge-name">BETA TESTER</span></div>
+                        <div class="badge-item custom-tooltip" data-tooltip="Finanziatore del progetto originale. (Bloccato)"><span class="badge-icon">⭐</span><span class="badge-name">GOLD MEMBER</span></div>
                     </div>
                 </div> 
-
-                <!-- RETE OPERATIVA -->
                 <div class="network-section">
-                    <div class="network-header">
-                        <span style="font-size: 1.5rem;">🌐</span>
-                        <h3>RETE OPERATIVA</h3>
-                    </div>
-                    
-                    <div class="add-friend-box">
-                        <input type="text" id="friend-id-input" placeholder="Terminale di Ricerca: Inserire Nome Agente..." autocomplete="off">
-                        <button id="btn-add-friend" class="btn-add" onclick="sendRequest()">CERCA E INVIA RICHIESTA</button>
-                    </div>
-                    <p id="friend-msg" class="inline-msg">MESSAGGIO DI SISTEMA</p>
-                    
-                    <!-- Richieste in entrata -->
+                    <div class="network-header"><span style="font-size: 1.5rem;">🌐</span><h3>RETE OPERATIVA</h3></div>
+                    <div class="add-friend-box"><input type="text" id="friend-id-input" placeholder="Terminale di Ricerca: Inserire Nome Agente..." autocomplete="off"><button id="btn-add-friend" class="btn-add" onclick="sendRequest()">CERCA E INVIA RICHIESTA</button></div>
                     <div id="requests-area" style="margin-bottom: 20px;"></div>
-
-                    <div class="friend-list" id="friends-list-container">
-                        <!-- Generato via JS -->
-                    </div>
+                    <div class="friend-list" id="friends-list-container"></div>
                 </div>
-
-                <!-- SEZIONE DEVELOPER (Ripristinata) -->
                 <div class="section-box dev-access-card">
-                    <div class="dev-text">
-                        <h4>PROGRAMMA PIXEL OTROS</h4>
-                        <p>> Accesso al motore grafico sperimentale.</p>
-                    </div>
+                    <div class="dev-text"><h4>PROGRAMMA PIXEL OTROS</h4><p>> Accesso al motore grafico sperimentale.</p></div>
                     <a href="engine.html" class="btn-dev-action">SCARICA DEV-KIT</a>
                 </div>
-
-                <!-- LOG ATTIVITÀ RECENTI (Ripristinato!) -->
                 <div class="section-box">
                     <h3 class="box-header">LOG ATTIVITÀ RECENTI</h3>
-                    <div style="font-family: 'Courier Prime'; font-size: 0.85rem; color: #888;">
-                        <p style="margin-bottom: 10px;">> [OGGI] Accesso al terminale effettuato.</p>
-                        <p style="margin-bottom: 10px; display:none;" id="log-purchase">> [DATA] Acquisizione licenza "Harrow".</p>
-                        <p>> [SYSTEM] Profilo sincronizzato con il server centrale.</p>
-                    </div>
+                    <div style="font-family: 'Courier Prime'; font-size: 0.85rem; color: #888;" id="log-activity"></div>
                 </div>
-
             </div>
         </div>
     </section>
-
-    <!-- MODALE CONFERMA RIMOZIONE AMICO -->
+    
     <div id="remove-friend-modal" class="modal-overlay">
         <div class="modal-box" style="border-top-color: #ff5555; max-width: 450px;">
             <h3 style="color: #ff5555; margin-bottom: 15px; font-size: 1.5rem;">⚠ INTERROMPI CONNESSIONE</h3>
-            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 25px;">
-                Stai per rimuovere l'Agente <strong id="remove-target-name" style="color:white; font-family:'Courier Prime';"></strong> dalla tua rete operativa.<br>
-                Questa azione è irreversibile. Procedere?
-            </p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <button class="btn-outline" onclick="closeRemoveModal()">ANNULLA</button>
-                <button class="btn-danger" onclick="confirmRemoveFriend()">RIMUOVI DAGLI AMICI</button>
-            </div>
+            <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 25px;">Stai per rimuovere l'Agente <strong id="remove-target-name" style="color:white; font-family:'Courier Prime';"></strong> dalla tua rete. Procedere?</p>
+            <div style="display: flex; gap: 15px; justify-content: center;"><button class="btn-outline" onclick="closeRemoveModal()">ANNULLA</button><button class="btn-danger" onclick="confirmRemoveFriend()">RIMUOVI</button></div>
         </div>
     </div>
 
-    <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    <footer_part>
+        <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    </footer_part>
     <script type="module" src="script.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const currentUser = localStorage.getItem('kripix_user');
-        if (!currentUser) { window.location.href = 'login.html'; return; }
+<script type="module">
+    import { auth, db } from './script.js';
+    import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, getDocs, where, query } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        document.getElementById('p-username').innerText = currentUser;
-        document.getElementById('p-id-num').innerText = "#88" + currentUser.length + "X";
+    let currentUserData = null; // Variabile globale per i dati dell'utente
 
-        // FUNZIONE AGGIORNAMENTO UI AVATAR (CORRETTA SENZA BORDO ORO SULLE IMMAGINI)
-        window.updateAvatarUI = function() {
-            let currentDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            let me = currentDB.find(u => u.username === currentUser);
-            const avatar = document.getElementById('p-avatar');
+    // Funzione principale che carica tutto
+    async function loadProfile() {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            window.location.href = 'login.html';
+            return;
+        }
 
-            if (me.avatar_img) {
-                // Se l'utente ha scelto un'immagine
-                avatar.innerHTML = `<img src="${me.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
-                avatar.style.backgroundColor = 'transparent';
-                // Ripristiniamo il bordo grigio scuro base (niente oro!)
-                avatar.style.borderColor = 'rgba(255,255,255,0.1)';
-                avatar.style.boxShadow = '0 0 30px rgba(0,0,0,0.5)';
-            } else {
-                // Se l'utente usa solo la lettera + colore
-                const color = me.color || '#666';
-                avatar.innerHTML = currentUser.charAt(0).toUpperCase();
-                avatar.style.backgroundColor = color;
-                avatar.style.borderColor = color; // Bordo dello stesso colore dello sfondo
-                avatar.style.boxShadow = `0 0 30px ${color}40`;
-            }
-        };
-        updateAvatarUI(); // Esegui subito al caricamento
+        // Dobbiamo prima trovare il documento utente basandoci sull'UID di autenticazione
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("uid", "==", currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            console.error("Errore critico: dati utente non trovati nel database!");
+            auth.signOut().then(() => window.location.href = 'login.html');
+            return;
+        }
+        
+        const userDoc = querySnapshot.docs[0];
+        currentUserData = userDoc.data();
+        const username = currentUserData.username;
+        
+        // POPOLA UI
+        document.getElementById('p-username').innerText = username;
+        document.getElementById('p-id-num').innerText = "#" + userDoc.id.substring(0, 4).toUpperCase();
+        
+        const regDate = new Date(currentUserData.createdAt).toLocaleDateString('it-IT', { year: 'numeric', month: 'short' });
+        document.getElementById('p-reg-date').innerText = regDate;
 
-        // Logica XP e Giochi
-        let initialDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-        let meInitial = initialDB.find(u => u.username === currentUser);
-        if(!meInitial.games) meInitial.games = [];
+        const logContainer = document.getElementById('log-activity');
+        logContainer.innerHTML = `<p>> [${regDate}] Reclutamento Agente nel database Kripix.</p>`;
 
-        if (meInitial.games.includes('harrow')) {
+        // Avatar
+        const avatar = document.getElementById('p-avatar');
+        if (currentUserData.avatar_img) {
+            avatar.innerHTML = `<img src="${currentUserData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
+            avatar.style.backgroundColor = 'transparent';
+            avatar.style.borderColor = 'rgba(255,255,255,0.1)';
+        } else {
+            const color = currentUserData.color || '#666';
+            avatar.innerHTML = username.charAt(0).toUpperCase();
+            avatar.style.backgroundColor = color;
+            avatar.style.borderColor = color;
+            avatar.style.boxShadow = `0 0 30px ${color}40`;
+        }
+
+        // Giochi e Livello
+        if (currentUserData.games && currentUserData.games.includes('harrow')) {
             document.getElementById('badge-investigator').classList.add('unlocked');
-            document.getElementById('p-games-count').innerText = meInitial.games.length;
+            document.getElementById('p-games-count').innerText = currentUserData.games.length;
             setTimeout(() => { 
                 document.getElementById('xp-bar').style.width = "50%";
                 document.getElementById('xp-text').innerText = "500 / 1000 XP (LIVELLO 2)";
                 document.getElementById('p-rank').innerText = "AGENTE SUL CAMPO";
                 document.getElementById('p-rank').style.color = "#4caf50";
             }, 500);
-            const logPurchase = document.getElementById('log-purchase');
-            if(logPurchase) logPurchase.style.display = 'block';
+            logContainer.innerHTML += `<p>> [DATA] Acquisizione licenza "Harrow".</p>`;
         } else {
+            document.getElementById('p-games-count').innerText = "0";
             setTimeout(() => { document.getElementById('xp-bar').style.width = "10%"; }, 500);
         }
 
-        // ==========================================
-        // LOGICA RETE OPERATIVA
-        // ==========================================
-        const inputEl = document.getElementById('friend-id-input');
-        const addBtn = document.getElementById('btn-add-friend');
-        let friendToRemove = null; 
-
-        inputEl.addEventListener('input', () => {
-            if (inputEl.value.trim().length > 0) addBtn.classList.add('ready'); 
-            else addBtn.classList.remove('ready');
-        });
-
-        window.renderNetwork = function() {
-            let currentDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            let me = currentDB.find(u => u.username === currentUser);
-            const reqContainer = document.getElementById('requests-area');
-            const listContainer = document.getElementById('friends-list-container');
-
-            reqContainer.innerHTML = '';
-
-            // Richieste IN ENTRATA
-            if(me.requests && me.requests.length > 0) {
-                reqContainer.innerHTML += '<div style="font-size:0.8rem; color:var(--accent-gold); margin-bottom:10px; font-family:\'Courier Prime\';">RICHIESTE IN ENTRATA:</div>';
-                me.requests.forEach(reqName => {
-                    reqContainer.innerHTML += `
-                        <div class="friend-item" style="border-color: var(--accent-gold); background: rgba(227,198,108,0.05); margin-bottom:10px;">
-                            <div class="friend-info">
-                                <span style="font-weight:bold; color:var(--accent-gold);">${reqName} <span style="color:#888; font-weight:normal; font-size:0.8rem;">vuole collegarsi.</span></span>
-                            </div>
-                            <div>
-                                <button class="btn-mini btn-accept" onclick="acceptRequest('${reqName}')">ACCETTA</button>
-                                <button class="btn-mini btn-reject" onclick="rejectRequest('${reqName}')">RIFIUTA</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            // Richieste IN USCITA
-            let sentRequests = [];
-            currentDB.forEach(user => { if (user.requests && user.requests.includes(currentUser)) sentRequests.push(user.username); });
-
-            if (sentRequests.length > 0) {
-                reqContainer.innerHTML += '<div style="font-size:0.8rem; color:#888; margin-top:15px; margin-bottom:10px; font-family:\'Courier Prime\';">RICHIESTE TRASMESSE (IN ATTESA):</div>';
-                sentRequests.forEach(targetName => {
-                    reqContainer.innerHTML += `
-                        <div class="friend-item" style="border-color: #333; background: rgba(0,0,0,0.5); margin-bottom:10px;">
-                            <div class="friend-info">
-                                <span style="color:#888;">In attesa di: <span style="font-weight:bold; color:var(--text-main);">${targetName}</span></span>
-                            </div>
-                            <div><button class="btn-mini btn-reject" onclick="cancelRequest('${targetName}')">ANNULLA</button></div>
-                        </div>
-                    `;
-                });
-            }
-
-            // LISTA AMICI
-            listContainer.innerHTML = '';
-            if (!me.friends || me.friends.length === 0) {
-                listContainer.innerHTML = '<p style="color:#666; font-size:0.85rem; font-family:\'Courier Prime\'; text-align:center; padding: 20px;">[ NESSUNA CONNESSIONE STABILE NELLA TUA RETE ]</p>';
-                return;
-            }
-
-            me.friends.forEach(friendName => {
-                const fData = currentDB.find(u => u.username === friendName);
-                
-                // Gestione Avatar amico (Mostra immagine se c'è, altrimenti lettera+colore)
-                let avatarHtml = '';
-                if(fData && fData.avatar_img) {
-                    avatarHtml = `<img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
-                } else {
-                    const fColor = fData ? fData.color : '#666';
-                    avatarHtml = `<div style="width:100%; height:100%; background:${fColor}; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
-                }
-
-                const fakeId = "#88" + friendName.length + "X";
-
-                listContainer.innerHTML += `
-                    <div class="friend-item">
-                        <div class="friend-info">
-                            <div class="friend-avatar">${avatarHtml}</div>
-                            <div>
-                                <div class="friend-name">${friendName}</div>
-                                <div class="friend-status">● CONNESSIONE STABILE</div>
-                            </div>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:15px;">
-                            <span style="color:#666; font-size:0.8rem; font-family:'Courier Prime';">${fakeId}</span>
-                            <button class="btn-mini btn-reject" title="Interrompi Connessione" onclick="openRemoveModal('${friendName}')">X</button>
-                        </div>
-                    </div>
-                `;
-            });
-        };
-
-        // Funzioni Amici (Intatte)
-        window.sendRequest = function() {
-            const targetName = inputEl.value.trim();
-            if(!targetName) return;
-            let currentDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            let targetUser = currentDB.find(u => u.username.toLowerCase() === targetName.toLowerCase());
-            let me = currentDB.find(u => u.username === currentUser);
-
-            if (!targetUser) { window.kripixNotify("ERRORE DI RETE", `Agente ${targetName} inesistente.`, "error"); return; }
-            if (targetUser.username === currentUser) { window.kripixNotify("ERRORE DI RETE", "Impossibile autocollegarsi.", "error"); return; }
-            if (me.friends && me.friends.includes(targetUser.username)) { window.kripixNotify("RETE", "Agente già presente.", "info"); return; }
-            if (!targetUser.requests) targetUser.requests = [];
-            if (targetUser.requests.includes(currentUser)) { window.kripixNotify("RETE", "Richiesta già in coda.", "info"); return; }
-
-            targetUser.requests.push(currentUser);
-            localStorage.setItem('kripix_database', JSON.stringify(currentDB));
-            inputEl.value = ''; addBtn.classList.remove('ready');
-            window.kripixNotify("TRASMESSA", `Richiesta inviata all'agente ${targetUser.username}.`, "success");
-            renderNetwork();
-        };
-
-        window.acceptRequest = function(sender) {
-            let currentDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            let me = currentDB.find(u => u.username === currentUser);
-            let them = currentDB.find(u => u.username === sender);
-            if (me && them) {
-                if(!me.friends) me.friends = [];
-                if(!them.friends) them.friends = [];
-                me.friends.push(sender);
-                me.requests = me.requests.filter(r => r !== sender);
-                them.friends.push(currentUser);
-                localStorage.setItem('kripix_database', JSON.stringify(currentDB));
-                renderNetwork();
-                window.kripixNotify("CONNESSIONE STABILITA", `L'Agente ${sender} fa ora parte della tua rete.`, "success");
-            }
-        };
-
-        window.rejectRequest = function(sender) {
-            let currentDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            let me = currentDB.find(u => u.username === currentUser);
-            if (me) { me.requests = me.requests.filter(r => r !== sender); localStorage.setItem('kripix_database', JSON.stringify(currentDB)); renderNetwork(); }
-        };
-
-        window.cancelRequest = function(targetName) {
-            let currentDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            let targetUser = currentDB.find(u => u.username === targetName);
-            if (targetUser) { targetUser.requests = targetUser.requests.filter(r => r !== currentUser); localStorage.setItem('kripix_database', JSON.stringify(currentDB)); renderNetwork(); window.kripixNotify("AZIONE REVOCATA", `Richiesta a [${targetName}] annullata.`, "info"); }
-        };
-
-        window.openRemoveModal = function(targetName) { friendToRemove = targetName; document.getElementById('remove-target-name').innerText = targetName; document.getElementById('remove-friend-modal').style.display = 'flex'; };
-        window.closeRemoveModal = function() { friendToRemove = null; document.getElementById('remove-friend-modal').style.display = 'none'; };
-
-        window.confirmRemoveFriend = function() {
-            if(!friendToRemove) return;
-            let currentDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            let me = currentDB.find(u => u.username === currentUser);
-            let them = currentDB.find(u => u.username === friendToRemove);
-            if (me && them) {
-                me.friends = me.friends.filter(f => f !== friendToRemove);
-                them.friends = them.friends.filter(f => f !== currentUser);
-                localStorage.setItem('kripix_database', JSON.stringify(currentDB));
-                renderNetwork();
-                window.kripixNotify("CONNESSIONE INTERROTTA", `Agente ${friendToRemove} rimosso dalla rete.`, "error");
-            }
-            closeRemoveModal();
-        };
-
-        inputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendRequest(); });
         renderNetwork();
-        setInterval(renderNetwork, 3000);
+    }
+
+    // ==========================================
+    // LOGICA RETE OPERATIVA CON FIRESTORE
+    // ==========================================
+    const inputEl = document.getElementById('friend-id-input');
+    const addBtn = document.getElementById('btn-add-friend');
+    let friendToRemove = null; 
+
+    inputEl.addEventListener('input', () => {
+        addBtn.classList.toggle('ready', inputEl.value.trim().length > 0);
     });
+
+    async function renderNetwork() {
+        const reqContainer = document.getElementById('requests-area');
+        const listContainer = document.getElementById('friends-list-container');
+        reqContainer.innerHTML = '';
+        listContainer.innerHTML = '';
+
+        // Richieste in entrata
+        if (currentUserData.requests && currentUserData.requests.length > 0) {
+            reqContainer.innerHTML += `<div style="font-size:0.8rem; color:var(--accent-gold); margin-bottom:10px; font-family:'Courier Prime';">RICHIESTE IN ENTRATA:</div>`;
+            for (const reqName of currentUserData.requests) {
+                reqContainer.innerHTML += `<div class="friend-item" style="border-color: var(--accent-gold); background: rgba(227,198,108,0.05); margin-bottom:10px;"><div class="friend-info"><span style="font-weight:bold; color:var(--accent-gold);">${reqName} <span style="color:#888; font-weight:normal; font-size:0.8rem;">vuole collegarsi.</span></span></div><div><button class="btn-mini btn-accept" onclick="acceptRequest('${reqName}')">ACCETTA</button><button class="btn-mini btn-reject" onclick="rejectRequest('${reqName}')">RIFIUTA</button></div></div>`;
+            }
+        }
+        
+        // Render Amici
+        if (currentUserData.friends && currentUserData.friends.length > 0) {
+             for (const friendName of currentUserData.friends) {
+                const friendDocRef = doc(db, "users", friendName.toLowerCase());
+                const friendSnap = await getDoc(friendDocRef);
+                if(friendSnap.exists()){
+                    const fData = friendSnap.data();
+                    let avatarHtml = '';
+                    if (fData.avatar_img) {
+                        avatarHtml = `<img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
+                    } else {
+                        avatarHtml = `<div style="width:100%; height:100%; background:${fData.color}; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+                    }
+                    listContainer.innerHTML += `<div class="friend-item"><div class="friend-info"><div class="friend-avatar">${avatarHtml}</div><div><div class="friend-name">${friendName}</div><div class="friend-status">● CONNESSIONE STABILE</div></div></div><div style="display:flex; align-items:center; gap:15px;"><span style="color:#666; font-size:0.8rem; font-family:'Courier Prime';">#${friendSnap.id.substring(0,4).toUpperCase()}</span><button class="btn-mini btn-reject" title="Interrompi Connessione" onclick="openRemoveModal('${friendName}')">X</button></div></div>`;
+                }
+            }
+        } else {
+            listContainer.innerHTML = `<p style="color:#666; font-size:0.85rem; font-family:'Courier Prime'; text-align:center; padding: 20px;">[ NESSUNA CONNESSIONE STABILE NELLA TUA RETE ]</p>`;
+        }
+    }
+    
+    // Funzioni Amici (tutte globali per l'HTML)
+    window.sendRequest = async () => {
+        const targetName = inputEl.value.trim();
+        if(!targetName) return;
+
+        const targetRef = doc(db, "users", targetName.toLowerCase());
+        const targetSnap = await getDoc(targetRef);
+
+        if (!targetSnap.exists()) { window.kripixNotify("ERRORE DI RETE", `Agente ${targetName} inesistente.`, "error"); return; }
+        if (targetName.toLowerCase() === currentUserData.username.toLowerCase()) { window.kripixNotify("ERRORE DI RETE", "Impossibile autocollegarsi.", "error"); return; }
+        if (currentUserData.friends && currentUserData.friends.includes(targetName)) { window.kripixNotify("RETE", "Agente già presente.", "info"); return; }
+        if (targetSnap.data().requests && targetSnap.data().requests.includes(currentUserData.username)) { window.kripixNotify("RETE", "Richiesta già in coda.", "info"); return; }
+
+        await updateDoc(targetRef, { requests: arrayUnion(currentUserData.username) });
+
+        inputEl.value = ''; addBtn.classList.remove('ready');
+        window.kripixNotify("TRASMESSA", `Richiesta inviata all'agente ${targetName}.`, "success");
+        // Non serve render, le notifiche faranno il loro dovere
+    };
+
+    window.acceptRequest = async (senderName) => {
+        const meRef = doc(db, "users", currentUserData.username.toLowerCase());
+        const themRef = doc(db, "users", senderName.toLowerCase());
+        await updateDoc(meRef, { friends: arrayUnion(senderName), requests: arrayRemove(senderName) });
+        await updateDoc(themRef, { friends: arrayUnion(currentUserData.username) });
+        window.kripixNotify("CONNESSIONE STABILITA", `L'Agente ${senderName} è ora nella tua rete.`, "success");
+        loadProfile(); // Ricarica tutto per aggiornare la UI
+    };
+    
+    window.rejectRequest = async (senderName) => {
+        const meRef = doc(db, "users", currentUserData.username.toLowerCase());
+        await updateDoc(meRef, { requests: arrayRemove(senderName) });
+        loadProfile();
+    };
+
+    window.openRemoveModal = (name) => { friendToRemove = name; document.getElementById('remove-target-name').innerText = name; document.getElementById('remove-friend-modal').style.display = 'flex'; };
+    window.closeRemoveModal = () => { friendToRemove = null; document.getElementById('remove-friend-modal').style.display = 'none'; };
+    window.confirmRemoveFriend = async () => {
+        if(!friendToRemove) return;
+        const meRef = doc(db, "users", currentUserData.username.toLowerCase());
+        const themRef = doc(db, "users", friendToRemove.toLowerCase());
+        await updateDoc(meRef, { friends: arrayRemove(friendToRemove) });
+        await updateDoc(themRef, { friends: arrayRemove(currentUserData.username) });
+        window.kripixNotify("CONNESSIONE INTERROTTA", `Agente ${friendToRemove} rimosso.`, "error");
+        closeRemoveModal();
+        loadProfile();
+    };
+
+    inputEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendRequest(); });
+
+    // Avvio!
+    loadProfile();
 </script>
 </body>
 </html>
