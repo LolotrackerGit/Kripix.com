@@ -203,124 +203,165 @@
     <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
     <script type="module" src="script.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = localStorage.getItem('kripix_user');
-            if (!currentUser) { window.location.href = 'login.html'; return; }
-            document.getElementById('disp-user').innerText = currentUser;
+    <script type="module">
+    import { auth, db } from './script.js';
+    import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-            const db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userData = db.find(u => u.username === currentUser);
-            
-            if(userData) {
+    const currentUser = localStorage.getItem('kripix_user');
+    if (!currentUser) window.location.href = 'login.html';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        document.getElementById('disp-user').innerText = currentUser;
+
+        try {
+            // RECUPERA DATI DAL CLOUD AL CARICAMENTO
+            const userRef = doc(db, "users", currentUser);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
                 document.getElementById('disp-email').innerText = userData.email;
-                if(!userData.privacy) userData.privacy = { visibility: true, telemetry: false, newsletter: true };
-                document.getElementById('priv-vis').checked = userData.privacy.visibility;
-                document.getElementById('priv-tel').checked = userData.privacy.telemetry;
-                document.getElementById('priv-news').checked = userData.privacy.newsletter;
+                
+                if (userData.privacy) {
+                    document.getElementById('priv-vis').checked = userData.privacy.visibility || false;
+                    document.getElementById('priv-tel').checked = userData.privacy.telemetry || false;
+                    document.getElementById('priv-news').checked = userData.privacy.newsletter || false;
+                }
             }
+        } catch (error) {
+            console.error("Errore recupero dati:", error);
+        }
 
-            // POPOLA LA GRIGLIA AVATAR
-            const avatarImages = [
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric2&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric3&backgroundColor=111111",
-                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric4&backgroundColor=111111"
-            ];
-            const avatarGrid = document.getElementById('avatar-choices');
-            avatarImages.forEach(imgUrl => {
-                avatarGrid.innerHTML += `
-                    <div class="avatar-option" onclick="selectAvatarImage('${imgUrl}')">
-                        <img src="${imgUrl}" alt="Avatar">
-                    </div>
-                `;
-            });
+        // POPOLA LA GRIGLIA AVATAR
+        const avatarImages = [
+            "https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111",
+            "https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111",
+            "https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111",
+            "https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111",
+            "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111"
+        ];
+        const avatarGrid = document.getElementById('avatar-choices');
+        avatarImages.forEach(imgUrl => {
+            avatarGrid.innerHTML += `
+                <div class="avatar-option" onclick="selectAvatarImage('${imgUrl}')">
+                    <img src="${imgUrl}" alt="Avatar">
+                </div>
+            `;
         });
+    });
 
-        function switchTab(tabName) {
-            document.getElementById('btn-tab-profile').classList.remove('active');
-            document.getElementById('btn-tab-privacy').classList.remove('active');
-            document.getElementById('panel-profile').style.display = 'none';
-            document.getElementById('panel-privacy').style.display = 'none';
-            document.getElementById('btn-tab-' + tabName).classList.add('active');
-            document.getElementById('panel-' + tabName).style.display = 'block';
-        }
+    // SISTEMA TABS
+    window.switchTab = function(tabName) {
+        document.getElementById('btn-tab-profile').classList.remove('active');
+        document.getElementById('btn-tab-privacy').classList.remove('active');
+        document.getElementById('panel-profile').style.display = 'none';
+        document.getElementById('panel-privacy').style.display = 'none';
+        document.getElementById('btn-tab-' + tabName).classList.add('active');
+        document.getElementById('panel-' + tabName).style.display = 'block';
+    }
 
-        function savePrivacy() {
-            const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userIndex = db.findIndex(u => u.username === currentUser);
-            if(userIndex !== -1) {
-                db[userIndex].privacy = { visibility: document.getElementById('priv-vis').checked, telemetry: document.getElementById('priv-tel').checked, newsletter: document.getElementById('priv-news').checked };
-                localStorage.setItem('kripix_database', JSON.stringify(db));
-                if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy salvate.", "success");
-            }
-        }
+    // SALVA PRIVACY SUL CLOUD
+    window.savePrivacy = async function() {
+        try {
+            await updateDoc(doc(db, "users", currentUser), {
+                privacy: { 
+                    visibility: document.getElementById('priv-vis').checked, 
+                    telemetry: document.getElementById('priv-tel').checked, 
+                    newsletter: document.getElementById('priv-news').checked 
+                }
+            });
+            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy salvate.", "success");
+        } catch (e) { console.error(e); }
+    }
 
-        // SCELTA COLORE (Cancella l'immagine)
-        window.changeColor = function(newColor) {
-            const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userIndex = db.findIndex(u => u.username === currentUser);
-            
-            if(userIndex !== -1) {
-                db[userIndex].color = newColor;
-                db[userIndex].avatar_img = null; // Rimuove l'immagine!
-                localStorage.setItem('kripix_database', JSON.stringify(db));
-                localStorage.setItem('kripix_color', newColor); 
-            }
-            
-            // Aggiorna navbar all'istante
+    // CAMBIA COLORE SUL CLOUD
+    window.changeColor = async function(newColor) {
+        try {
+            await updateDoc(doc(db, "users", currentUser), { color: newColor, avatar_img: null });
             if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
             if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success");
-        };
+        } catch (e) { console.error(e); }
+    };
 
-        // SCELTA IMMAGINE
-        window.selectAvatarImage = function(imgUrl) {
-            const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-            const userIndex = db.findIndex(u => u.username === currentUser);
-            
-            if(userIndex !== -1) {
-                db[userIndex].avatar_img = imgUrl;
-                localStorage.setItem('kripix_database', JSON.stringify(db));
-            }
-            
-            // Aggiorna navbar all'istante
+    // CAMBIA AVATAR SUL CLOUD
+    window.selectAvatarImage = async function(imgUrl) {
+        try {
+            await updateDoc(doc(db, "users", currentUser), { avatar_img: imgUrl });
             if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo crittografato aggiornato.", "success");
-        };
+            if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success");
+        } catch (e) { console.error(e); }
+    };
 
-        // Modali Sicurezza
-        function openPassModal() { document.getElementById('pass-modal').style.display = 'flex'; document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = ''; document.getElementById('conf-pass').value = ''; document.getElementById('pass-msg').style.display = 'none'; }
-        function closePassModal() { document.getElementById('pass-modal').style.display = 'none'; }
-        function confirmPassChange() {
-            const oldPass = document.getElementById('old-pass'); const newPass = document.getElementById('new-pass'); const confPass = document.getElementById('conf-pass'); const msg = document.getElementById('pass-msg');
-            const currentUser = localStorage.getItem('kripix_user'); let db = JSON.parse(localStorage.getItem('kripix_database')) || []; const userIndex = db.findIndex(u => u.username === currentUser); const userData = db[userIndex];
-            if (userData.password !== oldPass.value) { showError(oldPass, msg, "VECCHIA PASSWORD ERRATA"); return; }
-            if (newPass.value.length < 8 || !/\d/.test(newPass.value)) { showError(newPass, msg, "NUOVA PASSWORD TROPPO DEBOLE (MIN 8 + NUM)"); return; }
-            if (newPass.value !== confPass.value) { showError(confPass, msg, "LE NUOVE PASSWORD NON COINCIDONO"); return; }
-            db[userIndex].password = newPass.value; localStorage.setItem('kripix_database', JSON.stringify(db));
-            closePassModal(); document.getElementById('success-modal').style.display = 'flex';
+    // MODALI
+    window.openPassModal = () => document.getElementById('pass-modal').style.display = 'flex';
+    window.closePassModal = () => document.getElementById('pass-modal').style.display = 'none';
+    window.openDeleteModal = () => document.getElementById('delete-modal').style.display = 'flex';
+    window.closeDeleteModal = () => document.getElementById('delete-modal').style.display = 'none';
+
+    function showError(input, msgEl, text) { 
+        input.classList.add('error-border'); msgEl.innerText = text; msgEl.style.display = 'block'; 
+        setTimeout(() => input.classList.remove('error-border'), 500); 
+    }
+
+    // CAMBIO PASSWORD TRAMITE FIREBASE AUTH
+    window.confirmPassChange = async function() {
+        const oldPass = document.getElementById('old-pass'); 
+        const newPass = document.getElementById('new-pass'); 
+        const confPass = document.getElementById('conf-pass'); 
+        const msg = document.getElementById('pass-msg');
+
+        if (newPass.value.length < 8 || !/\d/.test(newPass.value)) { showError(newPass, msg, "NUOVA PASSWORD TROPPO DEBOLE"); return; }
+        if (newPass.value !== confPass.value) { showError(confPass, msg, "LE NUOVE PASSWORD NON COINCIDONO"); return; }
+
+        try {
+            const firebaseUser = auth.currentUser;
+            const credential = EmailAuthProvider.credential(firebaseUser.email, oldPass.value);
+            
+            // Ri-autentica per sicurezza
+            await reauthenticateWithCredential(firebaseUser, credential);
+            // Cambia password
+            await updatePassword(firebaseUser, newPass.value);
+
+            closePassModal(); 
+            document.getElementById('success-modal').style.display = 'flex';
+        } catch (error) {
+            showError(oldPass, msg, "VECCHIA PASSWORD ERRATA O ERRORE DI RETE");
         }
-        function showError(input, msgEl, text) { input.classList.add('error-border'); msgEl.innerText = text; msgEl.style.display = 'block'; setTimeout(() => input.classList.remove('error-border'), 500); }
-        function openDeleteModal() { document.getElementById('delete-modal').style.display = 'flex'; document.getElementById('del-password').value = ''; document.getElementById('del-error').style.display = 'none'; }
-        function closeDeleteModal() { document.getElementById('delete-modal').style.display = 'none'; }
-        function confirmDelete() {
-            const inputPass = document.getElementById('del-password').value; const currentUser = localStorage.getItem('kripix_user');
-            let db = JSON.parse(localStorage.getItem('kripix_database')) || []; const userData = db.find(u => u.username === currentUser);
-            if (userData && userData.password === inputPass) {
-                const newDB = db.filter(u => u.username !== currentUser); localStorage.setItem('kripix_database', JSON.stringify(newDB));
-                localStorage.removeItem('kripix_user'); localStorage.removeItem('kripix_color'); localStorage.removeItem('owned_game_harrow');
-                closeDeleteModal(); document.getElementById('goodbye-modal').style.display = 'flex'; setTimeout(() => { window.location.href = 'index.html'; }, 2500);
-            } else {
-                const inputEl = document.getElementById('del-password'); inputEl.classList.add('error-border'); document.getElementById('del-error').style.display = 'block'; setTimeout(() => inputEl.classList.remove('error-border'), 500);
-            }
+    }
+
+    // ELIMINAZIONE DEFINITIVA ACCOUNT E DATI
+    window.confirmDelete = async function() {
+        const inputPass = document.getElementById('del-password').value; 
+        const errorMsg = document.getElementById('del-error');
+        const firebaseUser = auth.currentUser;
+
+        if (!firebaseUser) return;
+
+        try {
+            // 1. Verifica la password
+            const credential = EmailAuthProvider.credential(firebaseUser.email, inputPass);
+            await reauthenticateWithCredential(firebaseUser, credential);
+
+            // 2. Elimina il documento dal database (Firestore)
+            await deleteDoc(doc(db, "users", currentUser));
+
+            // 3. Elimina l'account dal sistema Auth
+            await deleteUser(firebaseUser);
+
+            // 4. Saluta
+            localStorage.clear();
+            closeDeleteModal(); 
+            document.getElementById('goodbye-modal').style.display = 'flex'; 
+            setTimeout(() => { window.location.href = 'index.html'; }, 2500);
+
+        } catch (error) {
+            const inputEl = document.getElementById('del-password'); 
+            inputEl.classList.add('error-border'); 
+            errorMsg.style.display = 'block'; 
+            setTimeout(() => inputEl.classList.remove('error-border'), 500);
         }
-    </script>
+    }
+</script>
 </body>
 </html>
