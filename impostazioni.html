@@ -89,7 +89,7 @@
 
                 <div class="setting-row">
                     <span class="setting-label">EMAIL REGISTRATA</span>
-                    <div class="setting-value" id="disp-email" style="opacity: 0.7;">recupero dati...</div>
+                    <div class="setting-value" id="disp-email" style="opacity: 0.7;">Connessione al server in corso...</div>
                 </div>
 
                 <!-- SEZIONE AVATAR E COLORI IN IMPOSTAZIONI -->
@@ -128,7 +128,6 @@
             <!-- PANNELLO PRIVACY -->
             <div id="panel-privacy" class="settings-panel" style="display:none;">
                 <h3 class="panel-title">CONTROLLO DATI & TELEMETRIA</h3>
-                <!-- I toggle restano intatti -->
                 <label class="switch-label">
                     <div>
                         <span class="setting-label">VISIBILITÀ RETE</span>
@@ -157,9 +156,7 @@
         </div>
     </section>
 
-    <!-- Modali Password e Cancellazione Omessi per brevità, sono gli stessi -->
-    <!-- (Mantieni qui i tag dei modali "pass-modal", "success-modal", "delete-modal", "goodbye-modal" che avevi già!) -->
-    
+    <!-- MODALI -->
     <div id="pass-modal" class="modal-overlay">
         <div class="modal-box" style="max-width:400px;">
             <h3 style="color:var(--accent-gold); margin-bottom:20px;">AGGIORNA CREDENZIALI</h3>
@@ -173,6 +170,7 @@
             </div>
         </div>
     </div>
+    
     <div id="success-modal" class="modal-overlay">
         <div class="modal-box" style="max-width:400px; border-top-color:#4caf50;">
             <h3 style="color:#4caf50; margin-bottom:15px;">OPERAZIONE RIUSCITA</h3>
@@ -180,6 +178,7 @@
             <button class="btn-outline" style="margin-top:20px;" onclick="location.reload()">CHIUDI</button>
         </div>
     </div>
+    
     <div id="delete-modal" class="modal-overlay" style="display:none; background:rgba(20,0,0,0.9);">
         <div class="modal-box" style="border-top-color:#ff5555; max-width:400px;">
             <h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem;">⚠ CONFERMA ELIMINAZIONE</h3>
@@ -192,6 +191,7 @@
             </div>
         </div>
     </div>
+    
     <div id="goodbye-modal" class="modal-overlay">
         <div class="modal-box" style="border-top-color:#ccc; max-width:400px;">
             <h3 style="color:#fff; margin-bottom:15px;">PROTOCOLLO COMPLETATO</h3>
@@ -201,167 +201,217 @@
     </div>
 
     <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    
+    <!-- SCRIPT GLOBALE -->
     <script type="module" src="script.js"></script>
 
+    <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
     <script type="module">
-    import { auth, db } from './script.js';
-    import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // Importiamo gli strumenti dal nostro file script.js globale
+        import { auth, db } from './script.js';
+        // Importiamo le funzioni di autenticazione e database
+        import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    const currentUser = localStorage.getItem('kripix_user');
-    if (!currentUser) window.location.href = 'login.html';
+        // Controlliamo l'utente
+        const currentUser = localStorage.getItem('kripix_user');
+        if (!currentUser) window.location.href = 'login.html';
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        document.getElementById('disp-user').innerText = currentUser;
+        // Creiamo il riferimento al documento sul Cloud (usando toLowerCase() per sicurezza)
+        const userDocRef = doc(db, "users", currentUser.toLowerCase());
 
-        try {
-            // RECUPERA DATI DAL CLOUD AL CARICAMENTO
-            const userRef = doc(db, "users", currentUser);
-            const userSnap = await getDoc(userRef);
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('disp-user').innerText = currentUser;
 
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                document.getElementById('disp-email').innerText = userData.email;
-                
-                if (userData.privacy) {
-                    document.getElementById('priv-vis').checked = userData.privacy.visibility || false;
-                    document.getElementById('priv-tel').checked = userData.privacy.telemetry || false;
-                    document.getElementById('priv-news').checked = userData.privacy.newsletter || false;
+            try {
+                // Recuperiamo i dati dell'utente dal Cloud!
+                const userSnap = await getDoc(userDocRef);
+
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    
+                    // Inserisce la mail recuperata dal database
+                    document.getElementById('disp-email').innerText = userData.email;
+                    
+                    // Sincronizza i tasti della privacy
+                    if (userData.privacy) {
+                        document.getElementById('priv-vis').checked = userData.privacy.visibility || false;
+                        document.getElementById('priv-tel').checked = userData.privacy.telemetry || false;
+                        document.getElementById('priv-news').checked = userData.privacy.newsletter || false;
+                    }
+                } else {
+                    document.getElementById('disp-email').innerText = "Errore: Agente non trovato nel Cloud.";
                 }
+            } catch (error) {
+                console.error("Errore recupero dati:", error);
             }
-        } catch (error) {
-            console.error("Errore recupero dati:", error);
-        }
 
-        // POPOLA LA GRIGLIA AVATAR
-        const avatarImages = [
-            "https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111",
-            "https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111",
-            "https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111",
-            "https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111",
-            "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111"
-        ];
-        const avatarGrid = document.getElementById('avatar-choices');
-        avatarImages.forEach(imgUrl => {
-            avatarGrid.innerHTML += `
-                <div class="avatar-option" onclick="selectAvatarImage('${imgUrl}')">
-                    <img src="${imgUrl}" alt="Avatar">
-                </div>
-            `;
-        });
-    });
-
-    // SISTEMA TABS
-    window.switchTab = function(tabName) {
-        document.getElementById('btn-tab-profile').classList.remove('active');
-        document.getElementById('btn-tab-privacy').classList.remove('active');
-        document.getElementById('panel-profile').style.display = 'none';
-        document.getElementById('panel-privacy').style.display = 'none';
-        document.getElementById('btn-tab-' + tabName).classList.add('active');
-        document.getElementById('panel-' + tabName).style.display = 'block';
-    }
-
-    // SALVA PRIVACY SUL CLOUD
-    window.savePrivacy = async function() {
-        try {
-            await updateDoc(doc(db, "users", currentUser), {
-                privacy: { 
-                    visibility: document.getElementById('priv-vis').checked, 
-                    telemetry: document.getElementById('priv-tel').checked, 
-                    newsletter: document.getElementById('priv-news').checked 
-                }
-            });
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy salvate.", "success");
-        } catch (e) { console.error(e); }
-    }
-
-    // CAMBIA COLORE SUL CLOUD
-    window.changeColor = async function(newColor) {
-        try {
-            await updateDoc(doc(db, "users", currentUser), { color: newColor, avatar_img: null });
-            if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success");
-        } catch (e) { console.error(e); }
-    };
-
-    // CAMBIA AVATAR SUL CLOUD
-    window.selectAvatarImage = async function(imgUrl) {
-        try {
-            await updateDoc(doc(db, "users", currentUser), { avatar_img: imgUrl });
-            if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success");
-        } catch (e) { console.error(e); }
-    };
-
-    // MODALI
-    window.openPassModal = () => document.getElementById('pass-modal').style.display = 'flex';
-    window.closePassModal = () => document.getElementById('pass-modal').style.display = 'none';
-    window.openDeleteModal = () => document.getElementById('delete-modal').style.display = 'flex';
-    window.closeDeleteModal = () => document.getElementById('delete-modal').style.display = 'none';
-
-    function showError(input, msgEl, text) { 
-        input.classList.add('error-border'); msgEl.innerText = text; msgEl.style.display = 'block'; 
-        setTimeout(() => input.classList.remove('error-border'), 500); 
-    }
-
-    // CAMBIO PASSWORD TRAMITE FIREBASE AUTH
-    window.confirmPassChange = async function() {
-        const oldPass = document.getElementById('old-pass'); 
-        const newPass = document.getElementById('new-pass'); 
-        const confPass = document.getElementById('conf-pass'); 
-        const msg = document.getElementById('pass-msg');
-
-        if (newPass.value.length < 8 || !/\d/.test(newPass.value)) { showError(newPass, msg, "NUOVA PASSWORD TROPPO DEBOLE"); return; }
-        if (newPass.value !== confPass.value) { showError(confPass, msg, "LE NUOVE PASSWORD NON COINCIDONO"); return; }
-
-        try {
-            const firebaseUser = auth.currentUser;
-            const credential = EmailAuthProvider.credential(firebaseUser.email, oldPass.value);
+            // Popoliamo la griglia degli Avatar
+            const avatarImages = [
+                "https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111",
+                "https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111",
+                "https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111",
+                "https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111",
+                "https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111"
+            ];
             
-            // Ri-autentica per sicurezza
-            await reauthenticateWithCredential(firebaseUser, credential);
-            // Cambia password
-            await updatePassword(firebaseUser, newPass.value);
+            const avatarGrid = document.getElementById('avatar-choices');
+            avatarImages.forEach(imgUrl => {
+                avatarGrid.innerHTML += `
+                    <div class="avatar-option" onclick="selectAvatarImage('${imgUrl}')">
+                        <img src="${imgUrl}" alt="Avatar">
+                    </div>
+                `;
+            });
+        });
 
-            closePassModal(); 
-            document.getElementById('success-modal').style.display = 'flex';
-        } catch (error) {
-            showError(oldPass, msg, "VECCHIA PASSWORD ERRATA O ERRORE DI RETE");
+        // ----------------------------------------
+        // FUNZIONI GLOBALI (Esportate su Window per l'HTML)
+        // ----------------------------------------
+
+        // Cambio Tab
+        window.switchTab = function(tabName) {
+            document.getElementById('btn-tab-profile').classList.remove('active');
+            document.getElementById('btn-tab-privacy').classList.remove('active');
+            document.getElementById('panel-profile').style.display = 'none';
+            document.getElementById('panel-privacy').style.display = 'none';
+            
+            document.getElementById('btn-tab-' + tabName).classList.add('active');
+            document.getElementById('panel-' + tabName).style.display = 'block';
         }
-    }
 
-    // ELIMINAZIONE DEFINITIVA ACCOUNT E DATI
-    window.confirmDelete = async function() {
-        const inputPass = document.getElementById('del-password').value; 
-        const errorMsg = document.getElementById('del-error');
-        const firebaseUser = auth.currentUser;
-
-        if (!firebaseUser) return;
-
-        try {
-            // 1. Verifica la password
-            const credential = EmailAuthProvider.credential(firebaseUser.email, inputPass);
-            await reauthenticateWithCredential(firebaseUser, credential);
-
-            // 2. Elimina il documento dal database (Firestore)
-            await deleteDoc(doc(db, "users", currentUser));
-
-            // 3. Elimina l'account dal sistema Auth
-            await deleteUser(firebaseUser);
-
-            // 4. Saluta
-            localStorage.clear();
-            closeDeleteModal(); 
-            document.getElementById('goodbye-modal').style.display = 'flex'; 
-            setTimeout(() => { window.location.href = 'index.html'; }, 2500);
-
-        } catch (error) {
-            const inputEl = document.getElementById('del-password'); 
-            inputEl.classList.add('error-border'); 
-            errorMsg.style.display = 'block'; 
-            setTimeout(() => inputEl.classList.remove('error-border'), 500);
+        // Salva Privacy
+        window.savePrivacy = async function() {
+            try {
+                await updateDoc(userDocRef, {
+                    privacy: { 
+                        visibility: document.getElementById('priv-vis').checked, 
+                        telemetry: document.getElementById('priv-tel').checked, 
+                        newsletter: document.getElementById('priv-news').checked 
+                    }
+                });
+                if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy sincronizzate.", "success");
+            } catch (e) { 
+                console.error(e); 
+            }
         }
-    }
-</script>
+
+        // Cambia Colore Avatar
+        window.changeColor = async function(newColor) {
+            try {
+                await updateDoc(userDocRef, { color: newColor, avatar_img: null });
+                if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
+                if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success");
+            } catch (e) { 
+                console.error(e); 
+            }
+        };
+
+        // Cambia Immagine Avatar
+        window.selectAvatarImage = async function(imgUrl) {
+            try {
+                await updateDoc(userDocRef, { avatar_img: imgUrl });
+                if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay();
+                if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success");
+            } catch (e) { 
+                console.error(e); 
+            }
+        };
+
+        // Gestione Modali
+        window.openPassModal = () => {
+            document.getElementById('pass-modal').style.display = 'flex';
+            document.getElementById('pass-msg').style.display = 'none';
+        };
+        window.closePassModal = () => document.getElementById('pass-modal').style.display = 'none';
+        
+        window.openDeleteModal = () => {
+            document.getElementById('delete-modal').style.display = 'flex';
+            document.getElementById('del-error').style.display = 'none';
+        };
+        window.closeDeleteModal = () => document.getElementById('delete-modal').style.display = 'none';
+
+        function showError(input, msgEl, text) { 
+            input.classList.add('error-border'); 
+            msgEl.innerText = text; 
+            msgEl.style.display = 'block'; 
+            setTimeout(() => input.classList.remove('error-border'), 500); 
+        }
+
+        // ----------------------------------------
+        // AZIONI CRITICHE (AUTH FIREBASE)
+        // ----------------------------------------
+
+        // Cambio Password
+        window.confirmPassChange = async function() {
+            const oldPass = document.getElementById('old-pass'); 
+            const newPass = document.getElementById('new-pass'); 
+            const confPass = document.getElementById('conf-pass'); 
+            const msg = document.getElementById('pass-msg');
+            
+            const firebaseUser = auth.currentUser;
+            if (!firebaseUser) return;
+
+            if (newPass.value.length < 8 || !/\d/.test(newPass.value)) { 
+                showError(newPass, msg, "NUOVA PASSWORD TROPPO DEBOLE"); return; 
+            }
+            if (newPass.value !== confPass.value) { 
+                showError(confPass, msg, "LE NUOVE PASSWORD NON COINCIDONO"); return; 
+            }
+
+            try {
+                // 1. Ri-autentichiamo l'utente (misura di sicurezza di Firebase)
+                const credential = EmailAuthProvider.credential(firebaseUser.email, oldPass.value);
+                await reauthenticateWithCredential(firebaseUser, credential);
+                
+                // 2. Cambiamo la password
+                await updatePassword(firebaseUser, newPass.value);
+
+                // 3. Mostriamo successo
+                closePassModal(); 
+                document.getElementById('success-modal').style.display = 'flex';
+            } catch (error) {
+                console.error(error);
+                showError(oldPass, msg, "VECCHIA PASSWORD ERRATA O ERRORE DI RETE");
+            }
+        }
+
+        // Eliminazione Definitiva Account
+        window.confirmDelete = async function() {
+            const inputPass = document.getElementById('del-password').value; 
+            const errorMsg = document.getElementById('del-error');
+            const firebaseUser = auth.currentUser;
+
+            if (!firebaseUser) return;
+
+            try {
+                // 1. Verifica la password inserita (Ri-autenticazione)
+                const credential = EmailAuthProvider.credential(firebaseUser.email, inputPass);
+                await reauthenticateWithCredential(firebaseUser, credential);
+
+                // 2. Elimina il documento dal Cloud Firestore (Tutti i dati dell'utente)
+                await deleteDoc(userDocRef);
+
+                // 3. Elimina l'account dal sistema di Autenticazione (Google)
+                await deleteUser(firebaseUser);
+
+                // 4. Saluta l'utente e pulisci
+                localStorage.clear();
+                closeDeleteModal(); 
+                document.getElementById('goodbye-modal').style.display = 'flex'; 
+                
+                setTimeout(() => { 
+                    window.location.href = 'index.html'; 
+                }, 2500);
+
+            } catch (error) {
+                console.error("Errore Delete:", error);
+                const inputEl = document.getElementById('del-password'); 
+                inputEl.classList.add('error-border'); 
+                errorMsg.style.display = 'block'; 
+                setTimeout(() => inputEl.classList.remove('error-border'), 500);
+            }
+        }
+    </script>
 </body>
 </html>
