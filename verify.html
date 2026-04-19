@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifica Canale - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-grid"></div>
+    
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-box" style="text-align: center;">
+            <div class="login-header">
+                <h2>VERIFICA IN CORSO</h2>
+            </div>
+            
+            <p id="verify-msg" style="font-family:'Courier Prime'; font-size:1rem; color:var(--accent-gold); margin-bottom: 30px;">
+                >> Decrittazione del token...
+            </p>
+            
+            <a href="login.html" id="btn-return" class="btn-outline full-width" style="display:none;">ACCEDI AL TERMINALE</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './script.js';
+        import { applyActionCode } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const msgEl = document.getElementById('verify-msg');
+            const btn = document.getElementById('btn-return');
+            
+            // Prendiamo il codice dall'URL
+            const params = new URLSearchParams(window.location.search);
+            const actionCode = params.get('oobCode');
+
+            if (!actionCode) {
+                msgEl.innerText = ">> ERRORE CRITICO: Token mancante.";
+                msgEl.style.color = "#ff5555";
+                return;
+            }
+
+            try {
+                // Comunichiamo a Firebase che l'email è confermata!
+                await applyActionCode(auth, actionCode);
+                
+                msgEl.innerText = ">> PROTOCOLLO ACCETTATO. Identità confermata.";
+                msgEl.style.color = "#4caf50";
+                btn.style.display = "inline-block";
+                btn.innerText = "ACCEDI AL TERMINALE";
+                btn.className = "btn-gold full-width";
+                
+            } catch (error) {
+                msgEl.innerText = ">> ERRORE: Link scaduto o canale già verificato.";
+                msgEl.style.color = "#ff5555";
+                btn.style.display = "inline-block";
+                btn.innerText = "VAI AL LOGIN";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,14 +1,13 @@
 import { auth, db } from './script.js';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// ==========================================
-// 1. LOGICA LOGIN CLOUD CON VERIFICA EMAIL
-// ==========================================
+// Variabile globale per tenere in memoria l'utente nel Limbo
+let pendingUserDocRef = null;
+
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Reset grafico errori
     document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
     document.querySelectorAll('.validation-msg').forEach(el => el.style.display = 'none');
     
@@ -23,36 +22,87 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     btn.style.pointerEvents = 'none';
 
     try {
-        // FASE A: Recupero l'email dal Database tramite l'ID Agente
         const userDocRef = doc(db, "users", username);
         const docSnap = await getDoc(userDocRef);
 
-        if (!docSnap.exists()) {
-            throw new Error("user-not-found");
-        }
+        if (!docSnap.exists()) throw new Error("user-not-found");
 
         const userData = docSnap.data();
         const userEmail = userData.email;
 
-        // FASE B: Login con Firebase Auth
+        // Autenticazione con Firebase
         const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
         const firebaseUser = userCredential.user;
 
-        // FASE C: CONTROLLO EMAIL VERIFICATA
+        // ==========================================
+        // SE L'EMAIL NON È VERIFICATA: PANNELLO "LIMBO"
+        // ==========================================
         if (!firebaseUser.emailVerified) {
-            // Sconnettiamo immediatamente l'utente e blocchiamo l'accesso
-            await signOut(auth);
-            throw new Error("email-not-verified");
+            // Salviamo la reference per poterla cancellare se l'utente vuole
+            pendingUserDocRef = userDocRef; 
+
+            // Nascondiamo il form di login e mostriamo i bottoni di emergenza
+            document.getElementById('loginForm').innerHTML = `
+                <div style="border: 1px solid #ff5555; background: rgba(139, 35, 35, 0.1); padding: 20px; text-align: center; margin-bottom: 20px;">
+                    <h3 style="color:#ff5555; margin-bottom:10px;">CANALE NON VERIFICATO</h3>
+                    <p style="font-size:0.85rem; color:#ccc; margin-bottom:20px;">
+                        Non hai ancora confermato l'email: <strong style="color:white;">${userEmail}</strong>.
+                    </p>
+                    <button id="btn-resend" class="btn-outline full-width" style="margin-bottom:10px;">RE-INVIA MAIL DI VERIFICA</button>
+                    <button id="btn-destroy" class="btn-danger full-width" style="font-size:0.7rem;">HO SBAGLIATO EMAIL: DISTRUGGI DOSSIER</button>
+                    <p id="limbo-msg" style="margin-top:15px; font-family:'Courier Prime'; font-size:0.8rem; display:none;"></p>
+                </div>
+            `;
+
+            // EVENTO: RE-INVIA MAIL
+            document.getElementById('btn-resend').addEventListener('click', async () => {
+                const limboMsg = document.getElementById('limbo-msg');
+                try {
+                    await sendEmailVerification(auth.currentUser);
+                    limboMsg.innerText = ">> Nuovo protocollo inviato. Controlla la posta.";
+                    limboMsg.style.color = "#4caf50";
+                    limboMsg.style.display = "block";
+                    await signOut(auth); // Lo disconnettiamo
+                } catch(e) {
+                    limboMsg.innerText = ">> Errore: aspetta qualche minuto prima di riprovare.";
+                    limboMsg.style.color = "#ff5555";
+                    limboMsg.style.display = "block";
+                }
+            });
+
+            // EVENTO: DISTRUGGI ACCOUNT (Libera l'Username!)
+            document.getElementById('btn-destroy').addEventListener('click', async () => {
+                const limboMsg = document.getElementById('limbo-msg');
+                try {
+                    limboMsg.innerText = ">> Distruzione in corso...";
+                    limboMsg.style.color = "#e3c66c";
+                    limboMsg.style.display = "block";
+                    
+                    // 1. Eliminiamo il nome dal Database
+                    await deleteDoc(pendingUserDocRef);
+                    // 2. Eliminiamo l'account da Firebase Auth
+                    await deleteUser(auth.currentUser);
+
+                    limboMsg.innerText = ">> Dossier distrutto. L'ID è di nuovo libero.";
+                    limboMsg.style.color = "#4caf50";
+                    
+                    setTimeout(() => { window.location.reload(); }, 2500);
+
+                } catch(e) {
+                    console.error(e);
+                    limboMsg.innerText = ">> Errore critico. Impossibile distruggere.";
+                    limboMsg.style.color = "#ff5555";
+                }
+            });
+
+            throw new Error("email-limbo"); // Blocchiamo il proseguimento del login
         }
 
-        // FASE D: SUCCESSO! (Salvataggio cache e reindirizzamento)
+        // ==========================================
+        // SUCCESSO! (SE EMAIL È VERIFICATA)
+        // ==========================================
         localStorage.setItem('kripix_user', userData.username); 
         localStorage.setItem('kripix_color', userData.color);
-        if(userData.games && userData.games.includes('harrow')) {
-            localStorage.setItem('owned_game_harrow', 'true');
-        } else {
-            localStorage.removeItem('owned_game_harrow');
-        }
 
         btn.innerHTML = 'ACCESSO CONSENTITO';
         btn.style.background = '#4caf50';
@@ -62,21 +112,16 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         setTimeout(() => { window.location.href = 'index.html'; }, 1000);
 
     } catch (error) {
-        // GESTIONE ERRORI
+        if(error.message === "email-limbo") return; // Non mostrare errori rossi, l'UI è già cambiata
+
         userInput.classList.add('input-error');
         passInput.classList.add('input-error');
-        
         const msg = document.getElementById('err-login');
         
-        if (error.message === "email-not-verified") {
-            msg.innerHTML = '>> ACCESSO NEGATO: CANALE NON VERIFICATO.<br>Controlla la tua email per confermare l\'identità.';
-            msg.style.color = "var(--accent-gold)"; // Giallo
-        } else {
-            msg.innerText = '>> ERRORE CLOUD: CREDENZIALI NON VALIDE [ACCESS DENIED]';
-            msg.style.color = "#ff5555"; // Rosso
-        }
-        
+        msg.innerText = '>> ERRORE CLOUD: CREDENZIALI NON VALIDE [ACCESS DENIED]';
+        msg.style.color = "#ff5555";
         msg.style.display = 'block';
+        
         passInput.style.animation = 'none';
         passInput.offsetHeight;
         passInput.style.animation = 'shake 0.3s';
@@ -84,16 +129,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         btn.innerHTML = 'VERIFICA CREDENZIALI';
         btn.style.opacity = '1';
         btn.style.pointerEvents = 'auto';
-        
-        console.error("Dettaglio errore:", error.message);
     }
 });
 
-// Pulisci errore mentre scrivi
-document.querySelectorAll('input').forEach(i => i.addEventListener('input', function(){
-    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-    document.getElementById('err-login').style.display = 'none';
-}));
+// ... [Codice per il recupero password dimenticata che avevamo prima, lascialo in fondo al file] ...
 
 
 // ==========================================
