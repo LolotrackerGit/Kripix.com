@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progetti - Kripix Entertainment</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <!-- STILI LOCALI (Modali + Galleria) -->
+    <style>
+        /* Modale Overlay */
+        .modal-overlay, .lightbox-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Box Modale Acquisto */
+        .modal-box {
+            background: #0a0a0a; border: 1px solid #333; border-top: 3px solid var(--accent-gold);
+            padding: 40px; max-width: 500px; width: 90%; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: slideUp 0.3s ease-out;
+        }
+        .modal-title { font-size: 1.5rem; color: var(--accent-gold); margin-bottom: 15px; font-weight: 800; }
+        .success-icon { font-size: 3rem; margin-bottom: 20px; display: block; color: #4caf50; }
+        .modal-actions { display: flex; gap: 15px; justify-content: center; }
+
+        /* Galleria */
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .gallery-thumb {
+            width: 100%; aspect-ratio: 16/9; background: #1a1a1a; border: 1px solid #333;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+            font-family: 'Courier Prime'; color: #666; font-size: 0.7rem;
+        }
+        .gallery-thumb:hover { border-color: var(--accent-gold); transform: translateY(-3px); color: var(--accent-gold); }
+
+        /* Lightbox */
+        .lightbox-overlay { z-index: 11000; flex-direction: column; }
+        .lightbox-caption { margin-top: 15px; color: var(--accent-gold); font-family: 'Courier Prime'; letter-spacing: 2px; }
+        .close-lightbox { position: absolute; top: 30px; right: 40px; font-size: 3rem; color: #666; cursor: pointer; transition: 0.3s; }
+        .close-lightbox:hover { color: white; transform: rotate(90deg); }
+
+        @keyframes slideUp { from {transform: translateY(20px); opacity: 0;} to {transform: translateY(0); opacity: 1;} }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+<nav>
+    <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+    <div class="hamburger"><span></span><span></span><span></span></div>
+    <ul class="nav-links nav-menu">
+        <li><a href="progetti.html" class="active">Progetti</a></li> <!-- QUI -->
+        <li><a href="studio.html">Chi Siamo</a></li>
+        <li><a href="contatti.html">Contatti</a></li>
+        <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
+    </ul>
+</nav>
+
+    <div class="page-header">
+        <h1>CATALOGO PROGETTI</h1>
+    </div>
+
+    <section class="section-padding">
+        <div class="container">
+            
+            <!-- CARD PROGETTO -->
+            <div class="project-card">
+                <div class="project-visual">
+                    <!-- Poster -->
+                    <div class="poster-placeholder">POSTER<br>IL FILO DEL DUBBIO</div>
+                    
+                    <!-- Galleria -->
+                    <div class="gallery-grid">
+                        <div class="gallery-thumb" onclick="openLightbox('SCREENSHOT_1', 'SCENA DEL CRIMINE - PORTO')"><span>IMG 01</span></div>
+                        <div class="gallery-thumb" onclick="openLightbox('SCREENSHOT_2', 'INTERROGATORIO')"><span>IMG 02</span></div>
+                        <div class="gallery-thumb" onclick="openLightbox('SCREENSHOT_3', 'UFFICIO INVESTIGATIVO')"><span>IMG 03</span></div>
+                        <div class="gallery-thumb" onclick="openLightbox('SCREENSHOT_4', 'IL MACELLAIO')"><span>IMG 04</span></div>
+                    </div>
+                </div>
+
+                <div class="project-info">
+                    <h3 class="project-title">IL FILO DEL DUBBIO</h3>
+                    <p class="project-meta">IN SVILUPPO | PC | 2025</p>
+                    <p class="project-desc">
+                        Un thriller noir psicologico dove ogni fallimento investigativo rende i tuoi nemici più forti.
+                        Harrow ti aspetta.
+                    </p>
+                    
+                    <!-- Opzioni Acquisto -->
+                    <div class="purchase-options">
+                        <div class="purchase-card steam-option">
+                            <div class="option-header"><span class="platform-icon">STEAM</span><span class="price">€29.99</span></div>
+                            <p class="option-desc">Edizione Standard</p>
+                            <a href="#" class="btn-steam full-width">Wishlist</a>
+                        </div>
+                        <div class="purchase-card kripix-option">
+                            <div class="best-value-tag">MIGLIORE OFFERTA</div>
+                            <div class="option-header"><span class="platform-icon">KRIPIX STORE</span><span class="price">€29.99</span></div>
+                            <p class="option-desc" style="color: var(--accent-gold);">
+                                ★ Include DELUXE EDITION<br>
+                                <span style="font-size: 0.8rem; color: #ccc;">(Soundtrack + Artbook + Skin)</span>
+                            </p>
+                            <a href="#" class="btn-gold full-width" id="btn-buy-kripix">Acquista Ora</a>
+                            <p class="drm-note">Key Steam Inclusa • 100% Supporto Sviluppatori</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD PROGETTO FUTURO -->
+            <div class="project-card coming-soon">
+                <div class="project-visual grayscale">
+                    <div class="poster-placeholder">ANNUNCIO<br>2026</div>
+                </div>
+                <div class="project-info">
+                    <h3 class="project-title">PROGETTO SEGRETO</h3>
+                    <p class="project-meta">PRE-PRODUZIONE</p>
+                    <p class="project-desc">Un nuovo capitolo nell'universo Kripix.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+
+    <!-- MODALE ACQUISTO -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <span class="success-icon">✓</span>
+            <h3 class="modal-title">ACQUISTO COMPLETATO</h3>
+            <p style="color:#ccc; margin-bottom:30px;">La licenza per "Il Filo del Dubbio" è stata aggiunta al tuo account.</p>
+            <div class="modal-actions">
+                <button class="btn-outline" onclick="closeModal()">Resta Qui</button>
+                <a href="libreria.html" class="btn-gold">VAI ALLA LIBRERIA</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX GALLERIA -->
+    <div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
+        <span class="close-lightbox">&times;</span>
+        <!-- Placeholder Immagine -->
+        <div id="lightbox-img" style="width: 800px; height: 450px; background: #222; display: flex; align-items: center; justify-content: center; color: #555; font-size: 2rem; border: 1px solid var(--accent-gold);">
+            IMG PREVIEW
+        </div>
+        <div id="lightbox-caption" class="lightbox-caption">DESCRIZIONE</div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script type="module" src="script.js"></script>
+
+    <script>
+        // --- LOGICA GALLERIA ---
+        function openLightbox(src, text) {
+            document.getElementById('lightbox').style.display = 'flex';
+            document.getElementById('lightbox-img').innerText = src;
+            document.getElementById('lightbox-caption').innerText = ">> " + text;
+        }
+        function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+
+        // --- LOGICA ACQUISTO ---
+        function closeModal() {
+            document.getElementById('custom-modal').style.display = 'none';
+            window.location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const buyBtn = document.getElementById('btn-buy-kripix');
+            
+            // Check se già posseduto (questo legge solo lo 'scontrino' temporaneo)
+            if (localStorage.getItem('owned_game_harrow') === 'true') {
+                buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
+                buyBtn.style.background = '#4caf50';
+                buyBtn.style.color = '#000';
+                buyBtn.style.borderColor = '#4caf50';
+                buyBtn.href = 'libreria.html';
+                buyBtn.id = ''; // Rimuoviamo l'id per non attivare l'evento di acquisto
+                return;
+            }
+
+            if(buyBtn) {
+                buyBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const user = localStorage.getItem('kripix_user');
+                    
+                    if (!user) {
+                        // Se l'utente non è loggato, lo mandiamo al login
+                        window.location.href = 'login.html';
+                    } else {
+                        // Se è loggato, procediamo
+                        const btn = this;
+                        btn.innerText = 'ELABORAZIONE...';
+                        btn.style.opacity = '0.7';
+                        btn.style.pointerEvents = 'none';
+
+                        setTimeout(() => {
+                            
+                            // <<<<---- INIZIO LOGICA DI SALVATAGGIO PERMANENTE ---->>>>
+                            
+                            // 1. Recuperiamo il database e l'utente corrente
+                            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
+                            const userIndex = db.findIndex(u => u.username === user);
+
+                            if (userIndex !== -1) {
+                                // 2. Controlliamo se l'utente ha già un array di giochi, altrimenti lo creiamo
+                                if (!db[userIndex].games) {
+                                    db[userIndex].games = [];
+                                }
+                                
+                                // 3. Aggiungiamo 'harrow' all'array dei giochi posseduti
+                                if (!db[userIndex].games.includes('harrow')) {
+                                    db[userIndex].games.push('harrow');
+                                }
+                                
+                                // 4. Salviamo il database aggiornato nel localStorage
+                                localStorage.setItem('kripix_database', JSON.stringify(db));
+                            }
+                            
+                            // <<<<---- FINE LOGICA DI SALVATAGGIO PERMANENTE ---->>>>
+
+                            // Impostiamo lo 'scontrino' temporaneo per la sessione corrente
+                            localStorage.setItem('owned_game_harrow', 'true');
+                            
+                            // Mostriamo il messaggio di successo
+                            document.getElementById('custom-modal').style.display = 'flex';
+                            
+                        }, 1500);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

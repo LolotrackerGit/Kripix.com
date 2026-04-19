@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accesso - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <!-- SCRIPT UFFICIALE EMAILJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() { emailjs.init("RwYuJHf3pY9amOJn9"); })();
+    </script>
+
+    <!-- ============================================== -->
+    <!-- FIX: STILE PER L'INPUT DEL MODALE (AGGIUNTO QUI) -->
+    <!-- ============================================== -->
+    <style>
+        .modal-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #333;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            background: rgba(227, 198, 108, 0.05);
+            box-shadow: 0 0 15px rgba(227, 198, 108, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <a href="index.html" class="back-link">← TORNA ALLA HOME</a>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h2>ACCESSO</h2>
+            </div>
+
+            <form class="terminal-form" id="loginForm">
+                <div class="input-group">
+                    <label>USERNAME</label>
+                    <input type="text" id="usernameInput" placeholder="Inserire ID..." required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>PASSWORD</label>
+                    <input type="password" id="passwordInput" placeholder="••••••••" required>
+                    <div class="validation-msg" id="err-login"></div>
+                </div>
+
+                <div class="form-actions" style="margin-bottom: 15px;">
+                    <label class="checkbox-container">
+                        <input type="checkbox" checked> Rimani connesso
+                    </label>
+                    <!-- Link Recupero Password -->
+                    <a href="#" id="forgot-pass-link" style="color: #666; font-size: 0.8rem; text-decoration: none;">Password dimenticata?</a>
+                </div>
+
+                <button type="submit" class="btn-gold full-width glow-effect">VERIFICA CREDENZIALI</button>
+            </form>
+
+            <div class="login-footer">
+                <p>Non possiedi un Kripix ID?</p>
+                <a href="register.html" class="register-link">CREA NUOVO ACCOUNT</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE RECUPERO PASSWORD -->
+    <div id="reset-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width:400px;">
+            <h3 style="color:var(--accent-red); margin-bottom:15px;">RECUPERO CREDENZIALI</h3>
+            <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Inserisci la tua email registrata per ricevere un codice di sicurezza.</p>
+            <input type="email" id="reset-email" class="modal-input" placeholder="La tua email...">
+            <p id="reset-msg" style="display:none; font-family:'Courier Prime'; font-size:0.8rem; margin-top:15px; font-weight:bold;"></p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button class="btn-outline" onclick="closeResetModal()">ANNULLA</button>
+                <button id="btn-send-code" class="btn-gold" onclick="sendResetCode()">INVIA CODICE</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="login_script.js"></script>
+</body>
+</html>

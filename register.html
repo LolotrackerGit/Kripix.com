@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <a href="index.html" class="back-link">← ANNULLA</a>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h2>NUOVO AGENTE</h2>
+                <p style="font-family:'Courier Prime'; font-size:0.8rem; color:#888;">INIZIALIZZAZIONE PROTOCOLLO</p>
+            </div>
+
+            <form class="terminal-form" id="registerForm" novalidate>
+                
+                <div class="input-group">
+                    <label>EMAIL OPERATIVA</label>
+                    <input type="email" id="email" placeholder="nome@esempio.com" required>
+                    <div class="validation-msg" id="msg-email"></div>
+                </div>
+
+                <div class="input-group">
+                    <label>NOME IN CODICE (USERNAME)</label>
+                    <input type="text" id="regUsername" placeholder="Scegli il tuo ID" required autocomplete="off">
+                    <div class="validation-msg" id="msg-user"></div>
+                </div>
+
+                <div class="input-group">
+                    <label>PASSWORD (Min 8 car. + 1 Numero)</label>
+                    <input type="password" id="pass1" placeholder="Crea password" required>
+                    <div class="validation-msg" id="msg-pass1"></div>
+                </div>
+
+                <div class="input-group">
+                    <label>CONFERMA PASSWORD</label>
+                    <input type="password" id="pass2" placeholder="Ripeti password" required>
+                    <div class="validation-msg" id="msg-pass2"></div>
+                </div>
+
+                <button type="submit" class="btn-gold full-width glow-effect">CREA ACCOUNT</button>
+            </form>
+
+            <div class="login-footer">
+                <p>Hai già un ID?</p>
+                <a href="login.html" class="register-link">TORNA AL LOGIN</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            // 1. Reset Grafico
+            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+            document.querySelectorAll('.validation-msg').forEach(el => el.style.display = 'none');
+
+            const email = document.getElementById('email');
+            const user = document.getElementById('regUsername');
+            const pass1 = document.getElementById('pass1');
+            const pass2 = document.getElementById('pass2');
+            
+            let isValid = true;
+
+            // --- VALIDAZIONE FORMALE (Sintassi) ---
+            
+            // Check Username Vuoto
+            if (!user.value.trim()) { showError(user, 'msg-user', '>> ID RICHIESTO'); isValid = false; }
+            
+            // Check Email (Regex)
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email.value)) { showError(email, 'msg-email', '>> FORMATO EMAIL NON VALIDO'); isValid = false; }
+
+            // Check Password (Lunghezza + Numero)
+            if (pass1.value.length < 8 || !/\d/.test(pass1.value)) { 
+                showError(pass1, 'msg-pass1', '>> MINIMO 8 CARATTERI E 1 NUMERO'); isValid = false; 
+            }
+            
+            // Check Match Password
+            if (pass1.value !== pass2.value) { showError(pass2, 'msg-pass2', '>> PASSWORD NON COINCIDENTI'); isValid = false; }
+
+
+            // --- VALIDAZIONE DATABASE (Unicità) ---
+            
+            // Recupera il database attuale
+            let userDB = JSON.parse(localStorage.getItem('kripix_database')) || [];
+
+            // 1. Check ID Esistente
+            const userExists = userDB.find(u => u.username.toLowerCase() === user.value.trim().toLowerCase());
+            if (userExists) {
+                showError(user, 'msg-user', '>> ERRORE: ID GIA IN USO NEL SISTEMA');
+                isValid = false;
+            }
+
+            // 2. Check Email Esistente (NUOVO!)
+            const emailExists = userDB.find(u => u.email.toLowerCase() === email.value.trim().toLowerCase());
+            if (emailExists) {
+                showError(email, 'msg-email', '>> ERRORE: EMAIL GIA REGISTRATA');
+                isValid = false;
+            }
+
+
+            // --- SE È TUTTO VERDE ---
+            if (isValid) {
+                const btn = this.querySelector('button');
+                btn.innerHTML = 'REGISTRAZIONE NEL DATABASE...';
+                btn.style.opacity = '0.7';
+                
+                const newUser = {
+                    username: user.value.trim(),
+                    password: pass1.value,
+                    email: email.value.trim(),
+                    color: getRandomColor(),
+                    games: []
+                };
+
+                userDB.push(newUser);
+                localStorage.setItem('kripix_database', JSON.stringify(userDB));
+
+                // Auto-Login
+                localStorage.setItem('kripix_user', newUser.username);
+                localStorage.setItem('kripix_color', newUser.color);
+
+                setTimeout(() => {
+                    window.location.href = 'index.html'; 
+                }, 1500);
+            }
+        });
+
+        function showError(input, msgId, text) {
+            input.classList.add('input-error');
+            const msg = document.getElementById(msgId);
+            msg.innerText = text;
+            msg.style.display = 'block';
+            // Animazione
+            input.style.animation = 'none';
+            input.offsetHeight; 
+            input.style.animation = 'shake 0.3s';
+        }
+
+        function getRandomColor() {
+            const colors = ['#8b2323', '#e3c66c', '#2a475e', '#4caf50', '#9c27b0'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        // Pulisci errore mentre scrivi
+        document.querySelectorAll('input').forEach(i => i.addEventListener('input', function(){
+            this.classList.remove('input-error');
+            this.parentElement.querySelector('.validation-msg').style.display = 'none';
+        }));
+    </script>
+</body>
+</html>

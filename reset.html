@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-grid"></div>
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <a href="login.html" class="back-link">← TORNA AL LOGIN</a>
+    </nav>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h2>REIMPOSTA PASSWORD</h2>
+                <p style="font-family:'Courier Prime'; font-size:0.8rem; color:#888;">Inserisci il codice ricevuto via email.</p>
+            </div>
+            <form id="resetForm" class="terminal-form">
+                <input type="hidden" id="user-email-field">
+                <div class="input-group">
+                    <label>CODICE DI SICUREZZA (6 CIFRE)</label>
+                    <input type="text" id="reset-code-input" required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>NUOVA PASSWORD (Min 8 car. + 1 Numero)</label>
+                    <input type="password" id="new-pass-input" required>
+                </div>
+                <div class="input-group">
+                    <label>CONFERMA NUOVA PASSWORD</label>
+                    <input type="password" id="confirm-pass-input" required>
+                </div>
+                <p id="final-reset-msg" class="validation-msg" style="text-align:center;"></p>
+                <button type="submit" class="btn-gold full-width">CONFERMA E ACCEDI</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Recupera l'email dall'URL
+            const params = new URLSearchParams(window.location.search);
+            const email = params.get('email');
+            
+            if (!email) {
+                document.querySelector('.login-box').innerHTML = '<h3 style="color:red; text-align:center;">ERRORE: Link non valido.</h3>';
+                return;
+            }
+            document.getElementById('user-email-field').value = email;
+        });
+
+        document.getElementById('resetForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('user-email-field').value;
+            const code = document.getElementById('reset-code-input').value;
+            const newPass = document.getElementById('new-pass-input').value;
+            const confirmPass = document.getElementById('confirm-pass-input').value;
+            const msgEl = document.getElementById('final-reset-msg');
+            msgEl.style.display = 'none';
+
+            // Validazione
+            const storedCode = localStorage.getItem('reset_code_' + email);
+            if (!storedCode || storedCode !== code) {
+                showResetError("Codice di sicurezza errato o scaduto.");
+                return;
+            }
+            if (newPass.length < 8 || !/\d/.test(newPass)) {
+                showResetError("Password debole (min 8 caratteri + 1 numero).");
+                return;
+            }
+            if (newPass !== confirmPass) {
+                showResetError("Le password non coincidono.");
+                return;
+            }
+
+            // Tutto OK -> Aggiorna il DB
+            let db = JSON.parse(localStorage.getItem('kripix_database')) || [];
+            const userIndex = db.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+            
+            if (userIndex !== -1) {
+                db[userIndex].password = newPass;
+                localStorage.setItem('kripix_database', JSON.stringify(db));
+                localStorage.removeItem('reset_code_' + email); // Rimuovi il codice usato
+
+                // Successo
+                const btn = this.querySelector('button');
+                btn.innerText = "PASSWORD AGGIORNATA!";
+                btn.style.background = '#4caf50';
+                btn.style.color = '#000';
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                showResetError("Errore critico: utente non trovato.");
+            }
+        });
+
+        function showResetError(text) {
+            const msgEl = document.getElementById('final-reset-msg');
+            msgEl.innerText = '>> ' + text;
+            msgEl.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

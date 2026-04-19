@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contatti - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <!-- SCRIPT UFFICIALE EMAILJS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        // INIZIALIZZA EMAILJS (Sostituisci la stringa sotto con la tua PUBLIC KEY)
+        (function() {
+            emailjs.init("RwYuJHf3pY9amOJn9");
+        })();
+    </script>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <div class="hamburger"><span></span><span></span><span></span></div>
+        <ul class="nav-links nav-menu">
+            <li><a href="progetti.html">Progetti</a></li>
+            <li><a href="studio.html">Chi Siamo</a></li>
+            <li><a href="contatti.html" class="active">Contatti</a></li>
+            <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
+        </ul>
+    </nav>
+
+    <div class="page-header">
+        <h1>PARLA CON NOI</h1>
+    </div>
+
+    <section class="section-padding">
+        <div class="container contact-layout">
+            <div class="contact-info">
+                <h3 class="section-title" style="font-size: 2rem;">INFO</h3>
+                <p>Siamo sempre alla ricerca di collaboratori, feedback o opportunità di publishing.</p>
+                <ul class="contact-links">
+                    <li><a href="#">Twitter / X</a></li>
+                    <li><a href="#">YouTube</a></li>
+                    <li><a href="mailto:info@kripix.com">info@kripix.com</a></li>
+                </ul>
+            </div>
+            
+            <div class="contact-form-wrapper">
+                <!-- FORM AGGIORNATO PER EMAILJS -->
+                <form id="contact-form" class="contact-form">
+                    <div class="form-group">
+                        <label>NOME IN CODICE / NOME</label>
+                        <!-- L'attributo name="user_name" è vitale per EmailJS -->
+                        <input type="text" name="user_name" placeholder="Il tuo nome" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>EMAIL</label>
+                        <input type="email" name="user_email" placeholder="latua@email.com" required autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>MESSAGGIO / DOSSIER</label>
+                        <textarea name="message" rows="5" placeholder="Scrivi qui il tuo feedback o richiesta..." required></textarea>
+                    </div>
+                    
+                    <button type="submit" id="btn-submit" class="btn-gold full-width">TRASMETTI DATI</button>
+                    
+                    <!-- Messaggio di feedback a schermo -->
+                    <p id="status-msg" style="display:none; font-family:'Courier Prime'; font-size:0.8rem; margin-top:15px; font-weight:bold;"></p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    <script type="module" src="script.js"></script>
+
+    <!-- LOGICA DI INVIO EMAIL -->
+    <script>
+        document.getElementById('contact-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita che la pagina si ricarichi
+            
+            const btn = document.getElementById('btn-submit');
+            const statusMsg = document.getElementById('status-msg');
+            
+            // Effetto visivo: Caricamento
+            const originalText = btn.innerText;
+            btn.innerText = 'TRASMISSIONE IN CORSO...';
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none'; // Disabilita il click multiplo
+            statusMsg.style.display = 'none';
+
+            // MODIFICA QUESTE DUE RIGHE COSÌ:
+            const serviceID = 'service_4xvl1j1';
+            const templateID = 'template_fzcket8';
+
+            // Funzione di invio nativa di EmailJS
+            emailjs.sendForm(serviceID, templateID, this)
+                .then(() => {
+                    // SUCCESSO
+                    btn.innerText = 'DOSSIER INVIATO';
+                    btn.style.background = '#4caf50';
+                    btn.style.borderColor = '#4caf50';
+                    btn.style.color = '#000';
+                    
+                    statusMsg.innerText = ">> PROTOCOLLO COMPLETATO. RICEVERAI RISPOSTA A BREVE.";
+                    statusMsg.style.color = "#4caf50";
+                    statusMsg.style.display = "block";
+                    
+                    this.reset(); // Svuota il form
+                    
+                    // Riporta il bottone allo stato originale dopo 5 secondi
+                    setTimeout(() => {
+                        btn.innerText = originalText;
+                        btn.style.background = 'transparent';
+                        btn.style.borderColor = 'var(--accent-gold)';
+                        btn.style.color = 'var(--accent-gold)';
+                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
+                        statusMsg.style.display = 'none';
+                    }, 5000);
+
+                }, (err) => {
+                    // ERRORE
+                    btn.innerText = 'ERRORE DI TRASMISSIONE';
+                    btn.style.borderColor = '#ff5555';
+                    btn.style.color = '#ff5555';
+                    btn.style.opacity = '1';
+                    
+                    statusMsg.innerText = ">> ERRORE SERVER: " + JSON.stringify(err);
+                    statusMsg.style.color = "#ff5555";
+                    statusMsg.style.display = "block";
+                    
+                    setTimeout(() => {
+                        btn.innerText = originalText;
+                        btn.style.borderColor = 'var(--accent-gold)';
+                        btn.style.color = 'var(--accent-gold)';
+                        btn.style.pointerEvents = 'auto';
+                    }, 5000);
+                });
+        });
+
+        // (QoL Extra) Se l'utente è loggato, auto-compiliamo il suo nome e la sua email
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentUser = localStorage.getItem('kripix_user');
+            if(currentUser) {
+                const db = JSON.parse(localStorage.getItem('kripix_database')) || [];
+                const userData = db.find(u => u.username === currentUser);
+                
+                if(userData) {
+                    document.querySelector('input[name="user_name"]').value = currentUser;
+                    document.querySelector('input[name="user_email"]').value = userData.email;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

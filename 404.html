@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Dossier Mancante</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS SPECIFICO PER LA 404 */
+        
+        /* Centratura Totale */
+        .error-container {
+            height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            position: relative;
+            z-index: 2; /* Sopra l'overlay rosso */
+        }
+
+        /* Titolo 404 Glitch */
+        .glitch-text {
+            font-size: 10rem; 
+            font-weight: 900; 
+            color: var(--text-main); /* Avorio base */
+            line-height: 1;
+            margin-bottom: 10px;
+            position: relative;
+            /* Effetto ombra rossa spostata */
+            text-shadow: 4px 4px 0px var(--accent-red);
+            animation: textShudder 2s infinite;
+        }
+
+        /* Sottotitolo */
+        .error-title {
+            font-family: 'Courier Prime', monospace;
+            color: var(--accent-gold);
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        /* Descrizione */
+        .error-desc {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1rem; 
+            color: #888;
+            margin-bottom: 50px; 
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        /* L'effetto Vignettatura Rossa Pulsante */
+        .red-alert-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* Lascia cliccare attraverso */
+            z-index: 1;
+            /* Ombra interna rossa sfumata */
+            box-shadow: inset 0 0 150px rgba(139, 35, 35, 0.4);
+            animation: pulseRed 3s infinite ease-in-out;
+        }
+
+        /* Animazione pulsazione */
+        @keyframes pulseRed {
+            0%, 100% { box-shadow: inset 0 0 100px rgba(139, 35, 35, 0.2); }
+            50% { box-shadow: inset 0 0 250px rgba(139, 35, 35, 0.6); }
+        }
+
+        /* Animazione tremolio testo */
+        @keyframes textShudder {
+            0%, 100% { transform: translate(0,0); }
+            95% { transform: translate(0,0); }
+            96% { transform: translate(-2px, 2px); }
+            97% { transform: translate(2px, -2px); }
+            98% { transform: translate(-2px, -2px); }
+            99% { transform: translate(2px, 2px); }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Sfondo standard -->
+    <div class="background-grid"></div>
+
+    <!-- EFFETTO ANGOLI ROSSI -->
+    <div class="red-alert-overlay"></div>
+
+    <!-- Navigazione Semplificata (Solo Logo) -->
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <!-- Nessun altro link per non distrarre -->
+    </nav>
+
+    <!-- Contenuto Errore -->
+    <div class="error-container">
+        <h1 class="glitch-text">404</h1>
+        <h2 class="error-title">DOSSIER SCONOSCIUTO</h2>
+        
+        <p class="error-desc">
+            Il percorso che stai cercando di seguire non esiste o è stato cancellato.<br>
+            Non c'è nulla da vedere qui, Agente.
+        </p>
+        
+        <a href="index.html" class="btn-gold">RITORNA ALLA HOME</a>
+    </div>
+
+</body>
+</html>

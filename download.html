@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scarica Launcher - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-grid"></div>
+
+<nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        
+        <!-- Hamburger -->
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <ul class="nav-links nav-menu">
+            <li><a href="progetti.html">Progetti</a></li>
+            <li><a href="studio.html">Chi Siamo</a></li>
+            <li><a href="contatti.html">Contatti</a></li>
+            <li><a href="download.html" class="btn-launcher active">Scarica App</a></li>
+        </ul>
+    </nav>
+
+
+    <div class="page-header">
+        <h1>KRIPIX LAUNCHER</h1>
+        <p style="opacity: 0.7; font-family: 'Courier Prime'; margin-top: 10px;">Il tuo portale per Harrow e oltre.</p>
+    </div>
+
+    <section class="section-padding">
+        <div class="container">
+            
+            <!-- GRIGLIA DOWNLOAD (Solo Win e Mac) -->
+            <div class="download-grid" style="grid-template-columns: repeat(2, 1fr); max-width: 800px; margin: 0 auto 80px;">
+                
+                <!-- WINDOWS CARD -->
+                <div class="os-card" id="card-win">
+                    <div class="os-tag">Rilevato</div>
+                    <div class="os-icon">
+                        <svg viewBox="0 0 88 88" fill="currentColor"><path d="M0 12.402l35.687-4.86.016 34.423-35.67.203zm35.67 33.329l-.028 34.553-35.66-4.96-.001-29.601zm5.307-39.117L87.814 0v41.527l-46.837.062zm.022 39.294l46.825.264v41.67l-46.825-6.69z"/></svg>
+                    </div>
+                    <h3>WINDOWS</h3>
+                    <p class="os-specs">Windows 10/11 (64-bit)</p>
+                    <a href="#" class="btn-outline full-width js-download" data-file="kripix-setup.exe">SCARICA .EXE</a>
+                    <p class="download-msg" style="display:none; color: var(--accent-gold); margin-top: 10px; font-size: 0.8rem;">Grazie! Il download è iniziato.</p>
+                </div>
+
+                <!-- MAC CARD -->
+                <div class="os-card" id="card-mac">
+                    <div class="os-tag">Rilevato</div>
+                    <div class="os-icon">
+                        <svg viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 52.3-11.4 69.5-34.3z"/></svg>
+                    </div>
+                    <h3>macOS</h3>
+                    <p class="os-specs">Apple Silicon / Intel</p>
+                    <a href="#" class="btn-outline full-width js-download" data-file="kripix-installer.dmg">SCARICA .DMG</a>
+                    <p class="download-msg" style="display:none; color: var(--accent-gold); margin-top: 10px; font-size: 0.8rem;">Grazie! Il download è iniziato.</p>
+                </div>
+            </div>
+
+            <div class="launcher-features">
+                <div class="feature-item"><span class="f-icon">⚡</span><h4>Aggiornamenti Rapidi</h4><p>Ultima versione sempre disponibile.</p></div>
+                <div class="feature-item"><span class="f-icon">☁️</span><h4>Cloud Save</h4><p>Progressi al sicuro nel cloud.</p></div>
+                <div class="feature-item"><span class="f-icon">🎁</span><h4>Bonus Esclusivi</h4><p>Contenuti extra per gli utenti.</p></div>
+            </div>
+        </div>
+    </section>
+    <!-- ... fine della sezione launcher-features ... -->
+
+    <!-- SEZIONE DEVELOPER (Il Gancio) -->
+    <section class="dev-teaser" style="margin-top: 100px; border-top: 1px solid #222; padding: 80px 0; background: linear-gradient(to bottom, var(--bg-main), #080808);">
+        <div class="container" style="text-align: center;">
+            <p style="font-family: 'Courier Prime'; color: var(--accent-red); margin-bottom: 10px; letter-spacing: 2px;">ACCESSO SVILUPPATORI</p>
+            <h2 style="font-size: 3rem; color: #fff; margin-bottom: 20px;">FORGIARE LA REALTÀ</h2>
+            <p style="color: #888; max-width: 600px; margin: 0 auto 40px; font-size: 1.1rem;">
+                Non cerchiamo creatori di giochi. Cerchiamo architetti di mondi.
+                Scopri <strong>Pixel Otros</strong>, il nostro motore proprietario basato su streaming SSD e rendering Nanovoxel.
+            </p>
+            <a href="engine.html" class="btn-outline">ENTRA NEL PROGRAMMA DEV</a>
+        </div>
+    </section>
+
+    <!-- footer... -->
+
+    <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+
+    <!-- SCRIPT INCLUSO DIRETTAMENTE QUI PER LA LOGICA DOWNLOAD -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Rileva OS e gestisci download
+            let os = "Unknown";
+            if (navigator.appVersion.indexOf("Win") != -1) os = "Windows";
+            if (navigator.appVersion.indexOf("Mac") != -1) os = "MacOS";
+
+            function highlightCard(id) {
+                const card = document.getElementById(id);
+                if(card) {
+                    card.classList.add('highlighted');
+                    const btn = card.querySelector('a');
+                    btn.className = 'btn-gold full-width js-download';
+                    btn.innerText = 'SCARICA ORA';
+                }
+            }
+
+            if (os === "Windows") highlightCard('card-win');
+            else if (os === "MacOS") highlightCard('card-mac');
+
+            // Logica Bottone Download
+            const downloadBtns = document.querySelectorAll('.js-download');
+            downloadBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.innerText = "SCARICANDO...";
+                    this.style.opacity = "0.7";
+                    this.style.pointerEvents = "none";
+                    const msg = this.parentElement.querySelector('.download-msg');
+                    if(msg) msg.style.display = "block";
+                    setTimeout(() => {
+                        this.innerText = "GRAZIE!";
+                        this.style.opacity = "1";
+                    }, 1500);
+                });
+            });
+        });
+    </script>
+<script type="module" src="script.js"></script>
+</body>
+</html>
