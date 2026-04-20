@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <style>
+        .privacy-content { max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 50px; }
+        .privacy-content h2 { color: var(--accent-gold); font-size: 1.5rem; margin-top: 40px; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .privacy-content h2:first-child { margin-top: 0; }
+        .privacy-content p { color: #888; font-family: 'Courier Prime', monospace; font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px; }
+        .privacy-content ul { color: #888; font-family: 'Courier Prime', monospace; font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px; padding-left: 20px; }
+        .privacy-content li { margin-bottom: 10px; }
+        .highlight-text { color: var(--text-main); font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <a href="index.html" class="back-link">← TORNA AL NETWORK</a>
+    </nav>
+
+    <div class="page-header" style="padding-top: 100px; padding-bottom: 30px;">
+        <h1 style="font-size: 2rem;">DOSSIER PRIVACY</h1>
+        <p style="font-family:'Courier Prime'; color:#888;">Ultimo aggiornamento: 2026 (GDPR Compliant)</p>
+    </div>
+
+    <section class="section-padding" style="padding-top: 20px;">
+        <div class="container">
+            <div class="privacy-content">
+                
+                <h2>1. RACCOLTA DATI OPERATIVI</h2>
+                <p>Kripix Entertainment raccoglie esclusivamente i dati necessari al mantenimento del tuo <span class="highlight-text">ID Agente</span> e all'accesso al Network Operativo. Questi includono:</p>
+                <ul>
+                    <li>Indirizzo email crittografato (per l'autenticazione tramite Google Firebase).</li>
+                    <li>Nome in codice (Username) e ID Visivo (Avatar/Colore).</li>
+                    <li>Licenze software acquisite (es. "Il Filo del Dubbio").</li>
+                    <li>Rete di contatti (Lista Amici).</li>
+                </ul>
+
+                <h2>2. ARCHITETTURA CLOUD (FIREBASE)</h2>
+                <p>Tutti i dossier degli agenti sono ospitati su server cloud protetti gestiti da <span class="highlight-text">Google LLC (Firebase)</span>. Le tue credenziali d'accesso non transitano mai in chiaro sui nostri terminali locali, ma sono processate direttamente dai protocolli di sicurezza di Firebase Authentication.</p>
+
+                <h2>3. TRACCIAMENTO TELEMETRICO E COOKIE</h2>
+                <p>Utilizziamo tecnologie di archiviazione locale (LocalStorage e Cookie) per due scopi:</p>
+                <ul>
+                    <li><span class="highlight-text">Cookie Essenziali:</span> Mantengono attiva la tua sessione per evitare di farti reinserire le credenziali ad ogni cambio pagina.</li>
+                    <li><span class="highlight-text">Telemetria (Opzionale):</span> Se attivata dal tuo pannello di Configurazione, raccogliamo dati anonimi sui crash dell'engine <em>Pixel Otros</em> per scopi di sviluppo.</li>
+                </ul>
+
+                <h2>4. IL DIRITTO ALL'OBLIO (CANCELLAZIONE)</h2>
+                <p>In conformità al Regolamento Generale sulla Protezione dei Dati (GDPR), ogni Agente ha il diritto di richiedere la distruzione totale del proprio fascicolo. <br><br>
+                Puoi esercitare questo diritto in autonomia accedendo al tuo pannello <a href="impostazioni.html">Configurazione > Zona Rossa</a> e selezionando "Elimina Account". Questa azione è irreversibile e distruggerà ogni record dai server Firebase, incluse le licenze acquisite.</p>
+
+                <h2>5. CONTATTI STUDIO</h2>
+                <p>Per richieste relative al trattamento dei dati, puoi contattare il responsabile della sicurezza del network all'indirizzo: <span class="highlight-text">privacy@kripix.com</span>.</p>
+                
+            </div>
+        </div>
+    </section>
+
+    <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

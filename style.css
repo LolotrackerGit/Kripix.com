@@ -745,3 +745,85 @@ footer {
     font-size: 0.75rem;
     letter-spacing: 1px;
 }
+/* ==========================================
+   COOKIE CONSENT TERMINAL
+   ========================================== */
+#kripix-cookie-banner {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 999999;
+    background: rgba(5, 7, 10, 0.95);
+    border: 1px solid #333;
+    border-left: 4px solid var(--accent-gold);
+    padding: 25px;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+    
+    /* Animazione di entrata dal basso */
+    transform: translateY(150%);
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#kripix-cookie-banner.show {
+    transform: translateY(0);
+}
+
+.cookie-title {
+    color: var(--accent-gold);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.cookie-text {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.cookie-text a {
+    color: var(--text-main);
+    text-decoration: none;
+    border-bottom: 1px solid #666;
+    transition: 0.3s;
+}
+.cookie-text a:hover { color: var(--accent-gold); border-color: var(--accent-gold); }
+
+.cookie-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-cookie {
+    flex: 1;
+    padding: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: 0.3s;
+}
+
+.btn-cookie-accept {
+    background: var(--accent-gold);
+    color: #000;
+}
+.btn-cookie-accept:hover { background: #fff; }
+
+.btn-cookie-reject {
+    background: transparent;
+    border-color: #444;
+    color: #888;
+}
+.btn-cookie-reject:hover { border-color: #888; color: #fff; }
+
+@media (max-width: 600px) {
+    #kripix-cookie-banner { bottom: 0; left: 0; max-width: 100%; border-left: none; border-top: 4px solid var(--accent-gold); }
+}

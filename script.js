@@ -251,3 +251,45 @@ if (localStorage.getItem('kripix_user')) {
     setTimeout(checkBackgroundNotifications, 2000); 
     setInterval(checkBackgroundNotifications, 5000);
 }
+// ==========================================
+// 6. PROTOCOLLO GDPR & COOKIE LAW
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Controlla se l'utente ha già accettato in passato
+    if (localStorage.getItem('kripix_cookies_accepted')) return;
+
+    // Crea il banner HTML dinamicamente
+    const banner = document.createElement('div');
+    banner.id = 'kripix-cookie-banner';
+    banner.innerHTML = `
+        <div class="cookie-title">>> TRACCIAMENTO TELEMETRICO</div>
+        <div class="cookie-text">
+            Utilizziamo cookie crittografati per il funzionamento del network operativo e per analizzare il traffico del terminale. 
+            Leggi il <a href="privacy.html">Dossier Privacy</a> per i dettagli.
+        </div>
+        <div class="cookie-buttons">
+            <button id="btn-cookie-reject" class="btn-cookie btn-cookie-reject">SOLO ESSENZIALI</button>
+            <button id="btn-cookie-accept" class="btn-cookie btn-cookie-accept">ACCETTA TUTTI</button>
+        </div>
+    `;
+
+    document.body.appendChild(banner);
+
+    // Animazione di entrata dopo un secondo
+    setTimeout(() => {
+        banner.classList.add('show');
+    }, 1000);
+
+    // Logica dei bottoni
+    document.getElementById('btn-cookie-accept').addEventListener('click', () => {
+        localStorage.setItem('kripix_cookies_accepted', 'all');
+        banner.classList.remove('show');
+        setTimeout(() => banner.remove(), 600); // Rimuove dal DOM dopo l'animazione
+    });
+
+    document.getElementById('btn-cookie-reject').addEventListener('click', () => {
+        localStorage.setItem('kripix_cookies_accepted', 'essential');
+        banner.classList.remove('show');
+        setTimeout(() => banner.remove(), 600);
+    });
+});
