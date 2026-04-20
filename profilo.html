@@ -179,10 +179,8 @@
                     </div>
                     <p id="friend-msg" class="inline-msg">MESSAGGIO DI SISTEMA</p>
                     
-                    <!-- Richieste in entrata -->
                     <div id="requests-area" style="margin-bottom: 20px;"></div>
 
-                    <!-- Lista Amici -->
                     <div class="friend-list" id="friends-list-container">
                         <!-- Generato via JS -->
                     </div>
@@ -228,10 +226,9 @@
 
     <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
     
-    <!-- SCRIPT GLOBALE -->
     <script type="module" src="script.js"></script>
 
-    <!-- LOGICA DELLA PAGINA PROFILO (FIREBASE CLOUD) -->
+    <!-- LOGICA DELLA PAGINA PROFILO -->
     <script type="module">
         import { db } from './script.js';
         import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -239,11 +236,9 @@
         const currentUser = localStorage.getItem('kripix_user');
         if (!currentUser) window.location.href = 'login.html';
 
-        // La referenza corretta (minuscola) al mio documento sul Cloud
         const myDocRef = doc(db, "users", currentUser.toLowerCase());
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Setup iniziale testi base
             document.getElementById('p-username').innerText = currentUser;
             document.getElementById('p-id-num').innerText = "#88" + currentUser.length + "X";
 
@@ -252,7 +247,6 @@
                 if (docSnap.exists()) {
                     const me = docSnap.data();
                     
-                    // Se abbiamo la data di registrazione, la formattiamo
                     if(me.createdAt) {
                         const date = new Date(me.createdAt);
                         document.getElementById('p-reg-date').innerText = date.getFullYear();
@@ -261,8 +255,6 @@
                     updateAvatarUI(me);
                     updateXP(me);
                     renderNetwork(me);
-                } else {
-                    console.error("ERRORE: Profilo non trovato su Firestore.");
                 }
             });
         });
@@ -272,19 +264,16 @@
         // ==========================================
         function updateAvatarUI(me) {
             const avatar = document.getElementById('p-avatar');
-            
             if (me.avatar_img) {
-                // Immagine scelta dall'utente
                 avatar.innerHTML = `<img src="${me.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
                 avatar.style.backgroundColor = 'transparent';
                 avatar.style.borderColor = 'rgba(255,255,255,0.1)';
             } else {
-                // Colore di default o colore scelto
                 const color = me.color || '#666';
-                avatar.innerHTML = me.username.charAt(0).toUpperCase(); // Usa l'iniziale vera
+                avatar.innerHTML = me.username.charAt(0).toUpperCase(); 
                 avatar.style.backgroundColor = color;
                 avatar.style.borderColor = color;
-                avatar.style.boxShadow = `0 0 30px ${color}40`; // alone del colore
+                avatar.style.boxShadow = `0 0 30px ${color}40`; 
             }
         }
 
@@ -294,21 +283,15 @@
 
             if (me.games && me.games.includes('harrow')) {
                 document.getElementById('badge-investigator').classList.add('unlocked');
-                
-                // Animazione barra XP
                 setTimeout(() => { 
                     document.getElementById('xp-bar').style.width = "50%";
                     document.getElementById('xp-text').innerText = "500 / 1000 XP (LIVELLO 2)";
                     document.getElementById('p-rank').innerText = "AGENTE SUL CAMPO";
                     document.getElementById('p-rank').style.color = "#4caf50";
                 }, 500);
-
-                // Mostra nel log
                 const logPurchase = document.getElementById('log-purchase');
                 if(logPurchase) logPurchase.style.display = 'block';
-
             } else {
-                // Livello Base
                 setTimeout(() => { document.getElementById('xp-bar').style.width = "10%"; }, 500);
             }
         }
@@ -320,13 +303,12 @@
         const addBtn = document.getElementById('btn-add-friend');
         let friendToRemove = null;
 
-        // Attiva bottone solo se c'è testo
         inputEl.addEventListener('input', () => {
             if (inputEl.value.trim().length > 0) addBtn.classList.add('ready'); 
             else addBtn.classList.remove('ready');
         });
 
-        // RENDERIZZA LA RETE (Amici e Richieste)
+        // RENDERIZZA LA RETE
         async function renderNetwork(me) {
             const reqContainer = document.getElementById('requests-area');
             const listContainer = document.getElementById('friends-list-container');
@@ -337,7 +319,6 @@
             // A. MOSTRIAMO LE RICHIESTE IN ENTRATA
             if(me.requests && me.requests.length > 0) {
                 reqContainer.innerHTML += '<div style="font-size:0.8rem; color:var(--accent-gold); margin-bottom:10px; font-family:\'Courier Prime\';">RICHIESTE IN ENTRATA:</div>';
-                
                 me.requests.forEach(reqName => {
                     reqContainer.innerHTML += `
                         <div class="friend-item" style="border-color: var(--accent-gold); background: rgba(227,198,108,0.05); margin-bottom:10px;">
@@ -359,41 +340,42 @@
                 return;
             }
 
-            // Cicliamo gli amici per recuperare dal Cloud i loro veri Avatar/Colori
             for (const friendName of me.friends) {
-                // ATTENZIONE: Salviamo gli amici col loro nome originale, ma interroghiamo Firestore col minuscolo
-                const fSnap = await getDoc(doc(db, "users", friendName.toLowerCase()));
-                
-                let avatarHtml = `<div style="width:100%; height:100%; background:#666; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
-                let fColor = '#666';
+                try {
+                    const fSnap = await getDoc(doc(db, "users", friendName.toLowerCase()));
+                    let avatarHtml = `<div style="width:100%; height:100%; background:#666; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+                    let fColor = '#666';
 
-                if(fSnap.exists()) {
-                    const fData = fSnap.data();
-                    if(fData.avatar_img) {
-                        avatarHtml = `<img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
-                    } else if(fData.color) {
-                        fColor = fData.color;
-                        avatarHtml = `<div style="width:100%; height:100%; background:${fColor}; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+                    if(fSnap.exists()) {
+                        const fData = fSnap.data();
+                        if(fData.avatar_img) {
+                            avatarHtml = `<img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
+                        } else if(fData.color) {
+                            fColor = fData.color;
+                            avatarHtml = `<div style="width:100%; height:100%; background:${fColor}; display:flex; align-items:center; justify-content:center;">${friendName.charAt(0).toUpperCase()}</div>`;
+                        }
                     }
-                }
 
-                const fakeId = "#88" + friendName.length + "X";
+                    const fakeId = "#88" + friendName.length + "X";
 
-                listContainer.innerHTML += `
-                    <div class="friend-item">
-                        <div class="friend-info">
-                            <div class="friend-avatar" style="box-shadow: 0 0 10px ${fColor}80">${avatarHtml}</div>
-                            <div>
-                                <div class="friend-name">${friendName}</div>
-                                <div class="friend-status">● CONNESSIONE STABILE</div>
+                    listContainer.innerHTML += `
+                        <div class="friend-item">
+                            <div class="friend-info">
+                                <div class="friend-avatar" style="box-shadow: 0 0 10px ${fColor}80">${avatarHtml}</div>
+                                <div>
+                                    <div class="friend-name">${friendName}</div>
+                                    <div class="friend-status">● CONNESSIONE STABILE</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <span style="color:#666; font-size:0.8rem; font-family:'Courier Prime';">${fakeId}</span>
+                                <button class="btn-mini btn-reject" title="Interrompi Connessione" onclick="openRemoveModal('${friendName}')">X</button>
                             </div>
                         </div>
-                        <div style="display:flex; align-items:center; gap:15px;">
-                            <span style="color:#666; font-size:0.8rem; font-family:'Courier Prime';">${fakeId}</span>
-                            <button class="btn-mini btn-reject" title="Interrompi Connessione" onclick="openRemoveModal('${friendName}')">X</button>
-                        </div>
-                    </div>
-                `;
+                    `;
+                } catch(e) {
+                    console.error("Errore caricamento amico:", e);
+                }
             }
         }
 
@@ -401,14 +383,12 @@
         // 3. AZIONI RETE (ESPONIAMO A WINDOW PER L'HTML)
         // ==========================================
 
-        // INVIA RICHIESTA AMICIZIA
         window.sendRequest = async function() {
             const targetNameOriginal = inputEl.value.trim();
             const targetNameLower = targetNameOriginal.toLowerCase();
             
             if(!targetNameLower) return;
 
-            // Evita auto-invito
             if (targetNameLower === currentUser.toLowerCase()) { 
                 window.kripixNotify("ERRORE", "Impossibile autocollegarsi.", "error"); 
                 return; 
@@ -416,34 +396,34 @@
 
             const btnOriginalText = addBtn.innerText;
             addBtn.innerText = 'RICERCA IN CORSO...';
+            addBtn.disabled = true;
 
             try {
-                // Cerchiamo l'utente nel Cloud
                 const targetRef = doc(db, "users", targetNameLower);
                 const targetSnap = await getDoc(targetRef);
 
                 if (!targetSnap.exists()) {
-                    window.kripixNotify("ERRORE DI RETE", `Agente [${targetNameOriginal}] inesistente.`, "error"); 
-                    addBtn.innerText = btnOriginalText;
+                    window.kripixNotify("ERRORE", `Agente [${targetNameOriginal}] inesistente.`, "error"); 
+                    resetButton(btnOriginalText);
                     return; 
                 }
 
                 const targetData = targetSnap.data();
+                const targetFriends = targetData.friends || [];
+                const targetRequests = targetData.requests || [];
 
-                // Controllo se siamo già amici o se la richiesta è già in coda
-                if (targetData.friends && targetData.friends.includes(currentUser)) {
-                    window.kripixNotify("RETE", "Agente già presente.", "info"); 
-                    addBtn.innerText = btnOriginalText;
+                if (targetFriends.includes(currentUser)) {
+                    window.kripixNotify("RETE", "Agente già presente nella tua rete.", "info"); 
+                    resetButton(btnOriginalText);
                     return;
                 }
-                if (targetData.requests && targetData.requests.includes(currentUser)) {
-                    window.kripixNotify("RETE", "Richiesta già in coda.", "info"); 
-                    addBtn.innerText = btnOriginalText;
+                if (targetRequests.includes(currentUser)) {
+                    window.kripixNotify("RETE", "Richiesta già in attesa di risposta.", "info"); 
+                    resetButton(btnOriginalText);
                     return;
                 }
 
-                // Inviamo la richiesta (Aggiungiamo noi stessi all'array 'requests' del bersaglio)
-                // NOTA: Inviamo il currentUser originale (con le maiuscole corrette)
+                // INVIA RICHIESTA AL CLOUD
                 await updateDoc(targetRef, {
                     requests: arrayUnion(currentUser)
                 });
@@ -453,25 +433,32 @@
                 window.kripixNotify("TRASMESSA", `Richiesta inviata all'Agente ${targetData.username}.`, "success");
 
             } catch (error) {
-                console.error(error);
-                window.kripixNotify("ERRORE SERVER", "Connessione interrotta.", "error");
+                console.error("Dettaglio Errore:", error);
+                
+                // SE APPARE "Permissions Denied", LA COLPA È DELLE REGOLE FIREBASE
+                if (error.code === 'permission-denied') {
+                    window.kripixNotify("ERRORE DATABASE", "Regole di sicurezza Firebase scadute o errate.", "error");
+                } else {
+                    window.kripixNotify("ERRORE SERVER", "Dettaglio: " + error.message, "error");
+                }
             }
-            addBtn.innerText = btnOriginalText;
+            resetButton(btnOriginalText);
         };
 
-        // ACCETTA AMICIZIA
+        function resetButton(text) {
+            addBtn.innerText = text;
+            addBtn.disabled = false;
+        }
+
         window.acceptRequest = async function(sender) {
             try {
-                // Sender è il nome originale (es: "Mario")
                 const senderRef = doc(db, "users", sender.toLowerCase());
 
-                // 1. Togliamo sender dalle nostre richieste, e lo aggiungiamo agli amici
                 await updateDoc(myDocRef, {
                     friends: arrayUnion(sender),
                     requests: arrayRemove(sender)
                 });
 
-                // 2. Aggiungiamo noi stessi agli amici del sender
                 await updateDoc(senderRef, {
                     friends: arrayUnion(currentUser)
                 });
@@ -479,22 +466,18 @@
                 window.kripixNotify("CONNESSIONE STABILITA", `L'Agente ${sender} è ora nella tua rete.`, "success");
             } catch (error) { 
                 console.error("Errore Accept:", error); 
+                window.kripixNotify("ERRORE", "Impossibile accettare la richiesta.", "error");
             }
         };
 
-        // RIFIUTA AMICIZIA
         window.rejectRequest = async function(sender) {
             try {
-                // Rimuoviamo il sender dall'array delle richieste
                 await updateDoc(myDocRef, {
                     requests: arrayRemove(sender)
                 });
-            } catch (e) { 
-                console.error(e); 
-            }
+            } catch (e) { console.error(e); }
         };
 
-        // RIMOZIONE AMICI
         window.openRemoveModal = function(targetName) { 
             friendToRemove = targetName; 
             document.getElementById('remove-target-name').innerText = targetName; 
@@ -508,29 +491,19 @@
 
         window.confirmRemoveFriend = async function() {
             if(!friendToRemove) return;
-            
             try {
                 const friendRef = doc(db, "users", friendToRemove.toLowerCase());
 
-                // 1. Rimuovo l'amico dalla mia lista
-                await updateDoc(myDocRef, { 
-                    friends: arrayRemove(friendToRemove) 
-                });
-                
-                // 2. Rimuovo me stesso dalla lista dell'amico
-                await updateDoc(friendRef, { 
-                    friends: arrayRemove(currentUser) 
-                });
+                await updateDoc(myDocRef, { friends: arrayRemove(friendToRemove) });
+                await updateDoc(friendRef, { friends: arrayRemove(currentUser) });
 
                 window.kripixNotify("CONNESSIONE INTERROTTA", `Agente ${friendToRemove} rimosso.`, "error");
             } catch (e) { 
-                console.error(e); 
+                console.error("Errore Remove:", e); 
             }
-            
             closeRemoveModal();
         };
 
-        // Permette di inviare richiesta con INVIO sulla tastiera
         inputEl.addEventListener('keypress', (e) => { 
             if (e.key === 'Enter') sendRequest(); 
         });
