@@ -5,6 +5,9 @@ import { doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.
 // Variabile globale per tenere in memoria l'utente nel Limbo
 let pendingUserDocRef = null;
 
+// ==========================================
+// 1. LOGICA LOGIN & LIMBO (CONTROLLO EMAIL VERIFICATA)
+// ==========================================
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -35,22 +38,31 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const firebaseUser = userCredential.user;
 
         // ==========================================
-        // SE L'EMAIL NON È VERIFICATA: PANNELLO "LIMBO"
+        // IL LIMBO (EMAIL NON VERIFICATA)
         // ==========================================
         if (!firebaseUser.emailVerified) {
-            // Salviamo la reference per poterla cancellare se l'utente vuole
+            // Salviamo la reference per poterla cancellare se l'utente vuole annullare tutto
             pendingUserDocRef = userDocRef; 
 
-            // Nascondiamo il form di login e mostriamo i bottoni di emergenza
+            // Nuova Interfaccia Elegante
             document.getElementById('loginForm').innerHTML = `
-                <div style="border: 1px solid #ff5555; background: rgba(139, 35, 35, 0.1); padding: 20px; text-align: center; margin-bottom: 20px;">
-                    <h3 style="color:#ff5555; margin-bottom:10px;">CANALE NON VERIFICATO</h3>
-                    <p style="font-size:0.85rem; color:#ccc; margin-bottom:20px;">
-                        Non hai ancora confermato l'email: <strong style="color:white;">${userEmail}</strong>.
+                <div style="text-align: center; margin-bottom: 20px; padding: 20px 0;">
+                    <span style="font-size: 3rem; display: block; margin-bottom: 10px;">⏳</span>
+                    <h3 style="color:var(--accent-gold); margin-bottom:10px; font-family:'Courier Prime';">AUTORIZZAZIONE IN SOSPESO</h3>
+                    <p style="font-size:0.85rem; color:#888; margin-bottom:25px; line-height: 1.5;">
+                        In attesa di conferma dal canale crittografato:<br>
+                        <strong style="color:white; font-family:'Courier Prime';">${userEmail}</strong>
                     </p>
-                    <button id="btn-resend" class="btn-outline full-width" style="margin-bottom:10px;">RE-INVIA MAIL DI VERIFICA</button>
-                    <button id="btn-destroy" class="btn-danger full-width" style="font-size:0.7rem;">HO SBAGLIATO EMAIL: DISTRUGGI DOSSIER</button>
-                    <p id="limbo-msg" style="margin-top:15px; font-family:'Courier Prime'; font-size:0.8rem; display:none;"></p>
+                    
+                    <button id="btn-resend" class="btn-outline full-width" style="margin-bottom:20px;">RE-INVIA MAIL DI VERIFICA</button>
+                    
+                    <div style="border-top: 1px solid #222; padding-top: 15px;">
+                        <a href="#" id="btn-destroy" style="color:#666; font-size:0.75rem; text-decoration:none; transition:0.3s; font-family:'Courier Prime';">
+                            > Hai sbagliato email? Annulla e ricomincia.
+                        </a>
+                    </div>
+                    
+                    <p id="limbo-msg" style="margin-top:15px; font-family:'Courier Prime'; font-size:0.8rem; display:none; font-weight:bold;"></p>
                 </div>
             `;
 
@@ -62,7 +74,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                     limboMsg.innerText = ">> Nuovo protocollo inviato. Controlla la posta.";
                     limboMsg.style.color = "#4caf50";
                     limboMsg.style.display = "block";
-                    await signOut(auth); // Lo disconnettiamo
+                    await signOut(auth); // Lo disconnettiamo per sicurezza
                 } catch(e) {
                     limboMsg.innerText = ">> Errore: aspetta qualche minuto prima di riprovare.";
                     limboMsg.style.color = "#ff5555";
@@ -70,27 +82,25 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 }
             });
 
-            // EVENTO: DISTRUGGI ACCOUNT (Libera l'Username!)
-            document.getElementById('btn-destroy').addEventListener('click', async () => {
+            // EVENTO: ANNULLA E RICOMINCIA (Distrugge l'account dietro le quinte)
+            document.getElementById('btn-destroy').addEventListener('click', async (e) => {
+                e.preventDefault();
                 const limboMsg = document.getElementById('limbo-msg');
                 try {
-                    limboMsg.innerText = ">> Distruzione in corso...";
-                    limboMsg.style.color = "#e3c66c";
+                    limboMsg.innerText = ">> Revoca in corso...";
+                    limboMsg.style.color = "#888";
                     limboMsg.style.display = "block";
                     
-                    // 1. Eliminiamo il nome dal Database
+                    // Eliminiamo DB e Auth
                     await deleteDoc(pendingUserDocRef);
-                    // 2. Eliminiamo l'account da Firebase Auth
                     await deleteUser(auth.currentUser);
 
-                    limboMsg.innerText = ">> Dossier distrutto. L'ID è di nuovo libero.";
-                    limboMsg.style.color = "#4caf50";
-                    
-                    setTimeout(() => { window.location.reload(); }, 2500);
+                    // Ricarichiamo la pagina come se niente fosse
+                    window.location.reload();
 
                 } catch(e) {
                     console.error(e);
-                    limboMsg.innerText = ">> Errore critico. Impossibile distruggere.";
+                    limboMsg.innerText = ">> Errore. Riprova più tardi.";
                     limboMsg.style.color = "#ff5555";
                 }
             });
@@ -112,7 +122,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         setTimeout(() => { window.location.href = 'index.html'; }, 1000);
 
     } catch (error) {
-        if(error.message === "email-limbo") return; // Non mostrare errori rossi, l'UI è già cambiata
+        if(error.message === "email-limbo") return; // Non mostrare errori rossi, l'UI è già nel Limbo
 
         userInput.classList.add('input-error');
         passInput.classList.add('input-error');
@@ -132,11 +142,15 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
-// ... [Codice per il recupero password dimenticata che avevamo prima, lascialo in fondo al file] ...
+// Nascondi errore rosso mentre scrivi
+document.querySelectorAll('input').forEach(i => i.addEventListener('input', function(){
+    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+    document.getElementById('err-login').style.display = 'none';
+}));
 
 
 // ==========================================
-// 2. LOGICA RECUPERO PASSWORD
+// 2. LOGICA RECUPERO PASSWORD (NATIVA)
 // ==========================================
 const resetModal = document.getElementById('reset-modal');
 const forgotLink = document.getElementById('forgot-pass-link');

@@ -5,7 +5,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebas
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// INCOLLA QUI LA TUA CONFIGURAZIONE PRESA DALLA CONSOLE DI FIREBASE
+// LA TUA CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyCSCYzPprBLnd49x41WZ4jMBVyNDCOdJ64",
     authDomain: "kripix-ent.firebaseapp.com",
@@ -15,7 +15,7 @@ const firebaseConfig = {
     appId: "1:778855676026:web:0dc74f1108e2971f4da3c3"
 };
 
-// Avvio istanze Firebase (esportate per essere usate negli altri file HTML)
+// Avvio istanze Firebase (esportate per essere usate negli altri file)
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
@@ -116,11 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // CASO B: UTENTE LOGGATO - Inizializziamo valori di default
         let avatarHtmlContent = username.charAt(0).toUpperCase();
-        let avatarStyle = `background-color: #e3c66c;`; 
+        let avatarStyle = `background-color: #e3c66c; border: none;`; 
 
         try {
             // Peschiamo i dati aggiornati dal Cloud!
-            // NOTA: Usiamo toLowerCase() perché in fase di registrazione abbiamo salvato i documenti in minuscolo.
             const userRef = doc(db, "users", username.toLowerCase());
             const userSnap = await getDoc(userRef);
 
@@ -133,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     avatarStyle = `background-color: transparent; border: none;`; 
                 } else if (me.color) {
                     // Usa il colore scelto
-                    avatarStyle = `background-color: ${me.color};`;
+                    avatarStyle = `background-color: ${me.color}; border: none;`;
                 }
             }
         } catch (error) {
