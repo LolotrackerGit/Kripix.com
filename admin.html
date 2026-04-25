@@ -20,7 +20,7 @@
         .stat-number { font-size: 3rem; font-weight: 900; color: var(--text-main); line-height: 1; margin-bottom: 5px; }
         .stat-label { font-family: 'Courier Prime'; font-size: 0.8rem; color: var(--accent-red); }
 
-        /* Tabella Utenti */
+        /* Tabelle */
         .admin-table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); font-size: 0.9rem; }
         .admin-table th { background: #0a0a0a; color: var(--accent-gold); font-family: 'Courier Prime'; padding: 15px; text-align: left; border-bottom: 2px solid #333; }
         .admin-table td { padding: 15px; border-bottom: 1px solid #222; color: #ccc; }
@@ -51,7 +51,6 @@
     </nav>
 
     <section class="section-padding" style="padding-top: 150px;">
-        <!-- TUTTO DEVE STARE DENTRO IL CONTAINER -->
         <div class="container">
             
             <div class="admin-header">
@@ -59,7 +58,7 @@
                 <p style="font-family:'Courier Prime'; color:#888;">Accesso di Livello 5. Autorizzazione concessa.</p>
             </div>
 
-            <!-- STATISTICHE -->
+            <!-- STATISTICHE UTENTI -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number" id="stat-tot-users">-</div>
@@ -94,21 +93,25 @@
                 </table>
             </div>
 
-<!-- TRASMISSIONE NEWS -->
+            <!-- TRASMISSIONE NEWS -->
             <h3 style="color:white; margin-bottom:15px; border-left: 3px solid var(--accent-red); padding-left:10px;">BROADCAST DI RETE (NEWS)</h3>
             <div style="background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 30px; margin-bottom: 50px;">
+                
                 <select id="news-priority" class="admin-input" style="cursor:pointer;">
                     <option value="normal">Priorità: NORMALE (Scheda Piccola)</option>
                     <option value="high">Priorità: ALTA (Scheda Grande in Evidenza)</option>
                 </select>
+
                 <input type="text" id="news-title" class="admin-input" placeholder="Titolo Comunicazione (es. PATCH 1.0.2 LIVE)" autocomplete="off">
                 <textarea id="news-body" class="admin-input" rows="3" placeholder="Testo della comunicazione..."></textarea>
+                
                 <input type="text" id="news-link" class="admin-input" placeholder="URL Destinazione (es. progetti.html) - Opzionale" autocomplete="off">
+                
                 <button id="btn-broadcast" class="btn-gold full-width">TRASMETTI A TUTTI GLI AGENTI</button>
                 <p id="news-msg" style="color:#4caf50; font-family:'Courier Prime'; font-size:0.8rem; display:none; margin-top:15px; font-weight:bold;"></p>
             </div>
 
-            <!-- NUOVO: STORICO NEWS -->
+            <!-- STORICO E RIMOZIONE NEWS -->
             <h3 style="color:white; margin-bottom:15px; border-left: 3px solid #666; padding-left:10px;">STORICO COMUNICAZIONI</h3>
             <div style="overflow-x: auto; margin-bottom: 100px;">
                 <table class="admin-table">
@@ -131,9 +134,8 @@
 
     <!-- SCRIPT FIREBASE -->
     <script type="module">
-        // TUTTI GLI IMPORT DEVONO STARE IN CIMA AL FILE
         import { auth, db } from './script.js';
-        import { doc, getDoc, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // =====================================
@@ -154,10 +156,11 @@
 
             document.getElementById('access-overlay').style.display = 'none';
             loadDashboardData();
+            loadNewsData(); // Carichiamo anche lo storico News
         });
 
         // =====================================
-        // 2. CARICAMENTO DATI DASHBOARD
+        // 2. CARICAMENTO DATI UTENTI
         // =====================================
         async function loadDashboardData() {
             try {
@@ -206,9 +209,6 @@
         // =====================================
         // 3. LOGICA TRASMISSIONE NEWS
         // =====================================
-        // =====================================
-        // 3. LOGICA TRASMISSIONE NEWS
-        // =====================================
         document.getElementById('btn-broadcast').addEventListener('click', async () => {
             const priority = document.getElementById('news-priority').value;
             const title = document.getElementById('news-title').value.trim();
@@ -216,45 +216,3 @@
             const link = document.getElementById('news-link').value.trim();
             const msgEl = document.getElementById('news-msg');
             const btn = document.getElementById('btn-broadcast');
-            
-            if(!title || !body) {
-                alert("Titolo e Testo sono obbligatori.");
-                return;
-            }
-
-            btn.innerText = "TRASMISSIONE IN CORSO...";
-            btn.style.pointerEvents = "none";
-
-            try {
-                await addDoc(collection(db, "news"), {
-                    priority: priority,
-                    title: title,
-                    body: body,
-                    link: link, // Salviamo il link!
-                    date: new Date().toISOString(),
-                    author: "Kripix Overseer"
-                });
-
-                // Pulizia campi
-                document.getElementById('news-title').value = '';
-                document.getElementById('news-body').value = '';
-                document.getElementById('news-link').value = '';
-                
-                msgEl.innerText = ">> TRASMISSIONE COMPLETATA E SALVATA NEL CLOUD.";
-                msgEl.style.color = "#4caf50";
-                msgEl.style.display = "block";
-                setTimeout(() => { msgEl.style.display = "none"; }, 4000);
-
-            } catch (error) {
-                console.error(error);
-                msgEl.innerText = ">> ERRORE DI TRASMISSIONE: " + error.message;
-                msgEl.style.color = "#ff5555";
-                msgEl.style.display = "block";
-            }
-            
-            btn.innerText = "TRASMETTI A TUTTI GLI AGENTI";
-            btn.style.pointerEvents = "auto";
-        });
-    </script>
-</body>
-</html>
