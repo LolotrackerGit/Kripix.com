@@ -216,3 +216,93 @@
             const link = document.getElementById('news-link').value.trim();
             const msgEl = document.getElementById('news-msg');
             const btn = document.getElementById('btn-broadcast');
+            
+            if(!title || !body) {
+                alert("Titolo e Testo sono obbligatori.");
+                return;
+            }
+
+            btn.innerText = "TRASMISSIONE IN CORSO...";
+            btn.style.pointerEvents = "none";
+
+            try {
+                await addDoc(collection(db, "news"), {
+                    priority: priority,
+                    title: title,
+                    body: body,
+                    link: link,
+                    date: new Date().toISOString(),
+                    author: "Kripix Overseer"
+                });
+
+                // Pulizia campi
+                document.getElementById('news-title').value = '';
+                document.getElementById('news-body').value = '';
+                document.getElementById('news-link').value = '';
+                
+                msgEl.innerText = ">> TRASMISSIONE COMPLETATA E SALVATA NEL CLOUD.";
+                msgEl.style.color = "#4caf50";
+                msgEl.style.display = "block";
+                
+                loadNewsData(); // Aggiorna la tabella storico subito
+                
+                setTimeout(() => { msgEl.style.display = "none"; }, 4000);
+
+            } catch (error) {
+                console.error(error);
+                msgEl.innerText = ">> ERRORE DI TRASMISSIONE: " + error.message;
+                msgEl.style.color = "#ff5555";
+                msgEl.style.display = "block";
+            }
+            
+            btn.innerText = "TRASMETTI A TUTTI GLI AGENTI";
+            btn.style.pointerEvents = "auto";
+        });
+
+        // =====================================
+        // 4. CARICAMENTO E RIMOZIONE NEWS
+        // =====================================
+        async function loadNewsData() {
+            try {
+                const q = query(collection(db, "news"), orderBy("date", "desc"));
+                const newsSnapshot = await getDocs(q);
+                const tbody = document.getElementById('admin-news-table-body');
+                tbody.innerHTML = '';
+
+                newsSnapshot.forEach((newsDoc) => {
+                    const news = newsDoc.data();
+                    const d = new Date(news.date);
+                    const formattedDate = d.toLocaleDateString('it-IT');
+
+                    const priorityTag = news.priority === 'high' ? `<span style="color:#ff5555;">ALTA</span>` : `<span style="color:#aaa;">NORMALE</span>`;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong style="color:white;">${news.title}</strong></td>
+                        <td style="font-family:'Courier Prime';">${formattedDate}</td>
+                        <td>${priorityTag}</td>
+                        <td>
+                            <button class="btn-danger" style="padding: 5px 10px; font-size: 0.7rem;" onclick="deleteNews('${newsDoc.id}')">DISTRUGGI</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Errore caricamento storico news:", error);
+            }
+        }
+
+        window.deleteNews = async function(newsId) {
+            if (confirm("Confermi la distruzione di questa comunicazione da tutti i terminali?")) {
+                try {
+                    await deleteDoc(doc(db, "news", newsId));
+                    loadNewsData(); // Ricarica la tabella in tempo reale
+                } catch (error) {
+                    console.error(error);
+                    alert("Errore durante la distruzione.");
+                }
+            }
+        };
+    </script>
+</body>
+</html>
