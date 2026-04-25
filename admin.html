@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OVERSEER - Kripix Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <style>
+        /* STILI ESCLUSIVI DEL PANNELLO ADMIN */
+        body { background-color: #020202; } /* Sfondo ancora più scuro */
+        
+        .admin-header { border-bottom: 1px dashed var(--accent-red); padding-bottom: 20px; margin-bottom: 40px; }
+        .admin-header h1 { color: var(--accent-red); font-size: 2.5rem; letter-spacing: 5px; }
+        
+        /* Statistiche in alto */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 50px; }
+        .stat-card { background: rgba(139, 35, 35, 0.05); border: 1px solid var(--accent-red); padding: 20px; text-align: center; }
+        .stat-number { font-size: 3rem; font-weight: 900; color: var(--text-main); line-height: 1; margin-bottom: 5px; }
+        .stat-label { font-family: 'Courier Prime'; font-size: 0.8rem; color: var(--accent-red); }
+
+        /* Tabella Utenti */
+        .admin-table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); font-size: 0.9rem; }
+        .admin-table th { background: #0a0a0a; color: var(--accent-gold); font-family: 'Courier Prime'; padding: 15px; text-align: left; border-bottom: 2px solid #333; }
+        .admin-table td { padding: 15px; border-bottom: 1px solid #222; color: #ccc; }
+        .admin-table tr:hover td { background: rgba(227, 198, 108, 0.05); }
+        
+        .tag-admin { background: var(--accent-red); color: white; padding: 2px 8px; font-size: 0.7rem; font-weight: bold; border-radius: 2px; }
+        .tag-user { background: #333; color: #888; padding: 2px 8px; font-size: 0.7rem; font-weight: bold; border-radius: 2px; }
+
+        /* Schermata di blocco finta in attesa di verifica server */
+        #access-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#05070a; z-index: 99999; display: flex; align-items:center; justify-content:center; flex-direction:column; }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <!-- Schermata di caricamento finché Firebase non verifica i permessi -->
+    <div id="access-overlay">
+        <h2 style="color:var(--accent-red); font-family:'Courier Prime'; animation: pulseRed 2s infinite;">>> VERIFICA CREDENZIALI OVERSEER IN CORSO...</h2>
+    </div>
+
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <a href="index.html" class="back-link">← ESCI DAL TERMINALE</a>
+    </nav>
+
+    <section class="section-padding" style="padding-top: 150px;">
+        <div class="container">
+            
+            <div class="admin-header">
+                <h1>TERMINALE OVERSEER</h1>
+                <p style="font-family:'Courier Prime'; color:#888;">Accesso di Livello 5. Autorizzazione concessa.</p>
+            </div>
+
+            <!-- STATISTICHE -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-tot-users">-</div>
+                    <div class="stat-label">AGENTI TOTALI REGISTRATI</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-tot-games">-</div>
+                    <div class="stat-label">LICENZE "HARROW" VENDUTE</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-tot-news">-</div>
+                    <div class="stat-label">ISCRITTI ALLA NEWSLETTER</div>
+                </div>
+            </div>
+
+            <!-- DATABASE UTENTI -->
+            <h3 style="color:white; margin-bottom:15px; border-left: 3px solid var(--accent-gold); padding-left:10px;">DATABASE AGENTI</h3>
+            
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>USERNAME</th>
+                            <th>EMAIL</th>
+                            <th>LICENZA GIOCO</th>
+                            <th>DATA REG.</th>
+                            <th>LIVELLO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body">
+                        <!-- Popolato via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SCRIPT FIREBASE -->
+    <script type="module">
+        import { auth, db } from './script.js';
+        import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // 1. IL CANCELLO DI SICUREZZA
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = "login.html"; // Se non sei loggato, via!
+                return;
+            }
+
+            const localUser = localStorage.getItem('kripix_user');
+            if(!localUser) { window.location.href = "login.html"; return; }
+
+            // Chiediamo a Firestore se questo utente ha la qualifica di Admin
+            const userRef = doc(db, "users", localUser.toLowerCase());
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists() || userSnap.data().isAdmin !== true) {
+                // ACCESSO NEGATO: Cacciamo l'utente nella pagina 404 senza spiegazioni
+                window.location.href = "404.html";
+                return;
+            }
+
+            // ACCESSO CONSENTITO: Rimuoviamo la schermata di blocco
+            document.getElementById('access-overlay').style.display = 'none';
+
+            // 2. CARICAMENTO DATI PER LA DASHBOARD
+            loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                // Recuperiamo TUTTI gli utenti dalla collezione "users"
+                const usersSnapshot = await getDocs(collection(db, "users"));
+                
+                let totUsers = 0;
+                let totGames = 0;
+                let totNewsletter = 0;
+                
+                const tbody = document.getElementById('admin-table-body');
+                tbody.innerHTML = '';
+
+                usersSnapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    totUsers++;
+
+                    // Statistiche
+                    const hasHarrow = userData.games && userData.games.includes('harrow');
+                    if (hasHarrow) totGames++;
+                    
+                    if (userData.privacy && userData.privacy.newsletter) totNewsletter++;
+
+                    // Formattazione Data
+                    let dateStr = "Sconosciuta";
+                    if (userData.createdAt) {
+                        const d = new Date(userData.createdAt);
+                        dateStr = d.toLocaleDateString('it-IT');
+                    }
+
+                    // Creazione riga tabella
+                    const roleTag = userData.isAdmin ? `<span class="tag-admin">OVERSEER</span>` : `<span class="tag-user">AGENTE</span>`;
+                    const gameTag = hasHarrow ? `<span style="color:#4caf50;">POSSEDUTA</span>` : `<span style="color:#ff5555;">NON ACQUISITA</span>`;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong style="color:white;">${userData.username}</strong></td>
+                        <td style="font-family:'Courier Prime';">${userData.email}</td>
+                        <td>${gameTag}</td>
+                        <td style="font-family:'Courier Prime';">${dateStr}</td>
+                        <td>${roleTag}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Aggiorniamo le statistiche a schermo
+                document.getElementById('stat-tot-users').innerText = totUsers;
+                document.getElementById('stat-tot-games').innerText = totGames;
+                document.getElementById('stat-tot-news').innerText = totNewsletter;
+
+            } catch (error) {
+                console.error("Errore nel caricamento del database admin:", error);
+                alert("Errore caricamento dati server.");
+            }
+        }
+    </script>
+</body>
+</html>
