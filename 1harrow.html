@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IL FILO DEL DUBBIO - Kripix Entertainment</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS INTEGRATO HARROW V1.0 */
+        :root { --harrow-red: #8b2323; }
+
+        /* Hero con Glitch e Video */
+        .harrow-hero {
+            position: relative;
+            height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; text-align: center;
+        }
+
+        .video-bg {
+            position: absolute; top: 50%; left: 50%;
+            min-width: 100%; min-height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: -2;
+            filter: grayscale(100%) brightness(0.3) contrast(1.2);
+        }
+
+        .hero-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 20%, #05070a 100%);
+            z-index: -1;
+        }
+
+        .harrow-title {
+            font-size: 6rem; font-weight: 900; letter-spacing: 15px;
+            text-transform: uppercase; margin: 0;
+            text-shadow: 0 0 30px rgba(227, 198, 108, 0.3);
+            animation: glitchText 4s infinite;
+        }
+
+        /* Lore Section */
+        .lore-section { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; padding: 100px 0; }
+        .lore-text h2 { color: var(--harrow-red); margin-bottom: 20px; font-size: 2.5rem; text-transform: uppercase; }
+        .lore-text p { font-size: 1.1rem; color: #aaa; line-height: 1.8; margin-bottom: 20px; }
+
+        /* Sentinelle Grid */
+        .sentinel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 40px; }
+        .sentinel-card { 
+            background: #0a0a0a; border: 1px solid #222; padding: 25px; 
+            transition: 0.4s; position: relative;
+        }
+        .sentinel-card:hover { border-color: var(--harrow-red); transform: translateY(-10px); }
+        .sentinel-card h4 { color: var(--harrow-red); font-family: 'Courier Prime'; margin-bottom: 5px; }
+        .sentinel-card span { font-size: 0.7rem; color: #555; display: block; margin-bottom: 15px; text-transform: uppercase; }
+        .sentinel-card p { font-size: 0.85rem; color: #888; }
+
+        /* Meccaniche Diegetiche */
+        .mechanic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 50px; }
+        .mechanic-box { display: flex; background: rgba(255,255,255,0.02); border: 1px solid #222; transition: 0.3s; }
+        .mechanic-box:hover { border-color: var(--accent-gold); background: rgba(227, 198, 108, 0.03); }
+        .mech-icon { width: 80px; background: #0c0c0c; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+        .mech-desc { padding: 20px; }
+        .mech-desc h5 { color: var(--accent-gold); margin-bottom: 5px; font-size: 1rem; }
+        .mech-desc p { font-size: 0.85rem; color: #777; }
+
+        /* Review Mosaic */
+        .review-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 50px; }
+        .review-card { background: rgba(255,255,255,0.02); border: 1px solid #222; padding: 30px; text-align: center; transition: 0.3s; }
+        .review-card:hover { border-color: var(--accent-gold); transform: translateY(-5px); }
+        .stars { color: var(--accent-gold); font-size: 1.2rem; margin-bottom: 15px; display: block; }
+        .quote { font-style: italic; font-size: 0.95rem; color: #fff; margin-bottom: 15px; display: block; }
+        .source { font-family: 'Courier Prime'; font-size: 0.7rem; color: #666; text-transform: uppercase; }
+
+        /* Requisiti Terminale */
+        .specs-box { background: #000; border: 1px solid #333; font-family: 'Courier Prime', monospace; padding: 40px; position: relative; }
+        .specs-box::before { content: 'SYSTEM_DIAGNOSTICS_V4.0'; position: absolute; top: 10px; right: 20px; font-size: 0.6rem; color: #333; }
+        .spec-line { margin-bottom: 10px; font-size: 0.85rem; color: #4caf50; }
+        .spec-line span { color: #888; }
+
+        @keyframes glitchText {
+            0%, 100% { transform: none; opacity: 1; }
+            95% { transform: none; opacity: 1; }
+            96% { transform: skewX(-10deg); opacity: 0.8; }
+            97% { transform: skewX(10deg); opacity: 0.8; }
+            98% { transform: none; opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .harrow-title { font-size: 3rem; letter-spacing: 5px; }
+            .lore-section, .sentinel-grid, .mechanic-grid, .review-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <div class="hamburger"><span></span><span></span><span></span></div>
+        <ul class="nav-links nav-menu">
+            <li><a href="progetti.html">Progetti</a></li>
+            <li><a href="studio.html">Chi Siamo</a></li>
+            <li><a href="contatti.html">Contatti</a></li>
+            <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="harrow-hero">
+        <video class="video-bg" autoplay muted loop playsinline>
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-dark-ink-swirling-in-water-4333-large.mp4" type="video/mp4">
+        </video>
+        <div class="hero-overlay"></div>
+        
+        <div class="container" style="z-index: 10;">
+            <p style="font-family:'Courier Prime'; color:var(--accent-gold); letter-spacing:5px;">HARROW, 1973</p>
+            <h1 class="harrow-title">IL FILO DEL DUBBIO</h1>
+            <p class="tagline" style="max-width:650px; margin: 20px auto 40px;">Un Noir Psicologico dove la verità è l'arma più pericolosa. Benvenuto ad Harrow.</p>
+            <div class="btn-container">
+                <a href="#buy" class="btn-gold">ACQUISISCI LICENZA</a>
+                <a href="#lore" class="btn-outline">ANALISI DOSSIER</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- SEZIONE LORE -->
+    <section id="lore" class="section-padding">
+        <div class="container lore-section">
+            <div class="lore-image">
+                <div style="width:100%; aspect-ratio:1/1; background: url('https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&q=80&w=1000') center/cover; border: 1px solid #333; filter: grayscale(1) contrast(1.2);"></div>
+            </div>
+            <div class="lore-text">
+                <h2>William J. Holloway</h2>
+                <p>A 42 anni, William è un uomo spezzato, forgiato dall'insabbiamento del suicidio di sua madre. Non guarda mai negli occhi, interrompe le conversazioni, vive in una corazza emotiva.</p>
+                <p>È un <strong>Maestro della Mente</strong> ma un <strong>Dilettante della Violenza</strong>. In uno scontro aperto, William è goffo e disperato. La tua unica speranza è l'intelligenza, la deduzione e lo stealth analogico di un'era senza cellulari.</p>
+                <p style="font-family:'Courier Prime'; color:var(--accent-gold); font-size:0.9rem;">>> MISSIONE: Smantellare l'impero di Dominic Russo.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- LE SENTINELLE -->
+    <section class="section-padding bg-darker">
+        <div class="container">
+            <h2 class="section-header">LE QUATTRO SENTINELLE</h2>
+            <div class="sentinel-grid">
+                <div class="sentinel-card">
+                    <h4>IL MACELLAIO</h4>
+                    <span>Thomas Higgins, 35 anni</span>
+                    <p>La forza bruta. Un sadico che rompe la quarta parete, trascinandoti fuori dai tuoi menu di gioco.</p>
+                </div>
+                <div class="sentinel-card">
+                    <h4>IL RAGIONIERE</h4>
+                    <span>Arthur Finch, 45 anni</span>
+                    <p>L'intelletto paranoico. Ti intrappola in un archivio al buio, sfidandoti in una guerra psicologica.</p>
+                </div>
+                <div class="sentinel-card">
+                    <h4>IL FANTASMA</h4>
+                    <span>Angelo Conti, 52 anni</span>
+                    <p>L'artista della morte. Un assassino veterano da affrontare in un duello basato solo sull'udito.</p>
+                </div>
+                <div class="sentinel-card">
+                    <h4>IL DON</h4>
+                    <span>Dominic Russo, 58 anni</span>
+                    <p>Il Re del Passato. Il manipolatore che detiene l'ultima tossica verità su tua madre.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MECCANICHE DIEGETICHE -->
+    <section class="section-padding">
+        <div class="container">
+            <h2 class="section-header">MECCANICHE DI SOPRAVVIVENZA</h2>
+            <div class="mechanic-grid">
+                <div class="mechanic-box">
+                    <div class="mech-icon">📔</div>
+                    <div class="mech-desc">
+                        <h5>LAVAGNA MENTALE</h5>
+                        <p>Nessuna pausa. Unisci i fili logici nel tuo diario mentre il mondo intorno a te continua a muoversi.</p>
+                    </div>
+                </div>
+                <div class="mechanic-box">
+                    <div class="mech-icon">🚬</div>
+                    <div class="mech-desc">
+                        <h5>CURA DEL TRAUMA</h5>
+                        <p>Usa le sigarette per stabilizzare i nervi, ma ricorda: l'animazione è lenta e ti rende vulnerabile.</p>
+                    </div>
+                </div>
+                <div class="mechanic-box">
+                    <div class="mech-icon">🕵️</div>
+                    <div class="mech-desc">
+                        <h5>CAMMINATA FURTIVA</h5>
+                        <p>Nessun ninja. William rallenta il passo e abbassa le spalle. Un approccio realistico allo stealth.</p>
+                    </div>
+                </div>
+                <div class="mechanic-box">
+                    <div class="mech-icon">🔫</div>
+                    <div class="mech-desc">
+                        <h5>CHECK MUNIZIONI</h5>
+                        <p>Nessun HUD. William deve toccarsi le tasche per sentire quanti proiettili restano nel revolver.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CRITICA -->
+    <section class="section-padding bg-darker">
+        <div class="container">
+            <h2 class="section-header">ANALISI OPERATIVA</h2>
+            <div class="review-grid">
+                <div class="review-card">
+                    <span class="stars">★★★★★</span>
+                    <span class="quote">"Il noir più sporco e coraggioso degli ultimi vent'anni."</span>
+                    <span class="source">INDIE WORLD JOURNAL</span>
+                </div>
+                <div class="review-card">
+                    <span class="stars">★★★★☆</span>
+                    <span class="quote">"Rifiuta ogni arcade per abbracciare un realismo punitivo e magnifico."</span>
+                    <span class="source">THE GAMING OVERSEER</span>
+                </div>
+                <div class="review-card">
+                    <span class="stars">★★★★★</span>
+                    <span class="quote">"William Holloway è il protagonista più umano mai scritto."</span>
+                    <span class="source">PIXEL MAGAZINE</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REQUISITI TECNICI -->
+    <section class="section-padding">
+        <div class="container">
+            <h2 class="section-header">REQUISITI DI SISTEMA</h2>
+            <div class="specs-box">
+                <div class="spec-line">> OS: <span>Windows 10/11 (64-bit) / macOS Sonoma</span></div>
+                <div class="spec-line">> PROCESSOR: <span>Intel i7-9700K / Apple M1 or higher</span></div>
+                <div class="spec-line">> MEMORY: <span>16 GB RAM</span></div>
+                <div class="spec-line">> GRAPHICS: <span>NVIDIA RTX 3060 / 8GB VRAM</span></div>
+                <div class="spec-line">> STORAGE: <span>45 GB NVMe SSD Required</span></div>
+                <div style="margin-top:30px; color:#333; font-size:0.7rem;">// ENGINE: PIXEL OTROS v1.0.4 (NANOVOXEL READY)</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINALE -->
+    <section id="buy" class="section-padding bg-darker" style="text-align: center;">
+        <div class="container">
+            <h2 style="font-size: 3rem; margin-bottom: 20px; font-weight: 900;">ACCEDI AL NETWORK</h2>
+            <p style="color:#888; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Sblocca l'esperienza completa di Harrow e unisciti agli altri agenti del Kripix Network.
+            </p>
+            <div style="max-width: 400px; margin: 0 auto;">
+                <button id="btn-buy-harrow-final" class="btn-gold full-width" style="padding: 20px; font-size: 1.2rem;">ACQUISTA LICENZA - €29.99</button>
+                <p style="font-family:'Courier Prime'; font-size:0.7rem; color:#444; margin-top:15px;">Include: Deluxe Edition + Artbook + Soundtrack</p>
+            </div>
+        </div>
+    </section>
+
+    <footer><p>&copy; 2026 Kripix Entertainment. Tutti i diritti riservati.</p></footer>
+
+    <script type="module" src="script.js"></script>
+    <script type="module">
+        import { db } from './script.js';
+        import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const buyBtn = document.getElementById('btn-buy-harrow-final');
+            const currentUser = localStorage.getItem('kripix_user');
+
+            if (currentUser) {
+                const userRef = doc(db, "users", currentUser.toLowerCase());
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
+                    buyBtn.innerText = "GIÀ NELLA TUA LIBRERIA";
+                    buyBtn.style.background = "#4caf50";
+                    buyBtn.style.borderColor = "#4caf50";
+                    buyBtn.onclick = () => window.location.href = 'libreria.html';
+                    return;
+                }
+            }
+
+            buyBtn.addEventListener('click', async () => {
+                if (!currentUser) { window.location.href = 'login.html'; return; }
+                buyBtn.innerText = "ELABORAZIONE...";
+                buyBtn.style.pointerEvents = "none";
+                try {
+                    const userRef = doc(db, "users", currentUser.toLowerCase());
+                    await updateDoc(userRef, { games: arrayUnion('harrow') });
+                    window.kripixNotify("ACQUISTO", "Licenza acquisita con successo.", "success");
+                    setTimeout(() => { window.location.href = 'libreria.html'; }, 2000);
+                } catch (e) {
+                    window.kripixNotify("ERRORE", "Transazione fallita.", "error");
+                    buyBtn.innerText = "RIPROVA";
+                    buyBtn.style.pointerEvents = "auto";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

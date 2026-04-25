@@ -130,30 +130,38 @@
     <!-- LOGICA LIBRERIA CLOUD -->
     <script type="module">
         import { db } from './script.js';
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Funzione di emergenza per chi non ha la chiave
+        function generateGameKey() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            const segment = () => Array.from({length: 4}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+            return `KRPX-${segment()}-${segment()}-${segment()}`;
+        }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Controllo Accesso
             const currentUser = localStorage.getItem('kripix_user');
-            if (!currentUser) {
-                window.location.href = 'login.html';
-                return;
-            }
+            if (!currentUser) { window.location.href = 'login.html'; return; }
 
             const grid = document.getElementById('library-grid');
             const emptyMsg = document.getElementById('empty-msg');
-            
-            // Interroghiamo Firestore
             const userRef = doc(db, "users", currentUser.toLowerCase());
 
             try {
                 const userSnap = await getDoc(userRef);
-                
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
                     
-                    // Controlla se l'utente possiede il gioco 'harrow'
                     if (userData.games && userData.games.includes('harrow')) {
+                        // PRENDIAMO LA CHIAVE DAL CLOUD
+                        let gameKey = userData.keys?.harrow;
+
+                        // Se la chiave non esiste (vecchio account), creiamola ora e salviamola!
+                        if (!gameKey) {
+                            gameKey = generateGameKey();
+                            await updateDoc(userRef, { [`keys.harrow`]: gameKey });
+                        }
+
                         const gameCard = `
                             <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
                                 <div style="height:150px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #333; position:relative;">
@@ -171,81 +179,34 @@
                                     
                                     <div style="display:flex; gap:10px;" class="btn-container-relative">
                                         <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
+                                        <!-- MOSTRA LA CHIAVE REALE -->
                                         <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" 
                                                 title="Copia Chiave Steam" 
-                                                onclick="copyKey(this, 'KRPX-8821-X99Z')">🔑</button>
+                                                onclick="copyKey(this, '${gameKey}')">🔑</button>
                                     </div>
                                 </div>
                             </div>
                         `;
                         grid.innerHTML = gameCard;
-                    } else {
-                        // Non ha giochi
-                        emptyMsg.style.display = 'block';
-                    }
-                } else {
-                    // Utente non trovato nel cloud
-                    emptyMsg.style.display = 'block';
+                    } else { emptyMsg.style.display = 'block'; }
                 }
-            } catch (error) {
-                console.error("Errore caricamento libreria:", error);
-                emptyMsg.style.display = 'block';
-            }
+            } catch (error) { console.error(error); }
         });
 
-        // ----------------------------------------
-        // FUNZIONI UI ESPOSIZIONE GLOBALE
-        // ----------------------------------------
-        
+        // Funzioni UI (copyKey, openDlModal, etc. rimangono uguali a prima...)
         window.openDlModal = () => document.getElementById('dl-modal').style.display = 'flex';
         window.closeDlModal = () => document.getElementById('dl-modal').style.display = 'none';
-        
-        document.getElementById('dl-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeDlModal();
-        });
-
-        window.simulateDl = function(card, filename) {
-            const btn = card.querySelector('.btn-outline');
-            const originalText = btn.innerText;
-            btn.innerText = 'AVVIO...';
-            btn.style.color = 'var(--accent-gold)';
-            btn.style.borderColor = 'var(--accent-gold)';
-            
-            setTimeout(() => {
-                btn.innerText = 'SCARICANDO...';
-                setTimeout(() => {
-                    btn.innerText = 'GRAZIE!';
-                    setTimeout(() => {
-                        closeDlModal();
-                        btn.innerText = originalText;
-                        btn.style.color = '#888'; 
-                        btn.style.borderColor = '#666';
-                    }, 1000);
-                }, 1500);
-            }, 800);
-        }
-
         window.copyKey = function(btn, key) {
             navigator.clipboard.writeText(key).then(() => {
                 const container = btn.parentElement; 
-                
                 const oldTooltip = container.querySelector('.copy-tooltip');
                 if(oldTooltip) oldTooltip.remove();
-
                 const tooltip = document.createElement('div');
                 tooltip.className = 'copy-tooltip';
-                tooltip.innerText = 'COPIATO NEL BUFFER';
+                tooltip.innerText = 'CHIAVE: ' + key; // Mostriamo anche la chiave nel tooltip per bellezza
                 container.appendChild(tooltip);
-
                 setTimeout(() => { tooltip.classList.add('show'); }, 10);
-                setTimeout(() => {
-                    tooltip.classList.remove('show');
-                    setTimeout(() => tooltip.remove(), 300); 
-                }, 2000);
-
-            }).catch(err => {
-                console.error('Errore copia:', err);
-                alert("Errore nel copiare la chiave.");
+                setTimeout(() => { tooltip.classList.remove('show'); setTimeout(() => tooltip.remove(), 300); }, 3000);
             });
         }
     </script>

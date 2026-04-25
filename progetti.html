@@ -199,82 +199,67 @@
         import { db } from './script.js';
         import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Funzioni UI esposte globalmente
+        // --- FUNZIONE GENERATORE CHIAVI UNIVOCHE ---
+        function generateGameKey() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Evitiamo O, I, 1, 0 per chiarezza
+            const segment = () => Array.from({length: 4}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+            return `KRPX-${segment()}-${segment()}-${segment()}`;
+        }
+
         window.openLightbox = function(src, text) {
             document.getElementById('lightbox').style.display = 'flex';
             document.getElementById('lightbox-img').innerText = src;
             document.getElementById('lightbox-caption').innerText = ">> " + text;
         }
         window.closeLightbox = () => document.getElementById('lightbox').style.display = 'none';
-        
-        window.closeModal = () => {
-            document.getElementById('custom-modal').style.display = 'none';
-            window.location.reload();
-        }
+        window.closeModal = () => { document.getElementById('custom-modal').style.display = 'none'; window.location.reload(); }
 
         document.addEventListener('DOMContentLoaded', async () => {
             const buyBtn = document.getElementById('btn-buy-kripix');
             if (!buyBtn) return;
 
             const currentUser = localStorage.getItem('kripix_user');
-            
-            // SE NON SEI LOGGATO -> Click ti porta al login
             if (!currentUser) {
-                buyBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    window.location.href = 'login.html';
-                });
+                buyBtn.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'login.html'; });
                 return;
             }
 
-            // SE SEI LOGGATO -> Controlliamo sul Cloud se hai già il gioco
             const userRef = doc(db, "users", currentUser.toLowerCase());
             
+            // Check iniziale se posseduto
             try {
                 const userSnap = await getDoc(userRef);
-                
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    
-                    // Se l'array games esiste e contiene 'harrow'
-                    if (userData.games && userData.games.includes('harrow')) {
-                        buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
-                        buyBtn.style.background = '#4caf50';
-                        buyBtn.style.color = '#000';
-                        buyBtn.style.borderColor = '#4caf50';
-                        buyBtn.href = 'libreria.html';
-                        buyBtn.id = ''; // Disabilita l'evento acquisto
-                        return; // Fine, non aggiungere l'event listener
-                    }
+                if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
+                    buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
+                    buyBtn.style.background = '#4caf50';
+                    buyBtn.style.color = '#000';
+                    buyBtn.style.borderColor = '#4caf50';
+                    buyBtn.href = 'libreria.html';
+                    buyBtn.id = '';
+                    return;
                 }
-            } catch (error) {
-                console.error("Errore controllo libreria:", error);
-            }
+            } catch (error) { console.error(error); }
 
-            // LOGICA DI ACQUISTO SUL CLOUD
+            // LOGICA ACQUISTO CON GENERAZIONE CHIAVE
             buyBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
-                
                 const btn = this;
-                btn.innerText = 'CONNESSIONE AL SERVER...';
-                btn.style.opacity = '0.7';
+                btn.innerText = 'GENERAZIONE LICENZA...';
                 btn.style.pointerEvents = 'none';
 
                 try {
-                    // Aggiorniamo il documento aggiungendo 'harrow' all'array games (arrayUnion previene duplicati)
+                    const newKey = generateGameKey(); // Creiamo la chiave ora!
+
                     await updateDoc(userRef, {
-                        games: arrayUnion('harrow')
+                        games: arrayUnion('harrow'),
+                        // Salviamo la chiave in un oggetto 'keys' dedicato
+                        [`keys.harrow`]: newKey 
                     });
 
-                    // Successo! Mostra il modale
                     document.getElementById('custom-modal').style.display = 'flex';
-                    
                 } catch (error) {
-                    console.error("Errore durante l'acquisto:", error);
-                    btn.innerText = 'ERRORE DI TRANSAZIONE';
+                    btn.innerText = 'ERRORE TRANSAZIONE';
                     btn.style.borderColor = '#ff5555';
-                    btn.style.color = '#ff5555';
-                    btn.style.opacity = '1';
                 }
             });
         });

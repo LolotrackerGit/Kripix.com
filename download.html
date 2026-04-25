@@ -142,12 +142,17 @@
     <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
 
     <!-- SCRIPT INCLUSO DIRETTAMENTE QUI PER LA LOGICA DOWNLOAD -->
+    <!-- SCRIPT AGGIORNATO PER IL DOWNLOAD REALE -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Rileva OS e gestisci download
+            // 1. Rilevamento OS
             let os = "Unknown";
             if (navigator.appVersion.indexOf("Win") != -1) os = "Windows";
             if (navigator.appVersion.indexOf("Mac") != -1) os = "MacOS";
+
+            // --- INSERISCI QUI I TUOI LINK ---
+            const WIN_LINK = "https://github.com/LolotrackerGit/Kripix.com/releases/download/ciao/OperaGXSetup.exe";
+            const MAC_LINK = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
             function highlightCard(id) {
                 const card = document.getElementById(id);
@@ -162,16 +167,26 @@
             if (os === "Windows") highlightCard('card-win');
             else if (os === "MacOS") highlightCard('card-mac');
 
-            // Logica Bottone Download
+            // 2. Logica Bottone Download (IDENTICA ALLA TUA + DOWNLOAD REALE)
             const downloadBtns = document.querySelectorAll('.js-download');
             downloadBtns.forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
+                    
+                    // TESTO ORIGINALE
                     this.innerText = "SCARICANDO...";
                     this.style.opacity = "0.7";
                     this.style.pointerEvents = "none";
+                    
                     const msg = this.parentElement.querySelector('.download-msg');
                     if(msg) msg.style.display = "block";
+
+                    // --- PARTE AGGIUNTA PER IL DOWNLOAD REALE ---
+                    const isWin = this.closest('.os-card').id === 'card-win';
+                    const link = isWin ? WIN_LINK : MAC_LINK;
+                    window.location.href = link; 
+                    // --------------------------------------------
+
                     setTimeout(() => {
                         this.innerText = "GRAZIE!";
                         this.style.opacity = "1";
