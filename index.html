@@ -84,8 +84,64 @@
             </div>
         </div>
     </header>
+    <!-- SEZIONE NEWS DINAMICHE -->
+    <section class="section-padding" style="background-color: var(--bg-darker); border-top: 1px solid #111;">
+        <div class="container">
+            <h2 class="section-header" style="font-size: 1.5rem; margin-bottom: 30px;">COMUNICAZIONI DI RETE</h2>
+            
+            <div id="news-feed-container" style="display: flex; flex-direction: column; gap: 20px;">
+                <p style="font-family:'Courier Prime'; color:#666;">Intercettazione segnali dal server in corso...</p>
+                <!-- Le news verranno iniettate qui da JS -->
+            </div>
+        </div>
+    </section>
 
     <!-- Script JS -->
+    <!-- Script JS -->
     <script type="module" src="script.js"></script>
+    
+    <script type="module">
+        import { db } from './script.js';
+        import { collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const feedContainer = document.getElementById('news-feed-container');
+
+            try {
+                // Chiediamo a Firestore le ultime 3 notizie, ordinate per data (la più recente prima)
+                const q = query(collection(db, "news"), orderBy("date", "desc"), limit(3));
+                const querySnapshot = await getDocs(q);
+
+                feedContainer.innerHTML = ''; // Pulisce il messaggio di caricamento
+
+                if (querySnapshot.empty) {
+                    feedContainer.innerHTML = '<p style="font-family:\'Courier Prime\'; color:#666;">Nessuna nuova comunicazione dal server centrale.</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const news = doc.data();
+                    const d = new Date(news.date);
+                    const formattedDate = d.toLocaleDateString('it-IT');
+
+                    // Creiamo la grafica della singola notizia
+                    const newsCard = `
+                        <div style="background: rgba(255,255,255,0.02); border: 1px solid #222; border-left: 3px solid var(--accent-gold); padding: 20px; transition: 0.3s;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                <h3 style="color:var(--text-main); font-size:1.2rem; text-transform:uppercase;">${news.title}</h3>
+                                <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#888;">${formattedDate}</span>
+                            </div>
+                            <p style="color:#aaa; font-size:0.95rem; line-height:1.6;">${news.body}</p>
+                        </div>
+                    `;
+                    feedContainer.innerHTML += newsCard;
+                });
+
+            } catch (error) {
+                console.error("Errore recupero news:", error);
+                feedContainer.innerHTML = '<p style="font-family:\'Courier Prime\'; color:#ff5555;">Errore di connessione al terminale news.</p>';
+            }
+        });
+    </script>
 </body>
 </html>

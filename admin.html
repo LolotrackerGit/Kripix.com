@@ -35,6 +35,14 @@
 </head>
 <body>
     <div class="background-grid"></div>
+    <!-- NUOVA SEZIONE: TRASMISSIONE NEWS -->
+            <h3 style="color:white; margin-top:50px; margin-bottom:15px; border-left: 3px solid var(--accent-red); padding-left:10px;">BROADCAST DI RETE (NEWS)</h3>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 20px;">
+                <input type="text" id="news-title" class="modal-input" placeholder="Titolo Comunicazione (es. PATCH 1.0.2 LIVE)" autocomplete="off">
+                <textarea id="news-body" class="modal-input" rows="4" placeholder="Testo della comunicazione..."></textarea>
+                <button id="btn-broadcast" class="btn-gold">TRASMETTI A TUTTI GLI AGENTI</button>
+                <p id="news-msg" style="color:#4caf50; font-family:'Courier Prime'; font-size:0.8rem; display:none; margin-top:10px;"></p>
+            </div>
 
     <!-- Schermata di caricamento finché Firebase non verifica i permessi -->
     <div id="access-overlay">
@@ -180,6 +188,41 @@
                 alert("Errore caricamento dati server.");
             }
         }
+        import { addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // LOGICA TRASMISSIONE NEWS
+        document.getElementById('btn-broadcast').addEventListener('click', async () => {
+            const title = document.getElementById('news-title').value.trim();
+            const body = document.getElementById('news-body').value.trim();
+            const msgEl = document.getElementById('news-msg');
+            
+            if(!title || !body) return;
+
+            document.getElementById('btn-broadcast').innerText = "TRASMISSIONE IN CORSO...";
+
+            try {
+                // Creiamo un nuovo documento nella collezione "news"
+                await addDoc(collection(db, "news"), {
+                    title: title,
+                    body: body,
+                    date: new Date().toISOString(),
+                    author: "Kripix Overseer"
+                });
+
+                document.getElementById('news-title').value = '';
+                document.getElementById('news-body').value = '';
+                msgEl.innerText = ">> TRASMISSIONE COMPLETATA E SALVATA NEL CLOUD.";
+                msgEl.style.display = "block";
+                setTimeout(() => { msgEl.style.display = "none"; }, 4000);
+
+            } catch (e) {
+                console.error(e);
+                msgEl.innerText = ">> ERRORE DI TRASMISSIONE.";
+                msgEl.style.color = "#ff5555";
+                msgEl.style.display = "block";
+            }
+            document.getElementById('btn-broadcast').innerText = "TRASMETTI A TUTTI GLI AGENTI";
+        });
     </script>
 </body>
 </html>
