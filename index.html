@@ -1,77 +1,119 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
- <!-- ========================================== -->
-    <!-- SEO & OPEN GRAPH (CONDIVISIONE SOCIAL)     -->
-    <!-- ========================================== -->
-    
-    <!-- Descrizione base per i motori di ricerca (Max 160 caratteri) -->
+    <!-- SEO & OPEN GRAPH -->
     <meta name="description" content="Kripix Entertainment: A different way to see pixels">
-    
-    <!-- Parole chiave (Keywords) -->
     <meta name="keywords" content="videogiochi, sviluppo indie, kripix, il filo del dubbio, pixel otros, engine narrativo, thriller psicologico">
-    
-    <!-- Autore -->
     <meta name="author" content="Kripix Entertainment">
-    
-    <!-- Istruzioni per i Crawler (Permette a Google di indicizzare la pagina) -->
     <meta name="robots" content="index, follow">
-
-    <!-- TAG OPEN GRAPH (Per Facebook, Discord, LinkedIn, ecc.) -->
-    <!-- Titolo che appare nell'anteprima -->
     <meta property="og:title" content="Kripix Entertainment | A different way to see pixels">
-    
-    <!-- Descrizione dell'anteprima -->
-    <meta property="og:description" content="Esplora i nostri mondi immersivi. Scopri 'Il Filo del Dubbio' e accedi al network operativo per gli agenti Kripix.">
-    
-    <!-- Immagine di copertina (DEVI METTERE UN URL ASSOLUTO VALIDO) -->
-    <!-- Esempio: "https://kripix-studio.netlify.app/assets/cover-social.jpg" -->
-    <meta property="og:image" content="https://kripix.netlify.app/SocialPreview.pngE"> 
-    
-    <!-- URL della pagina principale -->
+    <meta property="og:description" content="Esplora i nostri mondi immersivi. Scopri 'Il Filo del Dubbio' e accedi al network operativo.">
+    <meta property="og:image" content="https://kripix.netlify.app/SocialPreview.png"> 
     <meta property="og:url" content="https://kripix.netlify.app/">
-    
-    <!-- Tipo di contenuto -->
     <meta property="og:type" content="website">
-
-    <!-- TAG TWITTER / X (Specifici per la visualizzazione Card su X) -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Kripix Entertainment">
     <meta name="twitter:description" content="Creatori di esperienze narrative ad alta tensione. Unisciti al network.">
     <meta name="twitter:image" content="https://kripix.netlify.app/SocialPreview.png">
-    
-    <!-- Tema colore Browser Mobile (La barra in alto su Chrome per Android diventerà scura) -->
     <meta name="theme-color" content="#05070a">   
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kripix Entertainment</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+
+    <!-- CSS SPECIFICO PER LA DASHBOARD NEWS NELLA HOME -->
+    <style>
+        /* Modifichiamo la Hero per contenere tutto in una schermata */
+        .hero { 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding: 80px 5% 20px;
+            box-sizing: border-box;
+            overflow: hidden; /* Niente scroll! */
+        }
+
+        .brand-title { font-size: 5rem; font-weight: 900; letter-spacing: 10px; line-height: 1; margin: 0; }
+        .brand-subtitle { font-size: 1.5rem; font-weight: 300; color: var(--accent-red); letter-spacing: 8px; margin-bottom: 20px; margin-top: -10px; }
+        .tagline { margin-bottom: 30px; color: var(--text-muted); }
+
+        /* GRIGLIA NEWS FLUTTUANTE */
+        .news-dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .news-card {
+            background: rgba(10, 10, 10, 0.6); /* Sfondo scuro trasparente */
+            backdrop-filter: blur(5px); /* Effetto vetro */
+            border: 1px solid #222;
+            border-top: 2px solid var(--accent-gold);
+            padding: 20px;
+            text-decoration: none; /* Rimuove la sottolineatura dal link */
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .news-card:hover {
+            border-color: var(--accent-gold);
+            background: rgba(227, 198, 108, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+
+        .news-card-title { color: var(--text-main); font-size: 1rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .news-card-date { font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: #666; margin-bottom: 10px; }
+        .news-card-body { color: #888; font-size: 0.85rem; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+        /* STILE PRIORITÀ ALTA (Occupa tutta la riga) */
+        .news-card.priority-high {
+            grid-column: 1 / -1; /* Occupa 100% della larghezza */
+            border-top-color: var(--accent-red);
+            background: rgba(139, 35, 35, 0.05);
+        }
+        .news-card.priority-high:hover { border-color: var(--accent-red); background: rgba(139, 35, 35, 0.1); }
+        .news-card.priority-high .news-card-title { color: var(--accent-red); font-size: 1.5rem; }
+        .news-card.priority-high .news-card-body { -webkit-line-clamp: 2; font-size: 1rem; }
+
+        /* Icona per i link cliccabili */
+        .link-icon { position: absolute; top: 15px; right: 15px; color: #444; font-size: 1.2rem; transition: 0.3s; }
+        .news-card:hover .link-icon { color: var(--accent-gold); }
+
+        @media (max-width: 768px) {
+            .news-dashboard { grid-template-columns: 1fr; } /* Su mobile, tutto a 1 colonna */
+            .hero { overflow-y: auto; display: block; padding-top: 120px; } /* Su mobile lo scroll serve per forza */
+        }
+    </style>
 </head>
 <body>
     
-    <!-- Sfondo Griglia Globale -->
     <div class="background-grid"></div>
 
-    <!-- Barra di Navigazione -->
-<nav>
-    <div class="logo-text"><a href="index.html">KRIPIX</a></div>
-    
-    <div class="hamburger">
-        <span></span><span></span><span></span>
-    </div>
+    <nav>
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <div class="hamburger"><span></span><span></span><span></span></div>
+        <ul class="nav-links nav-menu">
+            <li><a href="progetti.html">Progetti</a></li>
+            <li><a href="studio.html">Chi Siamo</a></li>
+            <li><a href="contatti.html">Contatti</a></li>
+            <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
+        </ul>
+    </nav>
 
-    <!-- È importante che ci sia la classe nav-menu qui -->
-    <ul class="nav-links nav-menu">
-        <li><a href="progetti.html">Progetti</a></li>
-        <li><a href="studio.html">Chi Siamo</a></li>
-        <li><a href="contatti.html">Contatti</a></li>
-        <!-- LO SCRIPT INSERIRÀ QUI IL TASTO ACCEDI O L'AVATAR -->
-        <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
-    </ul>
-</nav>
-
-    <!-- HERO SECTION -->
+    <!-- UNICA SCHERMATA HERO -->
     <header class="hero">
         <div class="hero-content">
             <h1 class="brand-title">KRIPIX</h1>
@@ -82,22 +124,17 @@
                 <a href="progetti.html" class="btn-gold">I Nostri Giochi</a>
                 <a href="studio.html" class="btn-outline">La Nostra Visione</a>
             </div>
-        </div>
-    </header>
-    <!-- SEZIONE NEWS DINAMICHE -->
-    <section class="section-padding" style="background-color: var(--bg-darker); border-top: 1px solid #111;">
-        <div class="container">
-            <h2 class="section-header" style="font-size: 1.5rem; margin-bottom: 30px;">COMUNICAZIONI DI RETE</h2>
-            
-            <div id="news-feed-container" style="display: flex; flex-direction: column; gap: 20px;">
-                <p style="font-family:'Courier Prime'; color:#666;">Intercettazione segnali dal server in corso...</p>
-                <!-- Le news verranno iniettate qui da JS -->
+
+            <!-- IL CRUSCOTTO DELLE NEWS (Senza scroll, integrato qui!) -->
+            <div class="news-dashboard" id="news-feed-container">
+                <p style="font-family:'Courier Prime'; color:#666; grid-column: 1/-1; text-align:center; padding: 20px;">
+                    >> Intercettazione segnali di rete...
+                </p>
+                <!-- Le news verranno iniettate qui -->
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- Script JS -->
-    <!-- Script JS -->
     <script type="module" src="script.js"></script>
     
     <script type="module">
@@ -108,14 +145,14 @@
             const feedContainer = document.getElementById('news-feed-container');
 
             try {
-                // Chiediamo a Firestore le ultime 3 notizie, ordinate per data (la più recente prima)
-                const q = query(collection(db, "news"), orderBy("date", "desc"), limit(3));
+                // Peschiamo le ultime 4 notizie (1 grande, 3 piccole è il setup perfetto)
+                const q = query(collection(db, "news"), orderBy("date", "desc"), limit(4));
                 const querySnapshot = await getDocs(q);
 
-                feedContainer.innerHTML = ''; // Pulisce il messaggio di caricamento
+                feedContainer.innerHTML = ''; 
 
                 if (querySnapshot.empty) {
-                    feedContainer.innerHTML = '<p style="font-family:\'Courier Prime\'; color:#666;">Nessuna nuova comunicazione dal server centrale.</p>';
+                    feedContainer.innerHTML = '<p style="font-family:\'Courier Prime\'; color:#666; grid-column: 1/-1; text-align:center;">>> Nessuna comunicazione attiva.</p>';
                     return;
                 }
 
@@ -123,23 +160,29 @@
                     const news = doc.data();
                     const d = new Date(news.date);
                     const formattedDate = d.toLocaleDateString('it-IT');
+                    
+                    // Classi dinamiche: Se priority è "high", aggiungiamo la classe
+                    const priorityClass = news.priority === 'high' ? 'priority-high' : '';
+                    
+                    // Se c'è un link, la card diventa un tag <a>, altrimenti resta un <div>
+                    const tagType = news.link ? 'a' : 'div';
+                    const hrefAttr = news.link ? `href="${news.link}"` : '';
+                    const linkIcon = news.link ? '<span class="link-icon">↗</span>' : '';
 
-                    // Creiamo la grafica della singola notizia
                     const newsCard = `
-                        <div style="background: rgba(255,255,255,0.02); border: 1px solid #222; border-left: 3px solid var(--accent-gold); padding: 20px; transition: 0.3s;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                <h3 style="color:var(--text-main); font-size:1.2rem; text-transform:uppercase;">${news.title}</h3>
-                                <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#888;">${formattedDate}</span>
-                            </div>
-                            <p style="color:#aaa; font-size:0.95rem; line-height:1.6;">${news.body}</p>
-                        </div>
+                        <${tagType} ${hrefAttr} class="news-card ${priorityClass}">
+                            ${linkIcon}
+                            <div class="news-card-title">${news.title}</div>
+                            <div class="news-card-date">${formattedDate} | Kripix Overseer</div>
+                            <div class="news-card-body">${news.body}</div>
+                        </${tagType}>
                     `;
                     feedContainer.innerHTML += newsCard;
                 });
 
             } catch (error) {
                 console.error("Errore recupero news:", error);
-                feedContainer.innerHTML = '<p style="font-family:\'Courier Prime\'; color:#ff5555;">Errore di connessione al terminale news.</p>';
+                feedContainer.innerHTML = '<p style="font-family:\'Courier Prime\'; color:#ff5555; grid-column: 1/-1; text-align:center;">>> Errore di connessione al terminale news.</p>';
             }
         });
     </script>
