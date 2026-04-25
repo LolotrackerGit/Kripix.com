@@ -97,19 +97,33 @@
 <!-- TRASMISSIONE NEWS -->
             <h3 style="color:white; margin-bottom:15px; border-left: 3px solid var(--accent-red); padding-left:10px;">BROADCAST DI RETE (NEWS)</h3>
             <div style="background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 30px; margin-bottom: 50px;">
-                
                 <select id="news-priority" class="admin-input" style="cursor:pointer;">
                     <option value="normal">Priorità: NORMALE (Scheda Piccola)</option>
                     <option value="high">Priorità: ALTA (Scheda Grande in Evidenza)</option>
                 </select>
-
                 <input type="text" id="news-title" class="admin-input" placeholder="Titolo Comunicazione (es. PATCH 1.0.2 LIVE)" autocomplete="off">
                 <textarea id="news-body" class="admin-input" rows="3" placeholder="Testo della comunicazione..."></textarea>
-                
                 <input type="text" id="news-link" class="admin-input" placeholder="URL Destinazione (es. progetti.html) - Opzionale" autocomplete="off">
-                
                 <button id="btn-broadcast" class="btn-gold full-width">TRASMETTI A TUTTI GLI AGENTI</button>
                 <p id="news-msg" style="color:#4caf50; font-family:'Courier Prime'; font-size:0.8rem; display:none; margin-top:15px; font-weight:bold;"></p>
+            </div>
+
+            <!-- NUOVO: STORICO NEWS -->
+            <h3 style="color:white; margin-bottom:15px; border-left: 3px solid #666; padding-left:10px;">STORICO COMUNICAZIONI</h3>
+            <div style="overflow-x: auto; margin-bottom: 100px;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>TITOLO</th>
+                            <th>DATA</th>
+                            <th>PRIORITÀ</th>
+                            <th>AZIONE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-news-table-body">
+                        <!-- Popolato via JS -->
+                    </tbody>
+                </table>
             </div>
 
         </div>

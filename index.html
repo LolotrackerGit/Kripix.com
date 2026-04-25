@@ -145,8 +145,8 @@
             const feedContainer = document.getElementById('news-feed-container');
 
             try {
-                // Peschiamo le ultime 4 notizie (1 grande, 3 piccole è il setup perfetto)
-                const q = query(collection(db, "news"), orderBy("date", "desc"), limit(4));
+                // Prendiamo le ultime 6 notizie dal cloud per avere margine di manovra
+                const q = query(collection(db, "news"), orderBy("date", "desc"), limit(6));
                 const querySnapshot = await getDocs(q);
 
                 feedContainer.innerHTML = ''; 
@@ -156,15 +156,28 @@
                     return;
                 }
 
+                let highPriorityNews = [];
+                let normalNews = [];
+
+                // Dividiamo le notizie: la prima ALTA trovata, e un massimo di 3 NORMALI
                 querySnapshot.forEach((doc) => {
                     const news = doc.data();
+                    
+                    if (news.priority === 'high' && highPriorityNews.length === 0) {
+                        highPriorityNews.push(news);
+                    } else if (news.priority !== 'high' && normalNews.length < 3) {
+                        normalNews.push(news);
+                    }
+                });
+
+                // Uniamo gli array: PRIMA la grande, POI le piccole
+                const sortedNews = [...highPriorityNews, ...normalNews];
+
+                sortedNews.forEach((news) => {
                     const d = new Date(news.date);
                     const formattedDate = d.toLocaleDateString('it-IT');
                     
-                    // Classi dinamiche: Se priority è "high", aggiungiamo la classe
                     const priorityClass = news.priority === 'high' ? 'priority-high' : '';
-                    
-                    // Se c'è un link, la card diventa un tag <a>, altrimenti resta un <div>
                     const tagType = news.link ? 'a' : 'div';
                     const hrefAttr = news.link ? `href="${news.link}"` : '';
                     const linkIcon = news.link ? '<span class="link-icon">↗</span>' : '';
