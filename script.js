@@ -183,7 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 1. Disconnette da Firebase
                     await signOut(auth);
                     // 2. Pulisce la memoria del browser
-                    localStorage.clear(); 
+                    // Salviamo la scelta dei cookie prima di far esplodere la memoria
+const savedCookies = localStorage.getItem('kripix_cookies_accepted');
+                    
+// Puliamo tutto
+localStorage.clear(); 
+
+// Rimettiamo a posto la scelta dei cookie
+if (savedCookies) localStorage.setItem('kripix_cookies_accepted', savedCookies);
                     // 3. Torna alla home
                     window.location.href = 'index.html'; 
                 } catch(err) {
