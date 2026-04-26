@@ -8,72 +8,78 @@
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="Kripix Entertainment | A different way to see pixels">
     <meta property="og:description" content="Esplora i nostri mondi immersivi. Scopri 'Il Filo del Dubbio' e accedi al network operativo.">
-    <meta property="og:image" content="https://lolotrackergit.github.io/Kripix.com/SocialPreview.png"> 
+    <meta property="og:image" content="https://kripix.netlify.app/SocialPreview.png"> 
     <meta property="og:url" content="https://kripix.netlify.app/">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Kripix Entertainment">
     <meta name="twitter:description" content="Creatori di esperienze narrative ad alta tensione. Unisciti al network.">
-    <meta name="twitter:image" content="https://lolotrackergit.github.io/Kripix.com/SocialPreview.png">
+    <meta name="twitter:image" content="https://kripix.netlify.app/SocialPreview.png">
     <meta name="theme-color" content="#05070a">   
     
     <meta charset="UTF-8">
 
-    <!-- ========================================== -->
-    <!-- FAVICON (ICONA SULLA TAB DEL BROWSER)      -->
-    <!-- ========================================== -->
+    <!-- FAVICON -->
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="manifest" href="site.webmanifest">
-    <link rel="icon" href="favicon.ico"> <!-- Fallback per browser vecchi -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.ico">
+    
+    <!-- FIX DECENTRAMENTO MOBILE (Previene larghezza eccessiva) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <title>Kripix Entertainment</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
 
-    <!-- CSS SPECIFICO PER LA DASHBOARD NEWS NELLA HOME -->
     <style>
-        /* Modifichiamo la Hero per contenere tutto in una schermata */
+        /* EVITA SCROLL ORIZZONTALE SU MOBILE */
+        body { overflow-x: hidden; }
+
+        /* HERO SECTION A SCHERMATA SINGOLA */
         .hero { 
-            height: 100vh; 
+            height: 100vh; /* Esattamente l'altezza dello schermo */
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
             text-align: center; 
-            padding: 80px 5% 20px;
+            padding: 80px 5% 0; /* Spazio per la navbar */
             box-sizing: border-box;
-            overflow: hidden; /* Niente scroll! */
+            overflow: hidden; /* Blocca lo scroll su PC */
         }
 
-        .brand-title { font-size: 5rem; font-weight: 900; letter-spacing: 10px; line-height: 1; margin: 0; }
-        .brand-subtitle { font-size: 1.5rem; font-weight: 300; color: var(--accent-red); letter-spacing: 8px; margin-bottom: 20px; margin-top: -10px; }
-        .tagline { margin-bottom: 30px; color: var(--text-muted); }
+        .brand-title { font-size: clamp(3rem, 6vw, 5rem); font-weight: 900; letter-spacing: 10px; line-height: 1; margin: 0; }
+        .brand-subtitle { font-size: clamp(1rem, 2vw, 1.5rem); font-weight: 300; color: var(--accent-red); letter-spacing: 8px; margin-bottom: 15px; margin-top: -10px; }
+        
+        /* FIX MOBILE PER TYPEWRITER */
+        .tagline { margin-bottom: 30px; color: var(--text-muted); font-size: clamp(0.8rem, 2vw, 1rem); }
+        .typewriter { width: min(34ch, 100%); white-space: nowrap; overflow: hidden; }
 
-        /* GRIGLIA NEWS FLUTTUANTE */
+        /* DASHBOARD DELLE NEWS: Stretta e vicina ai bottoni */
         .news-dashboard {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             width: 100%;
             max-width: 1000px;
-            margin-top: 40px;
+            margin-top: 30px;
             text-align: left;
         }
 
         .news-card {
-            background: rgba(10, 10, 10, 0.6); /* Sfondo scuro trasparente */
-            backdrop-filter: blur(5px); /* Effetto vetro */
+            background: rgba(10, 10, 10, 0.6); 
+            backdrop-filter: blur(5px); 
             border: 1px solid #222;
             border-top: 2px solid var(--accent-gold);
             padding: 20px;
-            text-decoration: none; /* Rimuove la sottolineatura dal link */
+            text-decoration: none; 
             display: flex;
             flex-direction: column;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
+            box-sizing: border-box;
         }
         
         .news-card:hover {
@@ -83,27 +89,43 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.8);
         }
 
-        .news-card-title { color: var(--text-main); font-size: 1rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        /* Il padding-right evita che il testo vada sotto l'icona */
+        .news-card-title { color: var(--text-main); font-size: 1rem; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; padding-right: 25px; }
         .news-card-date { font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: #666; margin-bottom: 10px; }
-        .news-card-body { color: #888; font-size: 0.85rem; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .news-card-body { color: #888; font-size: 0.85rem; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-        /* STILE PRIORITÀ ALTA (Occupa tutta la riga) */
+        /* STILE PRIORITÀ ALTA */
         .news-card.priority-high {
-            grid-column: 1 / -1; /* Occupa 100% della larghezza */
+            grid-column: 1 / -1; 
             border-top-color: var(--accent-red);
             background: rgba(139, 35, 35, 0.05);
+            padding: 25px 20px;
         }
         .news-card.priority-high:hover { border-color: var(--accent-red); background: rgba(139, 35, 35, 0.1); }
-        .news-card.priority-high .news-card-title { color: var(--accent-red); font-size: 1.5rem; }
-        .news-card.priority-high .news-card-body { -webkit-line-clamp: 2; font-size: 1rem; }
+        .news-card.priority-high .news-card-title { color: var(--accent-red); font-size: 1.3rem; }
 
-        /* Icona per i link cliccabili */
-        .link-icon { position: absolute; top: 15px; right: 15px; color: #444; font-size: 1.2rem; transition: 0.3s; }
+        /* ICONA FRECCIA (Ancorata in alto a destra) */
+        .link-icon { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            color: #444; 
+            font-size: 1.2rem; 
+            transition: 0.3s; 
+            line-height: 1;
+        }
         .news-card:hover .link-icon { color: var(--accent-gold); }
+        .news-card.priority-high:hover .link-icon { color: var(--accent-red); }
 
+        /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
-            .news-dashboard { grid-template-columns: 1fr; } /* Su mobile, tutto a 1 colonna */
-            .hero { overflow-y: auto; display: block; padding-top: 120px; } /* Su mobile lo scroll serve per forza */
+            .news-dashboard { grid-template-columns: 1fr; margin-bottom: 40px; }
+            .hero { 
+                height: auto; /* Su mobile bisogna scorrere per forza */
+                min-height: 100vh;
+                padding-top: 120px; 
+                justify-content: flex-start;
+            }
         }
     </style>
 </head>
@@ -122,30 +144,28 @@
         </ul>
     </nav>
 
-    <!-- UNICA SCHERMATA HERO -->
+    <!-- CRUSCOTTO CENTRALE (Tutto in una schermata su PC) -->
     <header class="hero">
-        <div class="hero-content">
-            <h1 class="brand-title">KRIPIX</h1>
-            <h2 class="brand-subtitle">ENTERTAINMENT</h2>
-            <p class="tagline typewriter">A different way to see pixels.</p>
-            
-            <div class="btn-container">
-                <a href="progetti.html" class="btn-gold">I Nostri Giochi</a>
-                <a href="studio.html" class="btn-outline">La Nostra Visione</a>
-            </div>
+        <h1 class="brand-title">KRIPIX</h1>
+        <h2 class="brand-subtitle">ENTERTAINMENT</h2>
+        <p class="tagline typewriter">A different way to see pixels.</p>
+        
+        <div class="btn-container">
+            <a href="progetti.html" class="btn-gold">I Nostri Giochi</a>
+            <a href="studio.html" class="btn-outline">La Nostra Visione</a>
+        </div>
 
-            <!-- IL CRUSCOTTO DELLE NEWS (Senza scroll, integrato qui!) -->
-            <div class="news-dashboard" id="news-feed-container">
-                <p style="font-family:'Courier Prime'; color:#666; grid-column: 1/-1; text-align:center; padding: 20px;">
-                    >> Intercettazione segnali di rete...
-                </p>
-                <!-- Le news verranno iniettate qui -->
-            </div>
+        <!-- DASHBOARD NEWS -->
+        <div class="news-dashboard" id="news-feed-container">
+            <p style="font-family:'Courier Prime'; color:#666; grid-column: 1/-1; text-align:center; padding: 20px;">
+                >> Intercettazione segnali di rete...
+            </p>
         </div>
     </header>
 
     <script type="module" src="script.js"></script>
     
+    <!-- LOGICA FIREBASE NEWS -->
     <script type="module">
         import { db } from './script.js';
         import { collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -154,7 +174,7 @@
             const feedContainer = document.getElementById('news-feed-container');
 
             try {
-                // Prendiamo le ultime 6 notizie dal cloud per avere margine di manovra
+                // Prende le ultime 6 news
                 const q = query(collection(db, "news"), orderBy("date", "desc"), limit(6));
                 const querySnapshot = await getDocs(q);
 
@@ -168,10 +188,8 @@
                 let highPriorityNews = [];
                 let normalNews = [];
 
-                // Dividiamo le notizie: la prima ALTA trovata, e un massimo di 3 NORMALI
                 querySnapshot.forEach((doc) => {
                     const news = doc.data();
-                    
                     if (news.priority === 'high' && highPriorityNews.length === 0) {
                         highPriorityNews.push(news);
                     } else if (news.priority !== 'high' && normalNews.length < 3) {
@@ -179,7 +197,6 @@
                     }
                 });
 
-                // Uniamo gli array: PRIMA la grande, POI le piccole
                 const sortedNews = [...highPriorityNews, ...normalNews];
 
                 sortedNews.forEach((news) => {
