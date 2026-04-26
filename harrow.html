@@ -1,261 +1,294 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <!-- SEO & OPEN GRAPH -->
+    <meta name="description" content="Il Filo del Dubbio: Un thriller noir psicologico.">
+    <meta name="author" content="Kripix Entertainment">
     <meta charset="UTF-8">
+
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="icon" href="favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IL FILO DEL DUBBIO - Kripix</title>
+    <title>Il Filo del Dubbio | Kripix</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
     
     <style>
-        /* CSS SPECIFICO HARROW */
-        
-        /* Hero con Video Background */
-        .harrow-hero {
-            position: relative;
+        /* STILI SPECIFICI PER LA PAGINA GIOCO */
+        body { background-color: #020202; }
+
+        /* HERO SECTION: Simulazione Video/Atmosfera */
+        .game-hero {
             height: 100vh;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            text-align: center;
-        }
-
-        .video-bg {
-            position: absolute;
-            top: 50%; left: 50%;
-            min-width: 100%; min-height: 100%;
-            width: auto; height: auto;
-            transform: translate(-50%, -50%);
-            z-index: -2;
-            filter: brightness(0.3) contrast(1.2);
-        }
-
-        .hero-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, transparent 20%, #05070a 100%);
-            z-index: -1;
-        }
-
-        .harrow-title {
-            font-size: 6rem;
-            font-weight: 900;
-            letter-spacing: 15px;
-            text-transform: uppercase;
-            margin: 0;
-            text-shadow: 0 0 30px rgba(227, 198, 108, 0.3);
-            animation: glitchText 4s infinite;
-        }
-
-        /* Lore Section */
-        .lore-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 80px;
-            align-items: center;
-            padding: 100px 0;
-        }
-        .lore-text h2 { color: var(--accent-red); margin-bottom: 20px; font-size: 2rem; }
-        .lore-text p { font-size: 1.1rem; color: #aaa; line-height: 1.8; margin-bottom: 20px; }
-
-        /* Review Mosaic */
-        .review-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 50px;
-        }
-        .review-card {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid #222;
-            padding: 30px;
-            text-align: center;
-            transition: 0.3s;
-        }
-        .review-card:hover { border-color: var(--accent-gold); transform: translateY(-5px); }
-        .stars { color: var(--accent-gold); font-size: 1.2rem; margin-bottom: 15px; display: block; }
-        .quote { font-style: italic; font-size: 0.9rem; color: #fff; margin-bottom: 15px; display: block; }
-        .source { font-family: 'Courier Prime'; font-size: 0.7rem; color: #666; text-transform: uppercase; }
-
-        /* Requisiti Terminale */
-        .specs-box {
-            background: #000;
-            border: 1px solid #333;
-            font-family: 'Courier Prime', monospace;
-            padding: 40px;
             position: relative;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
             overflow: hidden;
-        }
-        .specs-box::before {
-            content: 'SYSTEM_DIAGNOSTICS_V4.0';
-            position: absolute; top: 10px; right: 20px;
-            font-size: 0.6rem; color: #333;
-        }
-        .spec-line { margin-bottom: 10px; font-size: 0.85rem; color: #4caf50; }
-        .spec-line span { color: #888; }
-
-        @keyframes glitchText {
-            0%, 100% { transform: none; opacity: 1; }
-            95% { transform: none; opacity: 1; }
-            96% { transform: skewX(-10deg); opacity: 0.8; }
-            97% { transform: skewX(10deg); opacity: 0.8; }
-            98% { transform: none; opacity: 1; }
+            background: linear-gradient(to bottom, rgba(5,7,10,0.8), rgba(2,2,2,1)), url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover;
+            background-blend-mode: multiply;
         }
 
-        @media (max-width: 768px) {
-            .harrow-title { font-size: 3rem; letter-spacing: 5px; }
+        .game-title {
+            font-size: 6rem; font-weight: 900; letter-spacing: 5px; line-height: 1; margin-bottom: 10px;
+            color: var(--text-main); text-shadow: 0 5px 20px rgba(0,0,0,0.8);
+            text-transform: uppercase;
+        }
+
+        .game-tagline {
+            font-family: 'Courier Prime'; color: var(--accent-red); font-size: 1.5rem; letter-spacing: 3px;
+            text-transform: uppercase; margin-bottom: 40px;
+        }
+
+        /* Navigazione Trasparente */
+        .game-nav { background: transparent !important; position: absolute; width: 100%; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        /* SEZIONE LORE & FEATURES */
+        .lore-section { padding: 100px 5%; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+        
+        .feature-block { border-left: 3px solid var(--accent-red); padding-left: 20px; margin-bottom: 50px; }
+        .feature-block h3 { color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 15px; text-transform: uppercase; }
+        .feature-block p { color: #aaa; font-size: 1rem; line-height: 1.8; }
+
+        /* GRIGLIA SENTINELLE (BOSS) */
+        .boss-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 50px 5%; max-width: 1200px; margin: 0 auto; }
+        .boss-card { background: rgba(255,255,255,0.02); border: 1px solid #222; padding: 30px 20px; text-align: center; transition: 0.3s; }
+        .boss-card:hover { border-color: var(--accent-red); background: rgba(139, 35, 35, 0.05); transform: translateY(-10px); }
+        .boss-card h4 { color: var(--text-main); font-size: 1.2rem; margin-bottom: 5px; text-transform: uppercase; }
+        .boss-card span { font-family: 'Courier Prime'; color: var(--accent-red); font-size: 0.8rem; }
+        .boss-card p { margin-top: 15px; font-size: 0.85rem; color: #888; }
+
+        /* RECENSIONI CRITICA */
+        .reviews-section { padding: 80px 5%; background: var(--bg-main); border-top: 1px solid #111; border-bottom: 1px solid #111; }
+        .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; max-width: 1200px; margin: 0 auto; }
+        .review-card { background: rgba(255,255,255,0.02); border: 1px solid #222; padding: 30px; border-left: 3px solid var(--accent-gold); transition: 0.3s; }
+        .review-card:hover { transform: translateY(-5px); background: rgba(227, 198, 108, 0.05); }
+        .review-stars { color: var(--accent-gold); font-size: 1.2rem; margin-bottom: 15px; letter-spacing: 2px; }
+        .review-text { color: var(--text-main); font-size: 1rem; font-style: italic; margin-bottom: 20px; line-height: 1.6; }
+        .review-author { color: #888; font-family: 'Courier Prime', monospace; font-size: 0.8rem; text-transform: uppercase; }
+
+        /* REQUISITI DI SISTEMA (Stile Terminale) */
+        .sys-req-container { max-width: 800px; margin: 100px auto; background: #000; border: 1px solid #333; padding: 40px; font-family: 'Courier Prime', monospace; }
+        .req-header { color: var(--accent-gold); border-bottom: 1px dashed #333; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2rem; }
+        .req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .req-list p { font-size: 0.85rem; color: #888; margin-bottom: 10px; }
+        .req-list strong { color: #ccc; }
+
+        /* BANNER ACQUISTO FISSO IN BASSO */
+        .buy-banner { background: #05070a; border-top: 1px solid var(--accent-gold); padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; bottom: 0; z-index: 1000; }
+        .buy-price { font-size: 2rem; font-weight: 900; color: var(--text-main); }
+        .buy-price span { font-size: 1rem; color: var(--accent-gold); font-family: 'Courier Prime'; }
+
+        @media(max-width: 768px) {
             .lore-section { grid-template-columns: 1fr; }
-            .review-grid { grid-template-columns: 1fr; }
+            .boss-grid { grid-template-columns: 1fr 1fr; }
+            .reviews-grid { grid-template-columns: 1fr; }
+            .req-grid { grid-template-columns: 1fr; }
+            .game-title { font-size: 3.5rem; }
+            .buy-banner { flex-direction: column; gap: 15px; text-align: center; }
         }
     </style>
 </head>
 <body>
-    <div class="background-grid"></div>
 
-    <nav>
+    <nav class="game-nav">
         <div class="logo-text"><a href="index.html">KRIPIX</a></div>
-        <div class="hamburger"><span></span><span></span><span></span></div>
-        <ul class="nav-links nav-menu">
-            <li><a href="progetti.html">Progetti</a></li>
-            <li><a href="studio.html">Chi Siamo</a></li>
-            <li><a href="contatti.html">Contatti</a></li>
-            <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
-        </ul>
+        <a href="progetti.html" style="color:#888; text-decoration:none; font-family:'Courier Prime'; font-size:0.8rem;">← TORNA AL CATALOGO</a>
     </nav>
 
-    <!-- HERO HARROW -->
-    <header class="harrow-hero">
-        <!-- Placeholder Video Background -->
-        <video class="video-bg" autoplay muted loop playsinline>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-dark-ink-swirling-in-water-4333-large.mp4" type="video/mp4">
-        </video>
-        <div class="hero-overlay"></div>
-        
-        <div class="container" style="z-index: 10;">
-            <p style="font-family:'Courier Prime'; color:var(--accent-gold); letter-spacing:5px;">DISPONIBILE ORA</p>
-            <h1 class="harrow-title">IL FILO DEL DUBBIO</h1>
-            <p class="tagline" style="max-width:600px; margin: 20px auto 40px;">Un Noir Psicologico dove la verità è l'arma più pericolosa. Benvenuto ad Harrow.</p>
-            <div class="btn-container">
-                <a href="#buy" class="btn-gold">ACQUISISCI LICENZA</a>
-                <a href="#lore" class="btn-outline">SCOPRI LA STORIA</a>
-            </div>
-        </div>
+    <!-- HERO SECTION -->
+    <header class="game-hero">
+        <h1 class="game-title">IL FILO DEL DUBBIO</h1>
+        <h2 class="game-tagline">Realismo Sporco Noir</h2>
+        <p style="color:#aaa; max-width:600px; margin-bottom:40px; font-size:1.1rem; line-height:1.6;">
+            1973. Harrow non è solo un'ambientazione, è un personaggio antagonista. Una città avvolta da pioggia incessante, nebbia e decadenza morale.
+        </p>
+        <button class="btn-gold" onclick="document.getElementById('buy-section').scrollIntoView({behavior: 'smooth'})">ACQUISICI LICENZA</button>
     </header>
 
-    <!-- SEZIONE LORE -->
-    <section id="lore" class="section-padding">
-        <div class="container lore-section">
-            <div class="lore-image">
-                <div style="width:100%; aspect-ratio:1/1; background: url('https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&q=80&w=1000') center/cover; border: 1px solid #333; filter: grayscale(1);"></div>
-            </div>
-            <div class="lore-text">
-                <h2>L'OSCURITÀ DI HARROW</h2>
-                <p>Nelle strade bagnate dalla pioggia di Harrow, il confine tra giustizia e vendetta è sottile come un capello. Interpreti l'agente Elias Thorne, un uomo che ha perso tutto tranne la sua ossessione per la verità.</p>
-                <p>Ogni indizio trovato, ogni interrogatorio fallito e ogni scelta morale che farai cambierà radicalmente il mondo intorno a te. Ad Harrow, non sei tu che dai la caccia al mostro. È il mostro che aspetta che tu faccia un passo falso.</p>
-                <button class="btn-outline">LEGGI IL DOSSIER COMPLETO</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- CRITICA -->
-    <section class="section-padding bg-darker">
-        <div class="container">
-            <h2 class="section-header">ANALISI DELLA CRITICA</h2>
-            <div class="review-grid">
-                <div class="review-card">
-                    <span class="stars">★★★★★</span>
-                    <span class="quote">"Il miglior thriller interattivo dell'ultimo decennio."</span>
-                    <span class="source">INDIE GAME REVIEWS</span>
+    <!-- LORE & MECCANICHE -->
+    <!-- LORE & MECCANICHE -->
+    <section style="background: var(--bg-main);">
+        <div class="lore-section" style="grid-template-columns: 1fr; text-align: center; max-width: 900px;">
+            <div>
+                <div class="feature-block" style="border-left: none; padding-left: 0; margin-bottom: 60px;">
+                    <h3 style="border-bottom: 2px solid var(--accent-red); display: inline-block; padding-bottom: 10px;">IL CERVELLO E I MUSCOLI</h3>
+                    <p style="margin-top: 20px;">Vestirai i panni di William Joshmite Holloway, un detective "Double-Face". Incredibilmente intelligente nelle deduzioni e nella manipolazione psicologica, ma goffo e disperato nel combattimento corpo a corpo. La tua mira trema, i pugni sono pesanti, ogni rissa può essere l'ultima.</p>
                 </div>
-                <div class="review-card">
-                    <span class="stars">★★★★☆</span>
-                    <span class="quote">"Atmosfera così densa che si può tagliare con un coltello."</span>
-                    <span class="source">PIXEL MAGAZINE</span>
-                </div>
-                <div class="review-card">
-                    <span class="stars">★★★★★</span>
-                    <span class="quote">"Un capolavoro noir che non dimenticherete facilmente."</span>
-                    <span class="source">GLOBAL GAMING NETWORK</span>
+                <div class="feature-block" style="border-left: none; padding-left: 0;">
+                    <h3 style="border-bottom: 2px solid var(--accent-red); display: inline-block; padding-bottom: 10px;">L'IA DIRETTORE</h3>
+                    <p style="margin-top: 20px;">Il gioco rifiuta le convenzioni arcade. Non esiste "Detective Vision". Se fallisci un minigioco deduttivo, il mondo reagisce: i nemici entrano in allerta, piazzano trappole sonore e ti braccano. L'IA impara il tuo stile: troppo stealth? Aggiungeranno telecamere. Troppo aggressivo? Arriveranno i Bruti.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- REQUISITI TECNICI (STILE TERMINALE) -->
-    <section class="section-padding">
-        <div class="container">
-            <h2 class="section-header">SPECIFICHE HARDWARE</h2>
-            <div class="specs-box">
-                <div class="spec-line">> OS: <span>Windows 10/11 (64-bit) / macOS 12+</span></div>
-                <div class="spec-line">> PROCESSOR: <span>Intel i5-12400 / Ryzen 5 5600</span></div>
-                <div class="spec-line">> MEMORY: <span>16 GB RAM</span></div>
-                <div class="spec-line">> GRAPHICS: <span>RTX 3060 / RX 6600 (Supporto Raytracing consigliato)</span></div>
-                <div class="spec-line">> STORAGE: <span>45 GB NVMe SSD Required</span></div>
-                <div class="spec-line">> DRIVER: <span>Kripix Otros Runtime v1.0.4</span></div>
-                <div style="margin-top:30px; color:#333; font-size:0.7rem;">// STATO: SISTEMA OTTIMIZZATO</div>
+    <!-- LE SENTINELLE -->
+    <section style="background: var(--bg-darker); padding: 80px 0; border-top: 1px solid #111;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="color:var(--text-main); font-size:2.5rem; letter-spacing:3px;">I LUOGOTENENTI DI RUSSO</h2>
+            <p style="font-family:'Courier Prime'; color:var(--accent-red);">Quattro ostacoli mortali prima del Don.</p>
+        </div>
+        
+        <div class="boss-grid">
+            <div class="boss-card">
+                <h4>Il Macellaio</h4>
+                <span>Forza Bruta</span>
+                <p>Sadico e spietato. Una lotta puramente viscerale nei sotterranei dei rulli trasportatori.</p>
+            </div>
+            <div class="boss-card">
+                <h4>Il Ragioniere</h4>
+                <span>Intelletto Paranoico</span>
+                <p>Arthur Finch combatte con le trappole al buio. Per ucciderlo, dovrai distruggere il suo ego.</p>
+            </div>
+            <div class="boss-card">
+                <h4>Il Fantasma</h4>
+                <span>Perfezione Letale</span>
+                <p>Angelo Conti. Un duello al buio basato sull'audio 3D. Un'arte marziale letale, una morte rispettosa.</p>
+            </div>
+            <div class="boss-card">
+                <h4 style="color:var(--accent-gold);">Dominic Russo</h4>
+                <span>Il Re del Passato</span>
+                <p>Il Don. La resa dei conti sotto la pioggia nel fango, dove la verità sarà più letale dei proiettili.</p>
             </div>
         </div>
     </section>
 
-    <!-- SEZIONE ACQUISTO FINALE -->
-    <section id="buy" class="section-padding bg-darker" style="text-align: center;">
-        <div class="container">
-            <h2 style="font-size: 3rem; margin-bottom: 20px;">PRONTO AD ENTRARE?</h2>
-            <p style="color:#888; margin-bottom: 40px;">Sblocca la versione completa e ricevi i bonus del Network Kripix.</p>
+    <!-- SEZIONE RECENSIONI CRITICA -->
+    <section class="reviews-section">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="color:var(--text-main); font-size:2.5rem; letter-spacing:3px;">LA CRITICA</h2>
+            <p style="font-family:'Courier Prime'; color:#888;">Classificazione: Capolavoro Assoluto</p>
+        </div>
+
+        <div class="reviews-grid">
+            <!-- Review 1 -->
+            <div class="review-card">
+                <div class="review-stars">★★★★★</div>
+                <p class="review-text">"Un capolavoro di tensione. L'assenza di aiuti a schermo ti costringe a pensare davvero. Il sistema di IA è spietato e geniale."</p>
+                <div class="review-author">> THE INDIE INVESTIGATOR</div>
+            </div>
             
-            <div style="max-width: 400px; margin: 0 auto;">
-                <button id="btn-buy-harrow-final" class="btn-gold full-width" style="padding: 20px; font-size: 1.2rem;">ACQUISTA ORA - €29.99</button>
-                <p style="font-family:'Courier Prime'; font-size:0.7rem; color:#444; margin-top:15px;">Include: Gioco Base + Soundtrack + Artbook Digitale</p>
+            <!-- Review 2 -->
+            <div class="review-card">
+                <div class="review-stars">★★★★★</div>
+                <p class="review-text">"Lento, punitivo, e fottutamente brillante. L'atmosfera sporca di Harrow ti entra sotto la pelle e non ti lascia più."</p>
+                <div class="review-author">> NOIR GAMING MAGAZINE</div>
+            </div>
+            
+            <!-- Review 3 -->
+            <div class="review-card">
+                <div class="review-stars">★★★★☆</div>
+                <p class="review-text">"Una narrazione matura che non tratta il giocatore come un idiota. Le boss fight sono dei puzzle mentali travestiti da combattimenti."</p>
+                <div class="review-author">> PIXEL CRITICS</div>
             </div>
         </div>
     </section>
 
-    <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
+    <!-- REQUISITI DI SISTEMA -->
+    <section style="background: var(--bg-main); padding: 1px 5%;">
+        <div class="sys-req-container">
+            <div class="req-header">>> PROTOCOLLO DI SISTEMA RICHIESTO (PIXEL OTROS ENGINE)</div>
+            <div class="req-grid">
+                <div class="req-list">
+                    <p style="color:var(--text-main); margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:5px;">MINIMI</p>
+                    <p><strong>OS:</strong> Windows 10/11 64-bit</p>
+                    <p><strong>CPU:</strong> Intel Core i5-8400 / AMD Ryzen 5 2600</p>
+                    <p><strong>RAM:</strong> 16 GB (Bypass VRAM attivo)</p>
+                    <p><strong>GPU:</strong> NVIDIA RTX 2060 / AMD Radeon RX 5600 XT</p>
+                    <p><strong>Storage:</strong> 85 GB <span style="color:var(--accent-red);">[SSD NVMe OBBLIGATORIO]</span></p>
+                </div>
+                <div class="req-list">
+                    <p style="color:var(--text-main); margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:5px;">RACCOMANDATI</p>
+                    <p><strong>OS:</strong> Windows 11 64-bit</p>
+                    <p><strong>CPU:</strong> Intel Core i7-12700K / AMD Ryzen 7 5800X</p>
+                    <p><strong>RAM:</strong> 32 GB</p>
+                    <p><strong>GPU:</strong> NVIDIA RTX 3080 / AMD Radeon RX 6800 XT</p>
+                    <p><strong>Storage:</strong> 85 GB <span style="color:var(--accent-red);">[SSD Gen4 NVMe]</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <!-- SCRIPT FIREBASE -->
+    <!-- BANNER ACQUISTO -->
+    <div class="buy-banner" id="buy-section">
+        <div>
+            <h3 style="color:var(--text-main); font-size:1.5rem; margin-bottom:5px;">IL FILO DEL DUBBIO - DELUXE EDITION</h3>
+            <p style="color:#888; font-family:'Courier Prime'; font-size:0.8rem;">Include OST Industrial Jazz e Artbook Digitale.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:30px;">
+            <div class="buy-price">€ 29.99 <br><span>(No DRM)</span></div>
+            <button id="btn-buy-harrow-page" class="btn-gold">ACQUISTA ORA</button>
+        </div>
+    </div>
+
+    <!-- MODALE ACQUISTO -->
+    <div id="custom-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="modal-box" style="background: #0a0a0a; border: 1px solid #333; border-top: 3px solid var(--accent-gold); padding: 40px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+            <span style="font-size: 3rem; margin-bottom: 20px; display: block; color: #4caf50;">✓</span>
+            <h3 style="font-size: 1.5rem; color: var(--accent-gold); margin-bottom: 15px; font-weight: 800;">ACQUISTO COMPLETATO</h3>
+            <p style="color:#ccc; margin-bottom:30px;">La licenza per "Il Filo del Dubbio" è stata aggiunta al tuo account.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn-outline" onclick="window.location.reload()">Resta Qui</button>
+                <a href="libreria.html" class="btn-gold">VAI ALLA LIBRERIA</a>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="script.js"></script>
+
+    <!-- LOGICA ACQUISTO (Identica a progetti.html) -->
     <script type="module">
         import { db } from './script.js';
         import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const buyBtn = document.getElementById('btn-buy-harrow-final');
-            const currentUser = localStorage.getItem('kripix_user');
+        function generateGameKey() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            const segment = () => Array.from({length: 4}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+            return `KRPX-${segment()}-${segment()}-${segment()}`;
+        }
 
-            // 1. Controllo possesso iniziale
-            if (currentUser) {
-                const userRef = doc(db, "users", currentUser.toLowerCase());
+        document.addEventListener('DOMContentLoaded', async () => {
+            const buyBtn = document.getElementById('btn-buy-harrow-page');
+            const currentUser = localStorage.getItem('kripix_user');
+            
+            if (!currentUser) {
+                buyBtn.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'login.html'; });
+                return;
+            }
+
+            const userRef = doc(db, "users", currentUser.toLowerCase());
+            
+            try {
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
-                    buyBtn.innerText = "GIÀ NELLA TUA LIBRERIA";
-                    buyBtn.style.background = "#4caf50";
-                    buyBtn.style.borderColor = "#4caf50";
+                    buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
+                    buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000'; buyBtn.style.borderColor = '#4caf50';
                     buyBtn.onclick = () => window.location.href = 'libreria.html';
                     return;
                 }
-            }
+            } catch (error) { console.error(error); }
 
-            // 2. Logica di acquisto
-            buyBtn.addEventListener('click', async () => {
-                if (!currentUser) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-
-                buyBtn.innerText = "ELABORAZIONE...";
-                buyBtn.style.pointerEvents = "none";
+            buyBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const btn = this;
+                btn.innerText = 'ELABORAZIONE...';
+                btn.style.pointerEvents = 'none';
 
                 try {
-                    const userRef = doc(db, "users", currentUser.toLowerCase());
-                    await updateDoc(userRef, { games: arrayUnion('harrow') });
-                    window.kripixNotify("ACQUISTO", "Licenza acquisita con successo.", "success");
-                    setTimeout(() => { window.location.href = 'libreria.html'; }, 2000);
-                } catch (e) {
-                    window.kripixNotify("ERRORE", "Transazione fallita.", "error");
-                    buyBtn.innerText = "RIPROVA";
-                    buyBtn.style.pointerEvents = "auto";
+                    const newKey = generateGameKey();
+                    await updateDoc(userRef, {
+                        games: arrayUnion('harrow'),
+                        [`keys.harrow`]: newKey 
+                    });
+                    document.getElementById('custom-modal').style.display = 'flex';
+                } catch (error) {
+                    btn.innerText = 'ERRORE';
+                    btn.style.borderColor = '#ff5555';
                 }
             });
         });
