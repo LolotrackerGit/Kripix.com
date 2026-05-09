@@ -114,75 +114,98 @@
     <!-- SCRIPT FIREBASE -->
     <script type="module">
         import { auth, db } from './script.js';
-        import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { doc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { createUserWithEmailAndPassword, sendEmailVerification, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, setDoc, writeBatch, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Approccio di Sicurezza: Creeremo un "username" unico per evitare che due persone si registrino con lo stesso nome
+        // Questo è un approccio comune e molto sicuro
+        const usernamesCol = collection(db, "usernames");
 
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault(); 
-            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
             
-            const email = document.getElementById('email').value.trim();
-            const username = document.getElementById('regUsername').value.trim();
-            const pass1 = document.getElementById('pass1').value;
-            const pass2 = document.getElementById('pass2').value;
+            const emailInput = document.getElementById('email');
+            const usernameInput = document.getElementById('regUsername');
+            const pass1Input = document.getElementById('pass1');
+            const pass2Input = document.getElementById('pass2');
             const serverMsg = document.getElementById('msg-server');
             const btnSubmit = this.querySelector('button');
             
-            if (pass1 !== pass2) { alert("Le password non coincidono!"); return; }
+            const email = emailInput.value.trim();
+            const username = usernameInput.value.trim();
+            const password = pass1Input.value;
 
-            btnSubmit.innerHTML = 'CONNESSIONE AL SERVER...';
+            if (password !== pass2Input.value) { alert("Le password non coincidono!"); return; }
+
+            btnSubmit.innerHTML = 'VERIFICA PROTOCOLLO...';
             btnSubmit.style.pointerEvents = 'none';
 
+            // 1. Controlliamo se lo username è disponibile
+            const usernameDocRef = doc(db, "usernames", username.toLowerCase());
+            const usernameDoc = await getDoc(usernameDocRef);
+            
+            if (usernameDoc.exists()) {
+                serverMsg.innerText = '>> ERRORE: ID GIÀ IN USO NEL SISTEMA';
+                serverMsg.style.display = 'block';
+                btnSubmit.innerHTML = 'CREA ACCOUNT';
+                btnSubmit.style.pointerEvents = 'auto';
+                return;
+            }
+            
+            let firebaseUser = null;
             try {
-                // 1. Controlliamo se l'username esiste GIA' cercando in tutta la collezione
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, where("username", "==", username));
-                const querySnapshot = await getDocs(q);
+                // 2. Creiamo l'account in Firebase Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                firebaseUser = userCredential.user;
 
-                if (!querySnapshot.empty) {
-                    throw new Error("Username-taken");
-                }
-
-                // 2. Creiamo l'account Firebase
-                const userCredential = await createUserWithEmailAndPassword(auth, email, pass1);
-                const firebaseUser = userCredential.user;
-
-                // 3. Salviamo i dati con l'UID come nome del documento!
-                const userDocRef = doc(db, "users", firebaseUser.uid); 
-                await setDoc(userDocRef, {
+                // 3. Usiamo una "transazione" (batch) per creare sia il profilo che il documento username.
+                // Se una delle due operazioni fallisce, falliscono entrambe.
+                const batch = writeBatch(db);
+                
+                // Documento del profilo utente
+                const userDocRef = doc(db, "users", firebaseUser.uid);
+                batch.set(userDocRef, {
                     uid: firebaseUser.uid,
                     username: username,
                     email: email,
-                    isAdmin: false, // CRITICO: Forzato a falso dal client e confermato dalle regole
+                    isAdmin: false,
                     color: '#e3c66c',
-                    avatar_img: null,
-                    games: [],
-                    friends: [],
-                    requests:[],
                     createdAt: new Date().toISOString()
                 });
 
+                // Documento dello username per il controllo unicità
+                batch.set(usernameDocRef, { uid: firebaseUser.uid });
+
+                // Eseguiamo la transazione
+                await batch.commit();
+
+                // 4. Se tutto è andato bene, inviamo la mail di verifica
                 await sendEmailVerification(firebaseUser);
                 await signOut(auth);
 
-                serverMsg.innerText = ">> ATTENZIONE: Controlla la tua casella di posta per confermare l'identità prima del login.";
+                serverMsg.innerText = ">> PROTOCOLLO INVIATO. Controlla la tua posta per confermare l'identità.";
                 serverMsg.style.color = "var(--accent-gold)";
                 serverMsg.style.display = 'block';
-                btnSubmit.innerHTML = 'PROTOCOLLO INVIATO';
+                btnSubmit.innerHTML = 'REGISTRAZIONE COMPLETATA';
 
                 setTimeout(() => { window.location.href = 'login.html'; }, 4000);
 
             } catch (error) {
+                // Se la registrazione fallisce DOPO aver creato l'utente in Auth (raro), lo cancelliamo per pulizia
+                if (firebaseUser) {
+                    await deleteUser(firebaseUser);
+                }
+                
                 btnSubmit.innerHTML = 'CREA ACCOUNT';
                 btnSubmit.style.pointerEvents = 'auto';
 
-                if (error.message === "Username-taken") {
-                    serverMsg.innerText = '>> ERRORE: ID GIÀ IN USO NEL SISTEMA';
-                    serverMsg.style.display = 'block';
+                if (error.code === 'auth/email-already-in-use') {
+                    serverMsg.innerText = '>> ERRORE: EMAIL GIÀ REGISTRATA';
                 } else {
                     serverMsg.innerText = '>> ERRORE SERVER: ' + error.message;
-                    serverMsg.style.display = 'block';
                 }
+                serverMsg.style.display = 'block';
+                console.error(error);
             }
         });
     </script>
