@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// NAVBAR DINAMICA & SICUREZZA (La VERA auth)
+// NAVBAR DINAMICA & SICUREZZA
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const navbarList = document.querySelector('.nav-menu') || document.querySelector('.nav-links');
@@ -52,27 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
     li.id = 'auth-item';
     li.className = 'nav-user-container';
 
-    // onAuthStateChanged è la magia: controlla i cookie crittografati di Google, non il localStorage!
-    onAuthStateChanged(auth, async (user) => {
+    // Rendo la funzione globale così impostazioni.html può richiamarla per aggiornare l'avatar
+    window.updateNavbarAvatarDisplay = async function(user) {
         if (!user) {
             li.innerHTML = `<a href="login.html" class="btn-login-nav">ACCEDI</a>`;
-            if (targetNode) navbarList.insertBefore(li, targetNode); else navbarList.appendChild(li);
+            if (!document.getElementById('auth-item')) {
+                if (targetNode) navbarList.insertBefore(li, targetNode); else navbarList.appendChild(li);
+            }
             return;
         }
 
-        if(!user.emailVerified) return; // Se è nel Limbo, non mostrare la navbar utente
-
         try {
-            // Peschiamo il documento usando l'UID INVIOLABILE
+            // Usa il VERO ID (UID), impossibile da spoofare
             const userRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userRef);
 
             if (userSnap.exists()) {
                 const me = userSnap.data();
                 
-                // Salviamo username in locale SOLO per la UI, non per la sicurezza
-                localStorage.setItem('kripix_display_name', me.username);
-
                 let avatarHtmlContent = me.username.charAt(0).toUpperCase();
                 let avatarStyle = me.avatar_img ? `background-color: transparent; border: none;` : `background-color: ${me.color || '#e3c66c'}; border: none;`; 
                 if (me.avatar_img) avatarHtmlContent = `<img src="${me.avatar_img}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
@@ -92,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
 
-                if (li.parentNode !== navbarList) {
+                if (!document.getElementById('auth-item')) {
                     if (targetNode) navbarList.insertBefore(li, targetNode); else navbarList.appendChild(li);
                 }
 
@@ -103,13 +100,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.querySelector('#action-logout').onclick = async (e) => {
                     e.preventDefault();
                     await signOut(auth);
-                    localStorage.removeItem('kripix_display_name');
                     window.location.href = 'index.html'; 
                 };
 
                 document.onclick = (e) => { if (dropdown && !li.contains(e.target)) dropdown.classList.remove('show'); };
             }
         } catch (error) { console.error("Errore Auth State:", error); }
+    };
+
+    // Firebase si accorge automaticamente se l'utente entra o esce
+    onAuthStateChanged(auth, (user) => {
+        window.updateNavbarAvatarDisplay(user);
     });
 });
 

@@ -250,23 +250,25 @@
     <!-- LOGICA FIREBASE CLOUD -->
     <script type="module">
         import { auth, db } from './script.js';
-        import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, updateEmail, deleteUser, verifyBeforeUpdateEmail, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { doc, getDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const currentUser = localStorage.getItem('kripix_user');
-        if (!currentUser) window.location.href = 'login.html';
+        let userDocRef = null;
+        let userDataCache = null;
 
-        const userDocRef = doc(db, "users", currentUser.toLowerCase());
-        let userDataCache = null; // Salviamo i dati per usarli nei controlli del cooldown
+        // CONTROLLO SICUREZZA: SE NON SEI LOGGATO VERO, TI BUTTO FUORI
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = 'login.html'; return; }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('disp-user').innerText = currentUser;
-
+            // Usiamo l'UID vero, impossibile da falsificare col LocalStorage
+            userDocRef = doc(db, "users", user.uid);
+            
             try {
                 const userSnap = await getDoc(userDocRef);
-
                 if (userSnap.exists()) {
                     userDataCache = userSnap.data();
+                    
+                    document.getElementById('disp-user').innerText = userDataCache.username;
                     document.getElementById('disp-email').innerText = userDataCache.email;
                     
                     if (userDataCache.privacy) {
@@ -275,12 +277,12 @@
                         document.getElementById('priv-news').checked = userDataCache.privacy.newsletter || false;
                     }
                 }
-            } catch (error) {
-                console.error("Errore recupero dati:", error);
-            }
+            } catch (error) { console.error("Errore recupero dati:", error); }
+        });
 
+        document.addEventListener('DOMContentLoaded', async () => {
             // Popola Avatar Grid
-            const avatarImages = [
+            const avatarImages =[
                 "https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111",
                 "https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111",
                 "https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111",
@@ -296,7 +298,6 @@
         // ----------------------------------------
         // FUNZIONI UI ESPOSIZIONE GLOBALE
         // ----------------------------------------
-
         window.switchTab = function(tabName) {
             document.getElementById('btn-tab-profile').classList.remove('active');
             document.getElementById('btn-tab-privacy').classList.remove('active');
@@ -308,7 +309,6 @@
 
         window.closeModal = function(modalId) {
             document.getElementById(modalId).style.display = 'none';
-            // Pulisce gli input e gli errori quando chiudi
             const modal = document.getElementById(modalId);
             modal.querySelectorAll('input').forEach(i => { i.value = ''; i.classList.remove('error-border'); });
             modal.querySelectorAll('.error-msg').forEach(msg => msg.style.display = 'none');
@@ -316,19 +316,18 @@
 
         function showError(input, msgEl, text) { 
             input.classList.add('error-border'); 
-            msgEl.innerText = '>> ' + text; 
-            msgEl.style.display = 'block'; 
+            msgEl.innerText = '>> ' + text; msgEl.style.display = 'block'; 
             setTimeout(() => input.classList.remove('error-border'), 500); 
         }
 
         function showSuccess(msg) {
             document.getElementById('success-text').innerText = msg;
-            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); // Chiudi tutto
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
             document.getElementById('success-modal').style.display = 'flex';
         }
 
         // =========================================
-        // NUOVO: CAMBIO NOME (COOLDOWN 14 GIORNI)
+        // CAMBIO NOME (SISTEMATO)
         // =========================================
         window.openNameModal = function() {
             const cooldownInfo = document.getElementById('cooldown-info');
@@ -337,22 +336,14 @@
             
             document.getElementById('name-msg').style.display = 'none';
 
-            // Controllo del Cooldown
             if (userDataCache && userDataCache.lastNameChange) {
-                const lastChange = new Date(userDataCache.lastNameChange).getTime();
-                const now = new Date().getTime();
-                const diffTime = Math.abs(now - lastChange);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                
+                const diffDays = Math.ceil(Math.abs(new Date().getTime() - new Date(userDataCache.lastNameChange).getTime()) / (1000 * 60 * 60 * 24)); 
                 if (diffDays < 14) {
-                    const giorniMancanti = 14 - diffDays;
-                    cooldownInfo.innerHTML = `>> <span style="color:#ff5555; font-weight:bold;">ACCESSO NEGATO:</span> Hai cambiato nome di recente. Devi attendere <span style="color:#fff;">${giorniMancanti} giorni</span> per modificare nuovamente il tuo ID.`;
-                    btn.style.display = 'none';
-                    input.style.display = 'none';
+                    cooldownInfo.innerHTML = `>> <span style="color:#ff5555; font-weight:bold;">ACCESSO NEGATO:</span> Attendi <span style="color:#fff;">${14 - diffDays} giorni</span>.`;
+                    btn.style.display = 'none'; input.style.display = 'none';
                 } else {
                     cooldownInfo.innerText = "Il tuo nome in codice identifica il tuo profilo nella rete.";
-                    btn.style.display = 'block';
-                    input.style.display = 'block';
+                    btn.style.display = 'block'; input.style.display = 'block';
                 }
             }
             document.getElementById('name-modal').style.display = 'flex';
@@ -364,144 +355,121 @@
             const msgEl = document.getElementById('name-msg');
             const btn = document.getElementById('btn-confirm-name');
 
-            if (newName.length < 3 || newName.length > 15) {
-                showError(input, msgEl, "L'ID deve avere tra 3 e 15 caratteri.");
-                return;
-            }
+            if (newName.length < 3 || newName.length > 15) { showError(input, msgEl, "L'ID deve avere tra 3 e 15 caratteri."); return; }
+            if (newName.toLowerCase() === userDataCache.username.toLowerCase()) { showError(input, msgEl, "Stai già usando questo ID."); return; }
 
-            if (newName.toLowerCase() === currentUser.toLowerCase()) {
-                showError(input, msgEl, "Stai già usando questo ID.");
-                return;
-            }
-
-            btn.innerText = "VERIFICA DATABASE...";
-            btn.style.pointerEvents = "none";
+            btn.innerText = "VERIFICA DATABASE..."; btn.style.pointerEvents = "none";
 
             try {
-                // 1. Controlliamo se il nuovo nome è già in uso da qualcun altro
-                const newDocRef = doc(db, "users", newName.toLowerCase());
-                const docSnap = await getDoc(newDocRef);
+                // Controlla se il nome è libero
+                const q = query(collection(db, "users"), where("username", "==", newName));
+                const querySnap = await getDocs(q);
 
-                if (docSnap.exists()) {
+                if (!querySnap.empty) {
                     showError(input, msgEl, "ID non disponibile. Scegline un altro.");
-                    throw new Error("name_taken");
+                    btn.innerText = "AGGIORNA ID"; btn.style.pointerEvents = "auto";
+                    return;
                 }
 
-                // 2. Creiamo il nuovo documento copiando tutti i dati del vecchio
-                const newData = { ...userDataCache };
-                newData.username = newName; // Aggiorniamo il nome
-                newData.lastNameChange = new Date().toISOString(); // Aggiorniamo la data del cambio!
+                // Poiché il documento è l'UID, ci basta aggiornare il campo! Facilissimo.
+                await updateDoc(userDocRef, {
+                    username: newName,
+                    lastNameChange: new Date().toISOString()
+                });
 
-                await setDoc(newDocRef, newData);
-
-                // 3. Eliminiamo il vecchio documento
-                await deleteDoc(userDocRef);
-
-                // 4. Aggiorniamo il localStorage
-                localStorage.setItem('kripix_user', newName);
-
+                document.getElementById('disp-user').innerText = newName;
+                userDataCache.username = newName;
+                if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser);
                 showSuccess("Il tuo ID Agente è stato aggiornato con successo.");
 
             } catch (error) {
-                if (error.message !== "name_taken") {
-                    showError(input, msgEl, "Errore di connessione.");
-                    console.error(error);
-                }
+                showError(input, msgEl, "Errore di connessione."); console.error(error);
             }
-            btn.innerText = "AGGIORNA ID";
-            btn.style.pointerEvents = "auto";
+            btn.innerText = "AGGIORNA ID"; btn.style.pointerEvents = "auto";
         };
 
-
         // =========================================
-        // NUOVO: CAMBIO EMAIL
+        // CAMBIO EMAIL
         // =========================================
-        window.openEmailModal = function() {
-            document.getElementById('email-modal').style.display = 'flex';
-        };
-
+        window.openEmailModal = () => document.getElementById('email-modal').style.display = 'flex';
         window.confirmEmailChange = async function() {
             const passInput = document.getElementById('auth-pass-input');
             const emailInput = document.getElementById('new-email-input');
             const msgEl = document.getElementById('email-msg');
             const btn = document.getElementById('btn-confirm-email');
+            const firebaseUser = auth.currentUser; if (!firebaseUser) return;
 
-            const firebaseUser = auth.currentUser;
-            if (!firebaseUser) return;
-
-            if (!emailInput.value.includes('@')) {
-                showError(emailInput, msgEl, "Inserisci un'email valida.");
-                return;
-            }
-
-            btn.innerText = "ELABORAZIONE...";
-            btn.style.pointerEvents = "none";
-
+            btn.innerText = "ELABORAZIONE..."; btn.style.pointerEvents = "none";
             try {
-                // 1. Ri-autenticazione di sicurezza
                 const credential = EmailAuthProvider.credential(firebaseUser.email, passInput.value);
                 await reauthenticateWithCredential(firebaseUser, credential);
-
-                // 2. Firebase gestisce il cambio email!
-                // Manderà una mail di verifica al nuovo indirizzo, senza rompere la sessione attuale
                 await verifyBeforeUpdateEmail(firebaseUser, emailInput.value.trim());
-
-                showSuccess("Richiesta accettata! Controlla la tua NUOVA email per confermare l'aggiornamento. Fino ad allora, accederai col vecchio canale.");
-
+                showSuccess("Controlla la tua NUOVA email per confermare l'aggiornamento.");
             } catch (error) {
-                console.error(error);
-                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-                    showError(passInput, msgEl, "Password attuale errata.");
-                } else if (error.code === 'auth/email-already-in-use') {
-                    showError(emailInput, msgEl, "Questa email appartiene già ad un altro Agente.");
-                } else {
-                    showError(emailInput, msgEl, "Errore server. Riprova più tardi.");
-                }
+                showError(passInput, msgEl, "Password errata o errore di rete.");
             }
-            btn.innerText = "INVIA VERIFICA";
-            btn.style.pointerEvents = "auto";
+            btn.innerText = "INVIA VERIFICA"; btn.style.pointerEvents = "auto";
         };
 
-        // ... [Il resto del codice JS originale per Avatar, Colore e Password rimane uguale qui sotto] ...
-
+        // =========================================
+        // PRIVACY & PERSONALIZZAZIONE
+        // =========================================
         window.savePrivacy = async function() {
             try { await updateDoc(userDocRef, { privacy: { visibility: document.getElementById('priv-vis').checked, telemetry: document.getElementById('priv-tel').checked, newsletter: document.getElementById('priv-news').checked } }); if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy sincronizzate.", "success"); } catch (e) { console.error(e); }
         }
 
         window.changeColor = async function(newColor) {
-            try { await updateDoc(userDocRef, { color: newColor, avatar_img: null }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(); if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success"); } catch (e) { console.error(e); }
+            try { await updateDoc(userDocRef, { color: newColor, avatar_img: null }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success"); } catch (e) { console.error(e); }
         };
 
         window.selectAvatarImage = async function(imgUrl) {
-            try { await updateDoc(userDocRef, { avatar_img: imgUrl }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(); if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success"); } catch (e) { console.error(e); }
+            try { await updateDoc(userDocRef, { avatar_img: imgUrl }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success"); } catch (e) { console.error(e); }
         };
 
+        // =========================================
+        // PASSWORD & ZONA ROSSA (ELIMINAZIONE RISOLTA)
+        // =========================================
         window.openPassModal = () => document.getElementById('pass-modal').style.display = 'flex';
         window.confirmPassChange = async function() {
             const oldPass = document.getElementById('old-pass'); const newPass = document.getElementById('new-pass'); const confPass = document.getElementById('conf-pass'); const msg = document.getElementById('pass-msg');
             const firebaseUser = auth.currentUser; if (!firebaseUser) return;
-            if (newPass.value.length < 8 || !/\d/.test(newPass.value)) { showError(newPass, msg, "NUOVA PASSWORD TROPPO DEBOLE"); return; }
+            if (newPass.value.length < 8) { showError(newPass, msg, "NUOVA PASSWORD TROPPO DEBOLE"); return; }
             if (newPass.value !== confPass.value) { showError(confPass, msg, "LE NUOVE PASSWORD NON COINCIDONO"); return; }
             try {
                 const credential = EmailAuthProvider.credential(firebaseUser.email, oldPass.value);
                 await reauthenticateWithCredential(firebaseUser, credential);
                 await updatePassword(firebaseUser, newPass.value);
-                showSuccess("La tua password è stata aggiornata. Non dimenticarla, Agente.");
+                showSuccess("La tua password è stata aggiornata.");
             } catch (error) { showError(oldPass, msg, "VECCHIA PASSWORD ERRATA"); }
         }
 
         window.openDeleteModal = () => document.getElementById('delete-modal').style.display = 'flex';
+        
+        // IL FIX DELL'ELIMINAZIONE ACCOUNT
         window.confirmDelete = async function() {
-            const inputPass = document.getElementById('del-password').value; const errorMsg = document.getElementById('del-error'); const firebaseUser = auth.currentUser; if (!firebaseUser) return;
+            const inputPass = document.getElementById('del-password').value; 
+            const errorMsg = document.getElementById('del-error'); 
+            const firebaseUser = auth.currentUser; 
+            if (!firebaseUser) return;
+            
             try {
+                // Prima controlliamo la password
                 const credential = EmailAuthProvider.credential(firebaseUser.email, inputPass);
                 await reauthenticateWithCredential(firebaseUser, credential);
+                
+                // Prima cancelliamo i dati nel database (usando il VERO UID!)
                 await deleteDoc(userDocRef);
+                
+                // Poi cancelliamo l'account da Firebase Auth
                 await deleteUser(firebaseUser);
-                localStorage.clear(); document.getElementById('delete-modal').style.display='none'; document.getElementById('goodbye-modal').style.display = 'flex'; 
-                setTimeout(() => { window.location.href = 'index.html'; }, 2500);
+                
+                // Fatto!
+                window.location.href = 'index.html'; 
             } catch (error) {
-                const inputEl = document.getElementById('del-password'); inputEl.classList.add('error-border'); errorMsg.style.display = 'block'; setTimeout(() => inputEl.classList.remove('error-border'), 500);
+                const inputEl = document.getElementById('del-password'); 
+                inputEl.classList.add('error-border'); 
+                errorMsg.style.display = 'block'; 
+                setTimeout(() => inputEl.classList.remove('error-border'), 500);
             }
         }
     </script>
