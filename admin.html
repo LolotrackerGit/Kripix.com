@@ -158,107 +158,107 @@
 
     <!-- SCRIPT FIREBASE -->
     <script type="module">
-        import { auth, db } from './script.js';
-        import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+            import { auth, db } from './script.js';
+            import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+            import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // =====================================
-        // 1. CANCELLO DI SICUREZZA
-        // =====================================
-        onAuthStateChanged(auth, async (user) => {
-            if (!user || !localStorage.getItem('kripix_user')) { window.location.href = "login.html"; return; }
+            // =====================================
+            // 1. CANCELLO DI SICUREZZA
+            // =====================================
+            onAuthStateChanged(auth, async (user) => {
+                if (!user || !localStorage.getItem('kripix_user')) { window.location.href = "login.html"; return; }
 
-            const userRef = doc(db, "users", localStorage.getItem('kripix_user').toLowerCase());
-            const userSnap = await getDoc(userRef);
+                const userRef = doc(db, "users", localStorage.getItem('kripix_user').toLowerCase());
+                const userSnap = await getDoc(userRef);
 
-            if (!userSnap.exists() || userSnap.data().isAdmin !== true) { window.location.href = "404.html"; return; }
+                if (!userSnap.exists() || userSnap.data().isAdmin !== true) { window.location.href = "404.html"; return; }
 
-            document.getElementById('access-overlay').style.display = 'none';
-            loadDashboardData();
-            loadNewsData();
-        });
-
-        // =====================================
-        // 2. FUNZIONI DI CARICAMENTO DATI
-        // =====================================
-        async function loadDashboardData() {
-            // ... (uguale a prima)
-            const usersSnapshot = await getDocs(collection(db, "users"));
-            let totUsers = 0, totGames = 0, totNewsletter = 0;
-            const tbody = document.getElementById('admin-table-body');
-            tbody.innerHTML = '';
-            usersSnapshot.forEach((doc) => {
-                const userData = doc.data(); totUsers++;
-                const hasHarrow = userData.games && userData.games.includes('harrow'); if (hasHarrow) totGames++; if (userData.privacy && userData.privacy.newsletter) totNewsletter++;
-                let dateStr = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('it-IT') : "N/A";
-                const roleTag = userData.isAdmin ? `<span class="tag-admin">OVERSEER</span>` : `<span class="tag-user">AGENTE</span>`;
-                const gameTag = hasHarrow ? `<span style="color:#4caf50;">POSSEDUTA</span>` : `<span style="color:#ff5555;">NON ACQUISITA</span>`;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td><strong>${userData.username}</strong></td><td>${userData.email}</td><td>${gameTag}</td><td>${dateStr}</td><td>${roleTag}</td>`;
-                tbody.appendChild(tr);
+                document.getElementById('access-overlay').style.display = 'none';
+                loadDashboardData();
+                loadNewsData();
             });
-            document.getElementById('stat-tot-users').innerText = totUsers;
-            document.getElementById('stat-tot-games').innerText = totGames;
-            document.getElementById('stat-tot-news').innerText = totNewsletter;
-        }
 
-        async function loadNewsData() {
-            // ... (uguale a prima)
-            const q = query(collection(db, "news"), orderBy("date", "desc"));
-            const newsSnapshot = await getDocs(q);
-            const tbody = document.getElementById('admin-news-table-body');
-            tbody.innerHTML = '';
-            newsSnapshot.forEach((newsDoc) => {
-                const news = newsDoc.data();
-                const formattedDate = new Date(news.date).toLocaleDateString('it-IT');
-                const priorityTag = news.priority === 'high' ? `<span style="color:#ff5555;">ALTA</span>` : `<span style="color:#aaa;">NORMALE</span>`;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td><strong>${news.title}</strong></td><td>${formattedDate}</td><td>${priorityTag}</td><td><button class="btn-danger" onclick="deleteNews('${newsDoc.id}')">DISTRUGGI</button></td>`;
-                tbody.appendChild(tr);
+            // =====================================
+            // 2. FUNZIONI DI CARICAMENTO DATI
+            // =====================================
+            async function loadDashboardData() {
+                // ... (uguale a prima)
+                const usersSnapshot = await getDocs(collection(db, "users"));
+                let totUsers = 0, totGames = 0, totNewsletter = 0;
+                const tbody = document.getElementById('admin-table-body');
+                tbody.innerHTML = '';
+                usersSnapshot.forEach((doc) => {
+                    const userData = doc.data(); totUsers++;
+                    const hasHarrow = userData.games && userData.games.includes('harrow'); if (hasHarrow) totGames++; if (userData.privacy && userData.privacy.newsletter) totNewsletter++;
+                    let dateStr = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('it-IT') : "N/A";
+                    const roleTag = userData.isAdmin ? `<span class="tag-admin">OVERSEER</span>` : `<span class="tag-user">AGENTE</span>`;
+                    const gameTag = hasHarrow ? `<span style="color:#4caf50;">POSSEDUTA</span>` : `<span style="color:#ff5555;">NON ACQUISITA</span>`;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td><strong>${userData.username}</strong></td><td>${userData.email}</td><td>${gameTag}</td><td>${dateStr}</td><td>${roleTag}</td>`;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('stat-tot-users').innerText = totUsers;
+                document.getElementById('stat-tot-games').innerText = totGames;
+                document.getElementById('stat-tot-news').innerText = totNewsletter;
+            }
+
+            async function loadNewsData() {
+                // ... (uguale a prima)
+                const q = query(collection(db, "news"), orderBy("date", "desc"));
+                const newsSnapshot = await getDocs(q);
+                const tbody = document.getElementById('admin-news-table-body');
+                tbody.innerHTML = '';
+                newsSnapshot.forEach((newsDoc) => {
+                    const news = newsDoc.data();
+                    const formattedDate = new Date(news.date).toLocaleDateString('it-IT');
+                    const priorityTag = news.priority === 'high' ? `<span style="color:#ff5555;">ALTA</span>` : `<span style="color:#aaa;">NORMALE</span>`;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td><strong>${news.title}</strong></td><td>${formattedDate}</td><td>${priorityTag}</td><td><button class="btn-danger" onclick="deleteNews('${newsDoc.id}')">DISTRUGGI</button></td>`;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // =====================================
+            // 3. LOGICA UI (COLLAPSE & BROADCAST)
+            // =====================================
+            document.getElementById('toggle-users').addEventListener('click', () => {
+                document.getElementById('content-users').classList.toggle('collapsed');
+                document.getElementById('arrow-users').classList.toggle('collapsed');
             });
-        }
 
-        // =====================================
-        // 3. LOGICA UI (COLLAPSE & BROADCAST)
-        // =====================================
-        document.getElementById('toggle-users').addEventListener('click', () => {
-            document.getElementById('content-users').classList.toggle('collapsed');
-            document.getElementById('arrow-users').classList.toggle('collapsed');
-        });
+            document.getElementById('toggle-news').addEventListener('click', () => {
+                document.getElementById('content-news').classList.toggle('collapsed');
+                document.getElementById('arrow-news').classList.toggle('collapsed');
+            });
+            
+            document.getElementById('btn-broadcast').addEventListener('click', async () => {
+                // ... (logica invio news, uguale a prima)
+                const priority = document.getElementById('news-priority').value;
+                const title = document.getElementById('news-title').value.trim(); const body = document.getElementById('news-body').value.trim(); const link = document.getElementById('news-link').value.trim(); const btn = document.getElementById('btn-broadcast');
+                if(!title || !body) return;
+                btn.innerText = "TRASMISSIONE..."; btn.disabled = true;
+                try {
+                    await addDoc(collection(db, "news"), { priority, title, body, link, date: new Date().toISOString(), author: "Kripix Overseer" });
+                    document.getElementById('news-title').value = ''; document.getElementById('news-body').value = ''; document.getElementById('news-link').value = '';
+                    loadNewsData(); window.kripixNotify("BROADCAST", "Comunicazione inviata e salvata nel cloud.", "success");
+                } catch (e) {
+                    window.kripixNotify("ERRORE", "Trasmissione fallita: " + e.message, "error");
+                }
+                btn.innerText = "TRASMETTI"; btn.disabled = false;
+            });
 
-        document.getElementById('toggle-news').addEventListener('click', () => {
-            document.getElementById('content-news').classList.toggle('collapsed');
-            document.getElementById('arrow-news').classList.toggle('collapsed');
-        });
-        
-        document.getElementById('btn-broadcast').addEventListener('click', async () => {
-            // ... (logica invio news, uguale a prima)
-            const priority = document.getElementById('news-priority').value;
-            const title = document.getElementById('news-title').value.trim(); const body = document.getElementById('news-body').value.trim(); const link = document.getElementById('news-link').value.trim(); const btn = document.getElementById('btn-broadcast');
-            if(!title || !body) return;
-            btn.innerText = "TRASMISSIONE..."; btn.disabled = true;
-            try {
-                await addDoc(collection(db, "news"), { priority, title, body, link, date: new Date().toISOString(), author: "Kripix Overseer" });
-                document.getElementById('news-title').value = ''; document.getElementById('news-body').value = ''; document.getElementById('news-link').value = '';
-                loadNewsData(); window.kripixNotify("BROADCAST", "Comunicazione inviata e salvata nel cloud.", "success");
-            } catch (e) {
-                window.kripixNotify("ERRORE", "Trasmissione fallita: " + e.message, "error");
-            }
-            btn.innerText = "TRASMETTI"; btn.disabled = false;
-        });
-
-        // =====================================
-        // 4. ELIMINAZIONE NEWS (SENZA ALERT)
-        // =====================================
-        window.deleteNews = async function(newsId) {
-            try {
-                await deleteDoc(doc(db, "news", newsId));
-                loadNewsData(); // Ricarica la tabella
-                window.kripixNotify("PROTOCOLLO ESEGUITO", "Comunicazione distrutta con successo da tutti i terminali.", "error");
-            } catch (error) {
-                window.kripixNotify("ERRORE", "Impossibile distruggere la comunicazione.", "error");
-            }
-        };
-    </script>
+            // =====================================
+            // 4. ELIMINAZIONE NEWS (SENZA ALERT)
+            // =====================================
+            window.deleteNews = async function(newsId) {
+                try {
+                    await deleteDoc(doc(db, "news", newsId));
+                    loadNewsData(); // Ricarica la tabella
+                    window.kripixNotify("PROTOCOLLO ESEGUITO", "Comunicazione distrutta con successo da tutti i terminali.", "error");
+                } catch (error) {
+                    window.kripixNotify("ERRORE", "Impossibile distruggere la comunicazione.", "error");
+                }
+            };
+        </script>
 </body>
 </html>

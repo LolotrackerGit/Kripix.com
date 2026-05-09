@@ -201,63 +201,49 @@
 
     <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
     <script type="module">
-        import { db } from './script.js';
+        import { auth, db } from './script.js';
         import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // --- FUNZIONE GENERATORE CHIAVI UNIVOCHE ---
         function generateGameKey() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Evitiamo O, I, 1, 0 per chiarezza
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
             const segment = () => Array.from({length: 4}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
             return `KRPX-${segment()}-${segment()}-${segment()}`;
         }
 
-        window.openLightbox = function(src, text) {
-            document.getElementById('lightbox').style.display = 'flex';
-            document.getElementById('lightbox-img').innerText = src;
-            document.getElementById('lightbox-caption').innerText = ">> " + text;
-        }
-        window.closeLightbox = () => document.getElementById('lightbox').style.display = 'none';
-        window.closeModal = () => { document.getElementById('custom-modal').style.display = 'none'; window.location.reload(); }
-
-        document.addEventListener('DOMContentLoaded', async () => {
+        onAuthStateChanged(auth, async (user) => {
             const buyBtn = document.getElementById('btn-buy-kripix');
             if (!buyBtn) return;
 
-            const currentUser = localStorage.getItem('kripix_user');
-            if (!currentUser) {
+            if (!user) {
                 buyBtn.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'login.html'; });
                 return;
             }
 
-            const userRef = doc(db, "users", currentUser.toLowerCase());
+            const userRef = doc(db, "users", user.uid); // <--- ORA È SICURO
             
-            // Check iniziale se posseduto
             try {
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
                     buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
-                    buyBtn.style.background = '#4caf50';
-                    buyBtn.style.color = '#000';
-                    buyBtn.style.borderColor = '#4caf50';
-                    buyBtn.href = 'libreria.html';
-                    buyBtn.id = '';
+                    buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000'; buyBtn.href = 'libreria.html'; buyBtn.id = '';
                     return;
                 }
             } catch (error) { console.error(error); }
 
-            // LOGICA ACQUISTO CON GENERAZIONE CHIAVE
             buyBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
                 const btn = this;
-                btn.innerText = 'GENERAZIONE LICENZA...';
+                btn.innerText = 'ELABORAZIONE TRANSAZIONE...';
                 btn.style.pointerEvents = 'none';
 
                 try {
-                    const newKey = generateGameKey(); // Creiamo la chiave ora!
+                    // Genera chiave (In futuro questo si sposta su un Server Cloud Function Stripe)
+                    const newKey = generateGameKey(); 
 
+                    // Salva nel documento utente
                     await updateDoc(userRef, {
                         games: arrayUnion('harrow'),
-                        // Salviamo la chiave in un oggetto 'keys' dedicato
                         [`keys.harrow`]: newKey 
                     });
 
@@ -268,6 +254,7 @@
                 }
             });
         });
+        window.closeModal = () => { document.getElementById('custom-modal').style.display = 'none'; window.location.reload(); }
     </script>
 </body>
 </html>

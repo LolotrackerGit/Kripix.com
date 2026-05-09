@@ -115,130 +115,76 @@
     <script type="module">
         import { auth, db } from './script.js';
         import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault(); 
-            
-            // 1. Reset Grafico
             document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
-            document.querySelectorAll('.validation-msg').forEach(el => el.style.display = 'none');
-
-            const email = document.getElementById('email');
-            const user = document.getElementById('regUsername');
-            const pass1 = document.getElementById('pass1');
-            const pass2 = document.getElementById('pass2');
+            
+            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const pass1 = document.getElementById('pass1').value;
+            const pass2 = document.getElementById('pass2').value;
             const serverMsg = document.getElementById('msg-server');
             const btnSubmit = this.querySelector('button');
             
-            let isValid = true;
+            if (pass1 !== pass2) { alert("Le password non coincidono!"); return; }
 
-            // Validazione Formale Locale
-            if (!user.value.trim()) { showError(user, 'msg-user', '>> ID RICHIESTO'); isValid = false; }
-            
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(email.value)) { showError(email, 'msg-email', '>> FORMATO EMAIL NON VALIDO'); isValid = false; }
-
-            if (pass1.value.length < 8 || !/\d/.test(pass1.value)) { 
-                showError(pass1, 'msg-pass1', '>> MINIMO 8 CARATTERI E 1 NUMERO'); isValid = false; 
-            }
-            if (pass1.value !== pass2.value) { showError(pass2, 'msg-pass2', '>> PASSWORD NON COINCIDENTI'); isValid = false; }
-
-            if (!isValid) return;
-
-            // Avvio Connessione al Server
             btnSubmit.innerHTML = 'CONNESSIONE AL SERVER...';
-            btnSubmit.style.opacity = '0.7';
             btnSubmit.style.pointerEvents = 'none';
 
             try {
-                // Controllo disponibilità Username nel database
-                const usernameValue = user.value.trim();
-                const userDocRef = doc(db, "users", usernameValue.toLowerCase()); 
-                const docSnap = await getDoc(userDocRef);
+                // 1. Controlliamo se l'username esiste GIA' cercando in tutta la collezione
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username", "==", username));
+                const querySnapshot = await getDocs(q);
 
-                if (docSnap.exists()) {
-                    showError(user, 'msg-user', '>> ERRORE: ID GIA IN USO NEL SISTEMA');
+                if (!querySnapshot.empty) {
                     throw new Error("Username-taken");
                 }
 
-                // Creazione account Google Auth
-                const userCredential = await createUserWithEmailAndPassword(auth, email.value.trim(), pass1.value);
+                // 2. Creiamo l'account Firebase
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass1);
                 const firebaseUser = userCredential.user;
 
-                // Salvataggio Dossier nel Database Firestore
-                const newUserColor = getRandomColor();
+                // 3. Salviamo i dati con l'UID come nome del documento!
+                const userDocRef = doc(db, "users", firebaseUser.uid); 
                 await setDoc(userDocRef, {
                     uid: firebaseUser.uid,
-                    username: usernameValue,
-                    email: email.value.trim(),
-                    color: newUserColor,
+                    username: username,
+                    email: email,
+                    isAdmin: false, // CRITICO: Forzato a falso dal client e confermato dalle regole
+                    color: '#e3c66c',
                     avatar_img: null,
                     games: [],
                     friends: [],
-                    requests: [],
-                    privacy: { visibility: true, telemetry: false, newsletter: true },
+                    requests:[],
                     createdAt: new Date().toISOString()
                 });
 
-                // INVIO MAIL DI VERIFICA
                 await sendEmailVerification(firebaseUser);
-
-                // DISCONNESSIONE FORZATA (L'utente non può entrare finché non clicca la mail)
                 await signOut(auth);
 
-                // Successo UI
-                btnSubmit.innerHTML = 'PROTOCOLLO INVIATO ALLA TUA MAIL';
-                btnSubmit.style.background = 'var(--accent-gold)';
-                btnSubmit.style.borderColor = 'var(--accent-gold)';
-                btnSubmit.style.color = '#000';
-
-                serverMsg.innerText = ">> ATTENZIONE: Controlla la tua casella di posta per confermare l'identità.";
+                serverMsg.innerText = ">> ATTENZIONE: Controlla la tua casella di posta per confermare l'identità prima del login.";
                 serverMsg.style.color = "var(--accent-gold)";
                 serverMsg.style.display = 'block';
+                btnSubmit.innerHTML = 'PROTOCOLLO INVIATO';
 
-                // Riporta al login
-                setTimeout(() => {
-                    window.location.href = 'login.html'; 
-                }, 4000);
+                setTimeout(() => { window.location.href = 'login.html'; }, 4000);
 
             } catch (error) {
                 btnSubmit.innerHTML = 'CREA ACCOUNT';
-                btnSubmit.style.opacity = '1';
                 btnSubmit.style.pointerEvents = 'auto';
 
                 if (error.message === "Username-taken") {
-                    // Errore già mostrato a video
-                } else if (error.code === 'auth/email-already-in-use') {
-                    showError(email, 'msg-email', '>> ERRORE: EMAIL GIÀ REGISTRATA');
+                    serverMsg.innerText = '>> ERRORE: ID GIÀ IN USO NEL SISTEMA';
+                    serverMsg.style.display = 'block';
                 } else {
                     serverMsg.innerText = '>> ERRORE SERVER: ' + error.message;
                     serverMsg.style.display = 'block';
                 }
-                console.error(error);
             }
         });
-
-        function showError(input, msgId, text) {
-            input.classList.add('input-error');
-            const msg = document.getElementById(msgId);
-            msg.innerText = text;
-            msg.style.display = 'block';
-            input.style.animation = 'none';
-            input.offsetHeight; 
-            input.style.animation = 'shake 0.3s';
-        }
-
-        function getRandomColor() {
-            const colors = ['#8b2323', '#e3c66c', '#2a475e', '#4caf50', '#9c27b0'];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-        
-        document.querySelectorAll('input').forEach(i => i.addEventListener('input', function(){
-            this.classList.remove('input-error');
-            const msgEl = this.parentElement.querySelector('.validation-msg');
-            if(msgEl) msgEl.style.display = 'none';
-        }));
     </script>
 </body>
 </html>
