@@ -115,7 +115,7 @@
     <script type="module">
         import { auth, db } from './script.js';
         import { createUserWithEmailAndPassword, sendEmailVerification, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { doc, setDoc, writeBatch, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, setDoc, getDoc, writeBatch, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // Approccio di Sicurezza: Creeremo un "username" unico per evitare che due persone si registrino con lo stesso nome
         // Questo è un approccio comune e molto sicuro

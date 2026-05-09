@@ -165,18 +165,29 @@
             // =====================================
             // 1. CANCELLO DI SICUREZZA
             // =====================================
-            onAuthStateChanged(auth, async (user) => {
-                if (!user || !localStorage.getItem('kripix_user')) { window.location.href = "login.html"; return; }
+            // Codice sicuro per admin.html
+onAuthStateChanged(auth, async (user) => {
+    // Se non c'è un utente autenticato, fuori. Semplice e sicuro.
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
 
-                const userRef = doc(db, "users", localStorage.getItem('kripix_user').toLowerCase());
-                const userSnap = await getDoc(userRef);
+    // SICURO: Usiamo l'UID dell'utente autenticato, che è impossibile da falsificare.
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-                if (!userSnap.exists() || userSnap.data().isAdmin !== true) { window.location.href = "404.html"; return; }
+    // Questo controllo ora è infallibile.
+    if (!userSnap.exists() || userSnap.data().isAdmin !== true) {
+        window.location.href = "404.html";
+        return;
+    }
 
-                document.getElementById('access-overlay').style.display = 'none';
-                loadDashboardData();
-                loadNewsData();
-            });
+    // Se arrivi qui, sei un vero admin.
+    document.getElementById('access-overlay').style.display = 'none';
+    loadDashboardData();
+    loadNewsData();
+});
 
             // =====================================
             // 2. FUNZIONI DI CARICAMENTO DATI
