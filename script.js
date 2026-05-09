@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     li.id = 'auth-item';
     li.className = 'nav-user-container';
 
-    // Rendo la funzione globale così impostazioni.html può richiamarla per aggiornare l'avatar
     window.updateNavbarAvatarDisplay = async function(user) {
         if (!user) {
             li.innerHTML = `<a href="login.html" class="btn-login-nav">ACCEDI</a>`;
@@ -63,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Usa il VERO ID (UID), impossibile da spoofare
             const userRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userRef);
 
@@ -88,33 +86,43 @@ document.addEventListener('DOMContentLoaded', () => {
                         <a href="#" id="action-logout" style="color:#ff5555">Disconnetti</a>
                     </div>
                 `;
-
-                if (!document.getElementById('auth-item')) {
-                    if (targetNode) navbarList.insertBefore(li, targetNode); else navbarList.appendChild(li);
-                }
-
-                const avatarBtn = li.querySelector('.user-avatar');
-                const dropdown = li.querySelector('.user-dropdown');
-                if (avatarBtn) avatarBtn.onclick = (e) => { dropdown.classList.toggle('show'); e.stopPropagation(); };
-
-                li.querySelector('#action-logout').onclick = async (e) => {
-                    e.preventDefault();
-                    await signOut(auth);
-                    window.location.href = 'index.html'; 
-                };
-
-                document.onclick = (e) => { if (dropdown && !li.contains(e.target)) dropdown.classList.remove('show'); };
+            } else {
+                // IL FIX D'EMERGENZA: Se l'account è fantasma, mostra questo.
+                li.innerHTML = `
+                    <div class="user-avatar" style="background-color: #ff5555; border: none;" title="Errore Dati">!</div>
+                    <div class="user-dropdown">
+                        <div class="user-header">
+                            <span class="user-name" style="color:#ff5555">ACCOUNT FANTASMA</span>
+                        </div>
+                        <a href="#" id="action-logout" style="color:#ff5555">Scollegati (Errore Database)</a>
+                    </div>
+                `;
             }
+
+            if (!document.getElementById('auth-item')) {
+                if (targetNode) navbarList.insertBefore(li, targetNode); else navbarList.appendChild(li);
+            }
+
+            const avatarBtn = li.querySelector('.user-avatar');
+            const dropdown = li.querySelector('.user-dropdown');
+            if (avatarBtn) avatarBtn.onclick = (e) => { dropdown.classList.toggle('show'); e.stopPropagation(); };
+
+            li.querySelector('#action-logout').onclick = async (e) => {
+                e.preventDefault();
+                await signOut(auth);
+                window.location.href = 'index.html'; 
+            };
+
+            document.onclick = (e) => { if (dropdown && !li.contains(e.target)) dropdown.classList.remove('show'); };
+            
         } catch (error) { console.error("Errore Auth State:", error); }
     };
 
-    // Firebase si accorge automaticamente se l'utente entra o esce
     onAuthStateChanged(auth, (user) => {
         window.updateNavbarAvatarDisplay(user);
     });
 });
 
-// Menu Hamburger
 document.addEventListener("DOMContentLoaded", () => {
     const hamburger = document.querySelector(".hamburger");
     const navMenu = document.querySelector(".nav-menu");
