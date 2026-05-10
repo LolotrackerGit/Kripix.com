@@ -216,48 +216,40 @@
                     return;
                 }
 
-                // FIX: Inizializziamo le funzioni QUI DENTRO, quando il token è 100% pronto.
-                const functions = getFunctions(app);
-                const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
+                // --------- INSERISCI QUI LA TUA REGIONE! ---------
+                const functions = getFunctions(app, 'us-central1'); // Esempio: 'europe-west1' o 'us-central1'
+                // ---------------------------------------------------
+                
+                try { // Test di connessione automatica
+                    const checkAuth = httpsCallable(functions, 'checkAuth');
+                    await checkAuth();
+                } catch (error) {
+                    alert("ERRORE CRITICO: Impossibile stabilire una connessione autenticata con il server. La regione delle Cloud Functions nel tuo codice JS potrebbe essere sbagliata. Errore: " + error.message);
+                    return;
+                }
 
+                const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
                 const userRef = doc(db, "users", user.uid);
                 
                 try {
                     const userSnap = await getDoc(userRef);
                     if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
                         buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
-                        buyBtn.style.background = '#4caf50'; 
-                        buyBtn.style.color = '#000'; 
+                        buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000';
                         buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
                         return;
                     }
                 } catch (error) { console.error(error); }
 
-                // LOGICA ACQUISTO
                 buyBtn.onclick = async function(e) {
                     e.preventDefault();
-                    const btn = this;
-                    btn.innerText = 'ELABORAZIONE TRANSAZIONE...';
-                    btn.style.pointerEvents = 'none';
-
+                    this.innerText = 'ELABORAZIONE...'; this.style.pointerEvents = 'none';
                     try {
                         const result = await securePurchaseGame({ gameId: 'harrow' });
-
-                        if (result.data.status === 'success') {
-                            document.getElementById('custom-modal').style.display = 'flex';
-                        }
-                        
+                        if (result.data.status === 'success') document.getElementById('custom-modal').style.display = 'flex';
                     } catch (error) {
-                        console.error(error);
-                        btn.innerText = 'ERRORE TRANSAZIONE';
-                        btn.style.borderColor = '#ff5555';
-                        
-                        // Fallback visivo sicuro
-                        if(window.kripixNotify) {
-                            window.kripixNotify("ERRORE", error.message, "error");
-                        } else {
-                            alert("ERRORE SERVER: " + error.message);
-                        }
+                        this.innerText = 'ERRORE TRANSAZIONE'; this.style.borderColor = '#ff5555';
+                        if(window.kripixNotify) window.kripixNotify("ERRORE", error.message, "error"); else alert("ERRORE: " + error.message);
                     }
                 };
             });
