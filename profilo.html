@@ -301,6 +301,14 @@
                 btnAddUI.classList.remove('ready');
             }
         });
+
+        // NUOVO: CATTURA IL TASTO ENTER (INVIO)
+        friendInputUI.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Evita che la pagina si ricarichi
+                window.sendRequest(); // Lancia la funzione di ricerca
+            }
+        });
     }
     // ------------------------------------
 
@@ -428,65 +436,84 @@
 
     // ### 4. NUOVA LOGICA PER INVIARE RICHIESTE (SICURA) ###
     // ### 4. NUOVA LOGICA PER INVIARE RICHIESTE (SICURA E CON PRIVACY) ###
+    // ### 4. NUOVA LOGICA PER INVIARE RICHIESTE (SICURA, CON PRIVACY E CASE-INSENSITIVE) ###
     window.sendRequest = async function() {
         const friendInput = document.getElementById('friend-id-input');
-        const targetName = friendInput.value.trim().toLowerCase();
+        const rawTargetName = friendInput.value.trim();
+        const targetNameLower = rawTargetName.toLowerCase(); // Tutto in minuscolo per la ricerca
 
-        if (!targetName) return;
+        if (!targetNameLower) return;
 
         // Non puoi aggiungere te stesso
         const myUsername = document.getElementById('p-username').innerText.toLowerCase();
-        if (targetName === myUsername) {
+        if (targetNameLower === myUsername) {
             window.kripixNotify("ERRORE", "Non puoi aggiungere te stesso.", "error");
             return;
         }
 
-        try {
-            // 1. Cerchiamo l'utente tramite il suo nome in codice
-            const q = query(collection(db, "users"), where("username", "==", targetName));
-            const querySnapshot = await getDocs(q);
+        const btnAdd = document.getElementById('btn-add-friend');
+        btnAdd.innerText = "RICERCA IN CORSO...";
 
-            if (querySnapshot.empty) {
+        try {
+            // 1. Cerchiamo l'utente nella collezione "usernames" (che è tutta in minuscolo)
+            const usernameDocRef = doc(db, "usernames", targetNameLower);
+            const usernameSnap = await getDoc(usernameDocRef);
+
+            if (!usernameSnap.exists()) {
                 window.kripixNotify("NEGATIVO", "Agente non trovato nel database.", "error");
+                btnAdd.innerText = "CERCA E INVIA RICHIESTA";
                 return;
             }
 
-            const targetUserDoc = querySnapshot.docs[0];
-            const targetUid = targetUserDoc.id;
+            // Abbiamo trovato l'UID vero e proprio!
+            const targetUid = usernameSnap.data().uid;
+
+            // 2. Ora peschiamo il suo vero profilo dalla collezione "users"
+            const targetUserDoc = await getDoc(doc(db, "users", targetUid));
+            if (!targetUserDoc.exists()) {
+                 window.kripixNotify("ERRORE CRITICO", "Dati agente corrotti.", "error");
+                 btnAdd.innerText = "CERCA E INVIA RICHIESTA";
+                 return;
+            }
+
             const targetData = targetUserDoc.data();
 
-            // ==========================================
-            // NUOVO CONTROLLO: RISPETTO DELLA PRIVACY
-            // ==========================================
-            // Se l'oggetto privacy esiste E la visibilità è stata messa su false
+            // 3. CONTROLLO PRIVACY
             if (targetData.privacy && targetData.privacy.visibility === false) {
-                window.kripixNotify("ACCESSO NEGATO", "L'Agente ha disattivato la rintracciabilità sulla rete (Privacy).", "error");
-                return; // INTERROMPE LA FUNZIONE QUI
+                window.kripixNotify("ACCESSO NEGATO", "L'Agente ha disattivato la rintracciabilità sulla rete.", "error");
+                btnAdd.innerText = "CERCA E INVIA RICHIESTA";
+                return; 
             }
-            // ==========================================
 
-            // 2. Controlla se siete già amici o se hai già inviato una richiesta
+            // 4. Controlla se siete già amici o se hai già inviato una richiesta
             if (targetData.friends && targetData.friends.includes(myUid)) {
                 window.kripixNotify("INFO", "Siete già connessi.", "info");
+                btnAdd.innerText = "CERCA E INVIA RICHIESTA";
                 return;
             }
             if (targetData.requests && targetData.requests.includes(myUid)) {
                 window.kripixNotify("ATTESA", "Richiesta già inviata a questo agente.", "info");
+                btnAdd.innerText = "CERCA E INVIA RICHIESTA";
                 return;
             }
 
-            // 3. Aggiungo il MIO UID alla lista delle richieste del BERSAGLIO
+            // 5. Aggiungo il MIO UID alla lista delle richieste del BERSAGLIO
             await updateDoc(doc(db, "users", targetUid), {
                 requests: arrayUnion(myUid)
             });
 
-            window.kripixNotify("SUCCESSO", `Richiesta inviata a ${targetUserDoc.data().username}.`, "success");
+            window.kripixNotify("SUCCESSO", `Richiesta inviata a ${targetData.username}.`, "success");
+            
+            // Resettiamo il campo visivo
             friendInput.value = '';
+            btnAdd.classList.remove('ready');
 
         } catch (error) {
             window.kripixNotify("ERRORE SERVER", "Impossibile completare la richiesta.", "error");
             console.error("Errore invio richiesta:", error);
         }
+        
+        btnAdd.innerText = "CERCA E INVIA RICHIESTA";
     };
 
     // ### 5. FUNZIONI PER ACCETTARE/RIFIUTARE/RIMUOVERE (SICURE) ###

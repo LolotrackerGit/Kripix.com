@@ -155,14 +155,6 @@
                     <input type="checkbox" id="priv-vis" style="display:none;" onchange="savePrivacy()">
                     <div class="toggle"></div>
                 </label>
-                <label class="switch-label">
-                    <div>
-                        <span class="setting-label">CONDIVISIONE TELEMETRIA</span>
-                        <span class="switch-text" style="font-size:0.85rem;">Invia dati di crash e performance a Kripix.</span>
-                    </div>
-                    <input type="checkbox" id="priv-tel" style="display:none;" onchange="savePrivacy()">
-                    <div class="toggle"></div>
-                </label>
                 <label class="switch-label" style="border-bottom:none;">
                     <div>
                         <span class="setting-label">COMUNICAZIONI STUDIO</span>
@@ -171,10 +163,10 @@
                     <input type="checkbox" id="priv-news" style="display:none;" onchange="savePrivacy()">
                     <div class="toggle"></div>
                 </label>
-            </div>
-        </div>
+            </div> <!-- /// FINE PANNELLO PRIVACY /// -->
 
-        <!-- PANNELLO DOCUMENTAZIONE LEGALE -->
+
+            <!-- /// PANNELLO DOCUMENTAZIONE LEGALE (Deve stare QUI!) /// -->
             <div id="panel-legal" class="settings-panel" style="display:none;">
                 <h3 class="panel-title">ARCHIVIO LEGALE</h3>
                 <p style="color:#888; margin-bottom: 30px; font-family: 'Courier Prime'; font-size: 0.9rem;">
@@ -184,10 +176,11 @@
                 <div style="display: flex; flex-direction: column; gap: 15px; max-width: 400px;">
                     <a href="eula.html" class="btn-outline full-width" style="text-align: center;">Dossier E.U.L.A.</a>
                     <a href="dmr.html" class="btn-outline full-width" style="text-align: center;">Policy DRM</a>
-                    <!-- Se non hai ancora una pagina cookie, puoi linkarla a una che creerai -->
                     <a href="cookies.html" class="btn-outline full-width" style="text-align: center;">Gestione Cookie</a>
                 </div>
             </div>
+
+        </div> <!-- /// FINE DELLA SETTINGS-GRID (Questo tiene tutto in due colonne) /// -->
     </section>
 
     <!-- MODALE: CAMBIO NICKNAME -->
