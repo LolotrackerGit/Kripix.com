@@ -3,7 +3,6 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const db = admin.firestore();
-
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function generateKripixKey(uid, gameCode, editionCode) {
@@ -26,20 +25,15 @@ function generateKripixKey(uid, gameCode, editionCode) {
     const checksumChar = ALPHABET.charAt(sum % 32); 
 
     const block4 = salt + checksumChar;
-
     return `${block1}-${block2}-${block3}-${block4}`;
 }
 
 exports.createUserAccount = functions.https.onCall(async (data, context) => {
-    // Gestione sicura dei parametri
-    const payload = data.data ? data.data : data;
+    const payload = data.data || data;
     const { email, password, username } = payload;
 
     if (!email || !password || !username) {
         throw new functions.https.HttpsError('invalid-argument', 'Email, password e username sono richiesti.');
-    }
-    if (username.length < 3) {
-        throw new functions.https.HttpsError('invalid-argument', 'Username troppo corto.');
     }
 
     const usernameRef = db.collection('usernames').doc(username.toLowerCase());
@@ -49,7 +43,6 @@ exports.createUserAccount = functions.https.onCall(async (data, context) => {
     }
 
     try {
-        // Creazione Auth
         const userRecord = await admin.auth().createUser({
             email: email,
             password: password,
@@ -76,12 +69,9 @@ exports.createUserAccount = functions.https.onCall(async (data, context) => {
         batch.set(usernameRef, { uid: uid });
 
         await batch.commit();
-
-        // RIGA PROBLEMATICA RIMOSSA. Ora il server risponde "success" immediatamente!
         return { status: 'success', uid: uid };
 
     } catch (error) {
-        console.error("Errore creazione utente:", error);
         if (error.code === 'auth/email-already-exists') {
             throw new functions.https.HttpsError('already-exists', 'Questa email è già registrata.');
         }
@@ -89,15 +79,14 @@ exports.createUserAccount = functions.https.onCall(async (data, context) => {
     }
 });
 
-// MANTIENI LA TUA FUNZIONE securePurchaseGame INVARIATA QUI SOTTO
 exports.securePurchaseGame = functions.https.onCall(async (data, context) => {
-    // 1. Controllo identità
+    // 1. Controllo Autenticazione Severo
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'Devi essere loggato.');
     }
     
     const uid = context.auth.uid;
-    const payload = data.data ? data.data : data;
+    const payload = data.data || data; // Fix definitivo per il formato dati
     const gameId = payload.gameId; 
 
     if (gameId !== "harrow") {
@@ -107,30 +96,21 @@ exports.securePurchaseGame = functions.https.onCall(async (data, context) => {
     const userRef = db.collection('users').doc(uid);
     const privateRef = userRef.collection('private').doc('dossier');
     
-    // 2. Lettura sicura (Previene i crash se l'utente è un "account fantasma")
+    // 2. Lettura DB
     const userDoc = await userRef.get();
-    const userData = userDoc.exists ? userDoc.data() : {};
-    const userGames = userData.games ||[];
+    const userGames = userDoc.exists ? (userDoc.data().games || []) :[];
 
     if (userGames.includes(gameId)) {
         throw new functions.https.HttpsError('already-exists', 'Possiedi già questa licenza.');
     }
 
-    // 3. Generazione Chiave
     const newKey = generateKripixKey(uid, "HW", "D");
-    
     const batch = db.batch();
     
-    // FIX SUPREMO: Usiamo "set" con "merge: true" al posto di "update".
-    // Se il documento dell'utente è difettoso o manca, Firebase lo ripara al volo e non va in crash.
-    batch.set(userRef, {
-        games: admin.firestore.FieldValue.arrayUnion(gameId)
-    }, { merge: true });
-
-    batch.set(privateRef, {[`keys.${gameId}`]: newKey
-    }, { merge: true });
+    // 3. Scrittura Blindata (merge: true non fa crashare il server)
+    batch.set(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) }, { merge: true });
+    batch.set(privateRef, {[`keys.${gameId}`]: newKey }, { merge: true });
 
     await batch.commit();
-
     return { status: "success" };
 });

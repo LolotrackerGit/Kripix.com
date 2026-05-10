@@ -201,29 +201,24 @@
 
     <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
     <script type="module">
-        // FIX: Importiamo anche 'app' per forzare la sincronizzazione del token Auth!
         import { app, auth, db } from './script.js';
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        // Inizializziamo le funzioni FORZANDO l'app corretta
-        const functions = getFunctions(app);
 
         document.addEventListener('DOMContentLoaded', () => {
             const buyBtn = document.getElementById('btn-buy-kripix');
             if (!buyBtn) return;
 
             onAuthStateChanged(auth, async (user) => {
-                
-                // Se NON è loggato, rimuoviamo vecchi eventi e mandiamo al login
                 if (!user) {
-                    buyBtn.onclick = (e) => { 
-                        e.preventDefault(); 
-                        window.location.href = 'login.html'; 
-                    };
+                    buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'login.html'; };
                     return;
                 }
+
+                // FIX: Inizializziamo le funzioni QUI DENTRO, quando il token è 100% pronto.
+                const functions = getFunctions(app);
+                const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
 
                 const userRef = doc(db, "users", user.uid);
                 
@@ -233,15 +228,12 @@
                         buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
                         buyBtn.style.background = '#4caf50'; 
                         buyBtn.style.color = '#000'; 
-                        buyBtn.onclick = (e) => { 
-                            e.preventDefault(); 
-                            window.location.href = 'libreria.html'; 
-                        };
-                        return; // Ferma tutto se ha già il gioco
+                        buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
+                        return;
                     }
                 } catch (error) { console.error(error); }
 
-                // SE È LOGGATO E NON HA IL GIOCO:
+                // LOGICA ACQUISTO
                 buyBtn.onclick = async function(e) {
                     e.preventDefault();
                     const btn = this;
@@ -249,7 +241,6 @@
                     btn.style.pointerEvents = 'none';
 
                     try {
-                        const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
                         const result = await securePurchaseGame({ gameId: 'harrow' });
 
                         if (result.data.status === 'success') {
@@ -260,7 +251,13 @@
                         console.error(error);
                         btn.innerText = 'ERRORE TRANSAZIONE';
                         btn.style.borderColor = '#ff5555';
-                        if(window.kripixNotify) window.kripixNotify("ERRORE", error.message, "error");
+                        
+                        // Fallback visivo sicuro
+                        if(window.kripixNotify) {
+                            window.kripixNotify("ERRORE", error.message, "error");
+                        } else {
+                            alert("ERRORE SERVER: " + error.message);
+                        }
                     }
                 };
             });
