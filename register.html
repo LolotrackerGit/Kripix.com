@@ -112,78 +112,67 @@
     </div>
 
     <!-- SCRIPT FIREBASE -->
-    <!-- SCRIPT FIREBASE -->
-    <script type="module">
-        // 1. Importa 'auth' da script.js per forzare l'inizializzazione dell'app Firebase
-        import { auth } from './script.js'; 
-        // 2. Importa dal pacchetto corretto (firebase-functions.js)
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+<script type="module">
+    import { auth } from './script.js';
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
     
-        // Inizializza le funzioni
-        const functions = getFunctions();
+    // Inizializza le funzioni
+    const functions = getFunctions();
 
-        document.getElementById('registerForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); 
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        
+        // 1. Catturiamo i valori QUI DENTRO, nel momento esatto in cui premi "CREA ACCOUNT"
+        const email = document.getElementById('email').value.trim();
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('pass1').value;
+        const pass2 = document.getElementById('pass2').value;
+        
+        const serverMsg = document.getElementById('msg-server');
+        const btnSubmit = this.querySelector('button');
+
+        // Validazione base
+        if (password !== pass2) {
+            serverMsg.innerText = ">> Le password non coincidono.";
+            serverMsg.style.display = 'block';
+            return;
+        }
+
+        // STAMPA DI DEBUG (Premi F12 nel browser per vedere se i dati ci sono)
+        console.log("Dati in partenza verso il Cloud:", { email, username, password });
+
+        btnSubmit.innerHTML = 'CONTATTO IL SERVER CENTRALE...';
+        btnSubmit.disabled = true;
+        serverMsg.style.display = 'none';
+
+        try {
+            const createUserAccount = httpsCallable(functions, 'createUserAccount');
             
-            const emailInput = document.getElementById('email');
-            const usernameInput = document.getElementById('regUsername');
-            const pass1Input = document.getElementById('pass1');
-            const pass2Input = document.getElementById('pass2');
-            const serverMsg = document.getElementById('msg-server');
-            const btnSubmit = this.querySelector('button');
-            
-            const email = emailInput.value.trim();
-            const username = usernameInput.value.trim();
-            const password = pass1Input.value;
+            // 2. Inviamo i dati come un UNICO OGGETTO tra parentesi graffe {}
+            const result = await createUserAccount({ 
+                email: email, 
+                password: password, 
+                username: username 
+            });
 
-            // Validazione Frontend (veloce, per l'utente)
-            if (password !== pass2Input.value) {
-                serverMsg.innerText = ">> Le password non coincidono.";
+            if (result.data.status === 'success') {
+                serverMsg.innerText = ">> PROTOCOLLO COMPLETATO. Reindirizzamento al terminale...";
+                serverMsg.style.color = "var(--accent-gold)";
                 serverMsg.style.display = 'block';
-                return;
-            }
-             if (password.length < 8) {
-                serverMsg.innerText = ">> La password è troppo corta.";
-                serverMsg.style.display = 'block';
-                return;
-            }
-
-            btnSubmit.innerHTML = 'CONTATTO IL SERVER CENTRALE...';
-            btnSubmit.disabled = true;
-            serverMsg.style.display = 'none';
-
-            try {
-                // Prepara la chiamata alla nostra funzione Cloud
-                const createUserAccount = httpsCallable(functions, 'createUserAccount');
-                const result = await createUserAccount({ 
-                    email: email, 
-                    password: password, 
-                    username: username 
-                });
-
-                // Se il server ha finito senza errori
-                if (result.data.status === 'success') {
-                    serverMsg.innerText = ">> ACCOUNT CREATO. Riceverai un'email per l'attivazione. Reindirizzamento al login...";
-                    serverMsg.style.color = "var(--accent-gold)";
-                    serverMsg.style.display = 'block';
-                    btnSubmit.innerHTML = 'REGISTRAZIONE COMPLETATA';
-
-                    // In un'app vera, non invieresti la mail di verifica standard ma una mail personalizzata
-                    // Per ora Firebase la invia in automatico se abilitato nel pannello Auth.
-                    // Dopo 4 secondi, lo mandiamo al login
-                    setTimeout(() => { window.location.href = 'login.html'; }, 4000);
-                }
-
-            } catch (error) {
-                // Se il server restituisce un errore (es. email già in uso)
-                serverMsg.innerText = '>> ERRORE SERVER: ' + error.message;
-                serverMsg.style.color = '#ff5555';
-                serverMsg.style.display = 'block';
+                btnSubmit.innerHTML = 'REGISTRAZIONE COMPLETATA';
                 
-                btnSubmit.innerHTML = 'CREA ACCOUNT';
-                btnSubmit.disabled = false;
+                setTimeout(() => { window.location.href = 'login.html'; }, 3000);
             }
-        });
-    </script>
+
+        } catch (error) {
+            serverMsg.innerText = '>> ERRORE SERVER: ' + error.message;
+            serverMsg.style.color = '#ff5555';
+            serverMsg.style.display = 'block';
+            
+            btnSubmit.innerHTML = 'CREA ACCOUNT';
+            btnSubmit.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
