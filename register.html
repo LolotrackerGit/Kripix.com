@@ -1,58 +1,39 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
- <!-- ========================================== -->
+    <!-- ========================================== -->
     <!-- SEO & OPEN GRAPH (CONDIVISIONE SOCIAL)     -->
     <!-- ========================================== -->
     
-    <!-- Descrizione base per i motori di ricerca (Max 160 caratteri) -->
     <meta name="description" content="Kripix Entertainment: A different way to see pixels">
-    
-    <!-- Parole chiave (Keywords) -->
     <meta name="keywords" content="videogiochi, sviluppo indie, kripix, il filo del dubbio, pixel otros, engine narrativo, thriller psicologico">
-    
-    <!-- Autore -->
     <meta name="author" content="Kripix Entertainment">
-    
-    <!-- Istruzioni per i Crawler (Permette a Google di indicizzare la pagina) -->
     <meta name="robots" content="index, follow">
 
-    <!-- TAG OPEN GRAPH (Per Facebook, Discord, LinkedIn, ecc.) -->
-    <!-- Titolo che appare nell'anteprima -->
     <meta property="og:title" content="Kripix Entertainment | A different way to see pixels">
-    
-    <!-- Descrizione dell'anteprima -->
     <meta property="og:description" content="Esplora i nostri mondi immersivi. Scopri 'Il Filo del Dubbio' e accedi al network operativo per gli agenti Kripix.">
-    
-    <!-- Immagine di copertina (DEVI METTERE UN URL ASSOLUTO VALIDO) -->
-    <!-- Esempio: "https://kripix-studio.netlify.app/assets/cover-social.jpg" -->
-    <meta property="og:image" content="https://kripix.netlify.app/SocialPreview.pngE"> 
-    
-    <!-- URL della pagina principale -->
+    <meta property="og:image" content="https://kripix.netlify.app/SocialPreview.png"> 
     <meta property="og:url" content="https://kripix.netlify.app/">
-    
-    <!-- Tipo di contenuto -->
     <meta property="og:type" content="website">
 
-    <!-- TAG TWITTER / X (Specifici per la visualizzazione Card su X) -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Kripix Entertainment">
     <meta name="twitter:description" content="Creatori di esperienze narrative ad alta tensione. Unisciti al network.">
     <meta name="twitter:image" content="https://kripix.netlify.app/SocialPreview.png">
     
-    <!-- Tema colore Browser Mobile (La barra in alto su Chrome per Android diventerà scura) -->
     <meta name="theme-color" content="#05070a">   
     <meta charset="UTF-8">
 
     <!-- ========================================== -->
-    <!-- FAVICON (ICONA SULLA TAB DEL BROWSER)      -->
+    <!-- FAVICON E RISORSE                          -->
     <!-- ========================================== -->
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="manifest" href="site.webmanifest">
-    <link rel="icon" href="favicon.ico"> <!-- Fallback per browser vecchi -->
+    <link rel="icon" href="favicon.ico"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>Registrazione - Kripix</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
@@ -77,31 +58,27 @@
                 <div class="input-group">
                     <label>EMAIL OPERATIVA</label>
                     <input type="email" id="email" placeholder="nome@esempio.com" required>
-                    <div class="validation-msg" id="msg-email"></div>
                 </div>
 
                 <div class="input-group">
                     <label>NOME IN CODICE (USERNAME)</label>
                     <input type="text" id="regUsername" placeholder="Scegli il tuo ID" required autocomplete="off">
-                    <div class="validation-msg" id="msg-user"></div>
                 </div>
 
                 <div class="input-group">
                     <label>PASSWORD (Min 8 car. + 1 Numero)</label>
                     <input type="password" id="pass1" placeholder="Crea password" required>
-                    <div class="validation-msg" id="msg-pass1"></div>
                 </div>
 
                 <div class="input-group">
                     <label>CONFERMA PASSWORD</label>
                     <input type="password" id="pass2" placeholder="Ripeti password" required>
-                    <div class="validation-msg" id="msg-pass2"></div>
                 </div>
 
-                <!-- Messaggio di errore/successo globale dal Server -->
-                <div class="validation-msg" id="msg-server" style="text-align: center; margin-bottom: 15px; font-size: 0.85rem;"></div>
+                <!-- Messaggio di errore/successo globale -->
+                <div class="validation-msg" id="msg-server" style="text-align: center; margin-bottom: 15px; font-size: 0.85rem; display:none;"></div>
 
-                <button type="submit" class="btn-gold full-width glow-effect">CREA ACCOUNT</button>
+                <button type="submit" id="btn-submit" class="btn-gold full-width glow-effect">CREA ACCOUNT</button>
             </form>
 
             <div class="login-footer">
@@ -112,67 +89,89 @@
     </div>
 
     <!-- SCRIPT FIREBASE -->
-<script type="module">
-    import { auth } from './script.js';
-    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
-    
-    // Inizializza le funzioni
-    const functions = getFunctions();
-
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
-        e.preventDefault(); 
+    <script type="module">
+        import { auth } from './script.js';
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+        // Importiamo i moduli di Auth per inviare la mail dal client!
+        import { signInWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         
-        // 1. Catturiamo i valori QUI DENTRO, nel momento esatto in cui premi "CREA ACCOUNT"
-        const email = document.getElementById('email').value.trim();
-        const username = document.getElementById('regUsername').value.trim();
-        const password = document.getElementById('pass1').value;
-        const pass2 = document.getElementById('pass2').value;
-        
-        const serverMsg = document.getElementById('msg-server');
-        const btnSubmit = this.querySelector('button');
+        const functions = getFunctions();
 
-        // Validazione base
-        if (password !== pass2) {
-            serverMsg.innerText = ">> Le password non coincidono.";
-            serverMsg.style.display = 'block';
-            return;
-        }
-
-        // STAMPA DI DEBUG (Premi F12 nel browser per vedere se i dati ci sono)
-        console.log("Dati in partenza verso il Cloud:", { email, username, password });
-
-        btnSubmit.innerHTML = 'CONTATTO IL SERVER CENTRALE...';
-        btnSubmit.disabled = true;
-        serverMsg.style.display = 'none';
-
-        try {
-            const createUserAccount = httpsCallable(functions, 'createUserAccount');
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
             
-            // 2. Inviamo i dati come un UNICO OGGETTO tra parentesi graffe {}
-            const result = await createUserAccount({ 
-                email: email, 
-                password: password, 
-                username: username 
-            });
+            // 1. Catturiamo i valori inseriti dall'utente
+            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('pass1').value;
+            const pass2 = document.getElementById('pass2').value;
+            
+            const serverMsg = document.getElementById('msg-server');
+            const btnSubmit = document.getElementById('btn-submit');
 
-            if (result.data.status === 'success') {
-                serverMsg.innerText = ">> PROTOCOLLO COMPLETATO. Reindirizzamento al terminale...";
-                serverMsg.style.color = "var(--accent-gold)";
+            // 2. Validazione di base
+            if (!email || !username || !password) {
+                serverMsg.innerText = ">> Tutti i campi sono obbligatori.";
+                serverMsg.style.color = '#ff5555';
                 serverMsg.style.display = 'block';
-                btnSubmit.innerHTML = 'REGISTRAZIONE COMPLETATA';
-                
-                setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+                return;
             }
 
-        } catch (error) {
-            serverMsg.innerText = '>> ERRORE SERVER: ' + error.message;
-            serverMsg.style.color = '#ff5555';
-            serverMsg.style.display = 'block';
-            
-            btnSubmit.innerHTML = 'CREA ACCOUNT';
-            btnSubmit.disabled = false;
-        }
-    });
-</script>
+            if (password !== pass2) {
+                serverMsg.innerText = ">> Le password non coincidono.";
+                serverMsg.style.color = '#ff5555';
+                serverMsg.style.display = 'block';
+                return;
+            }
+             if (password.length < 8) {
+                serverMsg.innerText = ">> La password è troppo corta.";
+                serverMsg.style.color = '#ff5555';
+                serverMsg.style.display = 'block';
+                return;
+            }
+
+            // Inizio caricamento
+            btnSubmit.innerHTML = 'CONTATTO IL SERVER CENTRALE...';
+            btnSubmit.disabled = true;
+            serverMsg.style.display = 'none';
+
+            try {
+                // 3. Creiamo l'utente tramite Cloud Function (Database + Auth)
+                const createUserAccount = httpsCallable(functions, 'createUserAccount');
+                const result = await createUserAccount({ 
+                    email: email, 
+                    password: password, 
+                    username: username 
+                });
+
+                if (result.data.status === 'success') {
+                    serverMsg.innerText = ">> FASCICOLO CREATO. Preparazione protocollo mail...";
+                    serverMsg.style.color = "var(--accent-gold)";
+                    serverMsg.style.display = 'block';
+                    btnSubmit.innerHTML = 'INVIO TRASMISSIONE...';
+
+                    // 4. TRUCCO MAGICO: Facciamo il login silenzioso, mandiamo la mail e slogghiamo!
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    await sendEmailVerification(userCredential.user);
+                    await signOut(auth); // Lo disconnettiamo subito, dovrà verificare per rientrare
+
+                    serverMsg.innerText = ">> ACCOUNT ATTIVATO! Controlla la tua email. Reindirizzamento...";
+                    btnSubmit.innerHTML = 'REGISTRAZIONE COMPLETATA';
+
+                    // Mandiamo l'utente al Login
+                    setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+                }
+
+            } catch (error) {
+                // Gestione errori del server
+                serverMsg.innerText = '>> ERRORE SERVER: ' + error.message;
+                serverMsg.style.color = '#ff5555';
+                serverMsg.style.display = 'block';
+                
+                btnSubmit.innerHTML = 'CREA ACCOUNT';
+                btnSubmit.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
