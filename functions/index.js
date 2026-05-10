@@ -91,46 +91,46 @@ exports.createUserAccount = functions.https.onCall(async (data, context) => {
 
 // MANTIENI LA TUA FUNZIONE securePurchaseGame INVARIATA QUI SOTTO
 exports.securePurchaseGame = functions.https.onCall(async (data, context) => {
-    // 1. Controllo sicurezza (Deve essere loggato)
+    // 1. Controllo identità
     if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'Devi essere loggato per procedere.');
+        throw new functions.https.HttpsError('unauthenticated', 'Devi essere loggato.');
     }
     
     const uid = context.auth.uid;
-    
-    // FIX: Estrazione sicura del payload come nella registrazione
     const payload = data.data ? data.data : data;
     const gameId = payload.gameId; 
 
     if (gameId !== "harrow") {
-        throw new functions.https.HttpsError('invalid-argument', 'Gioco non trovato nel database.');
+        throw new functions.https.HttpsError('invalid-argument', 'Gioco non trovato.');
     }
 
     const userRef = db.collection('users').doc(uid);
     const privateRef = userRef.collection('private').doc('dossier');
+    
+    // 2. Lettura sicura (Previene i crash se l'utente è un "account fantasma")
     const userDoc = await userRef.get();
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const userGames = userData.games ||[];
 
-    if (userDoc.exists && userDoc.data().games && userDoc.data().games.includes(gameId)) {
+    if (userGames.includes(gameId)) {
         throw new functions.https.HttpsError('already-exists', 'Possiedi già questa licenza.');
     }
 
-    // 2. Genera la chiave VERA
+    // 3. Generazione Chiave
     const newKey = generateKripixKey(uid, "HW", "D");
     
     const batch = db.batch();
-    batch.update(userRef, {
+    
+    // FIX SUPREMO: Usiamo "set" con "merge: true" al posto di "update".
+    // Se il documento dell'utente è difettoso o manca, Firebase lo ripara al volo e non va in crash.
+    batch.set(userRef, {
         games: admin.firestore.FieldValue.arrayUnion(gameId)
-    });
-    // 3. Salva la chiave VERA solo nel DOSSIER PRIVATO
-    batch.set(privateRef, {
-        [`keys.${gameId}`]: newKey
+    }, { merge: true });
+
+    batch.set(privateRef, {[`keys.${gameId}`]: newKey
     }, { merge: true });
 
     await batch.commit();
 
-    return { 
-        status: "success", 
-        message: "Licenza acquisita con successo.",
-        game: gameId 
-    };
+    return { status: "success" };
 });

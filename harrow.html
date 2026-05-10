@@ -152,27 +152,29 @@
     </div>
 
     <!-- LOGICA ACQUISTO SICURA -->
-    <!-- LOGICA ACQUISTO SICURA -->
     <script type="module">
-        import { auth, db } from './script.js';
+        // FIX: Importiamo 'app' come abbiamo fatto in progetti.html
+        import { app, auth, db } from './script.js';
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        const functions = getFunctions();
+        // Forziamo il caricamento dell'app corretta
+        const functions = getFunctions(app);
 
         document.addEventListener('DOMContentLoaded', () => {
             const buyBtn = document.getElementById('btn-buy-harrow-page');
+            if(!buyBtn) return;
 
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
-                    buyBtn.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'login.html'; });
+                    buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'login.html'; };
                     return;
                 }
 
                 try {
                     const userSnap = await getDoc(doc(db, "users", user.uid));
-                    if (userSnap.exists() && userSnap.data().games && userSnap.data().games.includes('harrow')) {
+                    if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
                         buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
                         buyBtn.style.background = '#4caf50'; 
                         buyBtn.style.color = '#000'; 
@@ -180,16 +182,16 @@
                         buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
                         return; 
                     }
-                } catch (error) { console.error("Errore recupero info:", error); }
+                } catch (error) { console.error(error); }
 
-                buyBtn.addEventListener('click', async function(e) {
+                // LOGICA DEL CLICK
+                buyBtn.onclick = async function(e) {
                     e.preventDefault();
                     const btn = this;
-                    btn.innerText = 'ELABORAZIONE TRANSAZIONE... (Server Cloud)';
+                    btn.innerText = 'ELABORAZIONE TRANSAZIONE...';
                     btn.style.pointerEvents = 'none';
 
                     try {
-                        // CHIAMATA ALLA CLOUD FUNCTION
                         const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
                         const result = await securePurchaseGame({ gameId: 'harrow' });
 
@@ -200,8 +202,11 @@
                         btn.innerText = 'ERRORE TRANSAZIONE';
                         btn.style.borderColor = '#ff5555';
                         console.error("Errore acquisto:", error);
+                        
+                        // Il toast in basso a destra ti dirà l'errore esatto!
+                        if(window.kripixNotify) window.kripixNotify("ERRORE SERVER", error.message, "error");
                     }
-                });
+                };
             });
         });
     </script>
