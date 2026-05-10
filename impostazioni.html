@@ -192,8 +192,8 @@
     <script type="module" src="script.js"></script>
     <script type="module">
         import { auth, db } from './script.js';
-        import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { doc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { reauthenticateWithCredential, EmailAuthProvider, updatePassword, verifyBeforeUpdateEmail, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, getDoc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         let userDocRef = null;
         let userDataCache = null;
@@ -205,7 +205,6 @@
                 const userSnap = await getDoc(userDocRef);
                 if (userSnap.exists()) {
                     userDataCache = userSnap.data();
-                    // PROTEZIONE XSS SU TEXT CONTENT
                     document.getElementById('disp-user').textContent = userDataCache.username;
                     document.getElementById('disp-email').textContent = userDataCache.email;
                     
@@ -227,7 +226,7 @@
                 div.className = 'avatar-option';
                 div.onclick = () => selectAvatarImage(imgUrl);
                 const img = document.createElement('img');
-                img.src = imgUrl; // Dicebear link sicuri
+                img.src = imgUrl; // CREAZIONE SICURA DELL'IMMAGINE
                 div.appendChild(img);
                 avatarGrid.appendChild(div);
             });
@@ -264,21 +263,97 @@
                 } else {
                     await updateDoc(userDocRef, { onlineStatus: "online" });
                 }
-                
             } catch (e) { console.error(e); }
         }
 
         window.changeColor = async function(newColor) { try { await updateDoc(userDocRef, { color: newColor, avatar_img: null }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success"); } catch (e) { console.error(e); } };
         window.selectAvatarImage = async function(imgUrl) { try { await updateDoc(userDocRef, { avatar_img: imgUrl }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success"); } catch (e) { console.error(e); } };
 
+        // ==========================================
+        // LE FUNZIONI DEI MODALI (RIPRISTINATE)
+        // ==========================================
         window.openNameModal = () => document.getElementById('name-modal').style.display = 'flex';
-        window.confirmNameChange = async function() { /* ... logica esistente ... */ }
-        window.openEmailModal = () => document.getElementById('email-modal').style.display = 'flex';
-        window.confirmEmailChange = async function() { /* ... logica esistente ... */ }
+        window.confirmNameChange = async function() {
+            const input = document.getElementById('new-name-input');
+            const msg = document.getElementById('name-msg');
+            const newName = input.value.trim();
+            if(!newName) { showError(input, msg, "Inserisci un nome."); return; }
+            
+            try {
+                const newNameLower = newName.toLowerCase();
+                const oldNameLower = userDataCache.username.toLowerCase();
+                if(newNameLower === oldNameLower) { showError(input, msg, "È già il tuo nome."); return; }
+
+                const nameCheck = await getDoc(doc(db, "usernames", newNameLower));
+                if(nameCheck.exists()) { showError(input, msg, "ID già in uso nel Network."); return; }
+
+                // Transazione per scambiare gli username
+                const batch = writeBatch(db);
+                batch.set(doc(db, "usernames", newNameLower), { uid: auth.currentUser.uid });
+                batch.delete(doc(db, "usernames", oldNameLower));
+                batch.update(userDocRef, { username: newName });
+                await batch.commit();
+
+                userDataCache.username = newName;
+                document.getElementById('disp-user').textContent = newName;
+                if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser);
+                closeModal('name-modal');
+                if(window.kripixNotify) window.kripixNotify("AGGIORNAMENTO", "ID Agente modificato.", "success");
+            } catch(e) { showError(input, msg, "Errore di rete."); }
+        };
+
         window.openPassModal = () => document.getElementById('pass-modal').style.display = 'flex';
-        window.confirmPassChange = async function() { /* ... logica esistente ... */ }
+        window.confirmPassChange = async function() {
+            const oldPass = document.getElementById('old-pass');
+            const newPass = document.getElementById('new-pass');
+            const confPass = document.getElementById('conf-pass');
+            const msg = document.getElementById('pass-msg');
+
+            if(newPass.value !== confPass.value) { showError(confPass, msg, "Le password non coincidono."); return; }
+            if(newPass.value.length < 8) { showError(newPass, msg, "Password troppo corta."); return; }
+
+            try {
+                const credential = EmailAuthProvider.credential(auth.currentUser.email, oldPass.value);
+                await reauthenticateWithCredential(auth.currentUser, credential);
+                await updatePassword(auth.currentUser, newPass.value);
+                closeModal('pass-modal');
+                if(window.kripixNotify) window.kripixNotify("SICUREZZA", "Password aggiornata.", "success");
+            } catch(e) { showError(oldPass, msg, "Password attuale errata o errore di rete."); }
+        };
+
+        // Funzione Email (Manda link di verifica)
+        window.openEmailModal = () => document.getElementById('email-modal').style.display = 'flex';
+        window.confirmEmailChange = async function() {
+            const passInput = document.getElementById('auth-pass-input');
+            const emailInput = document.getElementById('new-email-input');
+            const msg = document.getElementById('email-msg');
+            
+            try {
+                const credential = EmailAuthProvider.credential(auth.currentUser.email, passInput.value);
+                await reauthenticateWithCredential(auth.currentUser, credential);
+                await verifyBeforeUpdateEmail(auth.currentUser, emailInput.value);
+                closeModal('email-modal');
+                showSuccess("Abbiamo inviato un link di conferma alla tua NUOVA email. Cliccalo per completare l'operazione.");
+            } catch(e) { showError(passInput, msg, "Password errata o email non valida."); }
+        };
+
+        // Eliminazione (Zona Rossa)
         window.openDeleteModal = () => document.getElementById('delete-modal').style.display = 'flex';
-        window.confirmDelete = async function() { /* ... logica esistente ... */ }
+        window.confirmDelete = async function() {
+            const passInput = document.getElementById('del-password');
+            const msg = document.getElementById('del-error');
+            try {
+                const credential = EmailAuthProvider.credential(auth.currentUser.email, passInput.value);
+                await reauthenticateWithCredential(auth.currentUser, credential);
+                
+                // Distrugge prima il documento per non lasciare rimasugli
+                await deleteDoc(userDocRef);
+                await deleteDoc(doc(db, "usernames", userDataCache.username.toLowerCase()));
+                await deleteUser(auth.currentUser);
+                
+                window.location.href = "index.html";
+            } catch(e) { showError(passInput, msg, "Autorizzazione negata."); }
+        };
     </script>
 </body>
 </html>

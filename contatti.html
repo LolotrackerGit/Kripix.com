@@ -1,46 +1,26 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
- <!-- ========================================== -->
+    <!-- ========================================== -->
     <!-- SEO & OPEN GRAPH (CONDIVISIONE SOCIAL)     -->
     <!-- ========================================== -->
     
-    <!-- Descrizione base per i motori di ricerca (Max 160 caratteri) -->
     <meta name="description" content="Kripix Entertainment: A different way to see pixels">
-    
-    <!-- Parole chiave (Keywords) -->
     <meta name="keywords" content="videogiochi, sviluppo indie, kripix, il filo del dubbio, pixel otros, engine narrativo, thriller psicologico">
-    
-    <!-- Autore -->
     <meta name="author" content="Kripix Entertainment">
-    
-    <!-- Istruzioni per i Crawler (Permette a Google di indicizzare la pagina) -->
     <meta name="robots" content="index, follow">
 
-    <!-- TAG OPEN GRAPH (Per Facebook, Discord, LinkedIn, ecc.) -->
-    <!-- Titolo che appare nell'anteprima -->
     <meta property="og:title" content="Kripix Entertainment | A different way to see pixels">
-    
-    <!-- Descrizione dell'anteprima -->
     <meta property="og:description" content="Esplora i nostri mondi immersivi. Scopri 'Il Filo del Dubbio' e accedi al network operativo per gli agenti Kripix.">
-    
-    <!-- Immagine di copertina (DEVI METTERE UN URL ASSOLUTO VALIDO) -->
-    <!-- Esempio: "https://kripix-studio.netlify.app/assets/cover-social.jpg" -->
-    <meta property="og:image" content="https://kripix.netlify.app/SocialPreview.pngE"> 
-    
-    <!-- URL della pagina principale -->
+    <meta property="og:image" content="https://kripix.netlify.app/SocialPreview.png"> 
     <meta property="og:url" content="https://kripix.netlify.app/">
-    
-    <!-- Tipo di contenuto -->
     <meta property="og:type" content="website">
 
-    <!-- TAG TWITTER / X (Specifici per la visualizzazione Card su X) -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Kripix Entertainment">
     <meta name="twitter:description" content="Creatori di esperienze narrative ad alta tensione. Unisciti al network.">
     <meta name="twitter:image" content="https://kripix.netlify.app/SocialPreview.png">
     
-    <!-- Tema colore Browser Mobile (La barra in alto su Chrome per Android diventerà scura) -->
     <meta name="theme-color" content="#05070a">   
     <meta charset="UTF-8">
 
@@ -51,16 +31,17 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="manifest" href="site.webmanifest">
-    <link rel="icon" href="favicon.ico"> <!-- Fallback per browser vecchi -->
+    <link rel="icon" href="favicon.ico"> 
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contatti - Kripix</title>
+    
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
     
     <!-- SCRIPT UFFICIALE EMAILJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript">
-        // INIZIALIZZA EMAILJS (Sostituisci la stringa sotto con la tua PUBLIC KEY)
         (function() {
             emailjs.init("RwYuJHf3pY9amOJn9");
         })();
@@ -97,11 +78,10 @@
             </div>
             
             <div class="contact-form-wrapper">
-                <!-- FORM AGGIORNATO PER EMAILJS -->
+                <!-- FORM -->
                 <form id="contact-form" class="contact-form">
                     <div class="form-group">
                         <label>NOME IN CODICE / NOME</label>
-                        <!-- L'attributo name="user_name" è vitale per EmailJS -->
                         <input type="text" name="user_name" placeholder="Il tuo nome" required autocomplete="off">
                     </div>
                     <div class="form-group">
@@ -128,26 +108,22 @@
     <!-- LOGICA DI INVIO EMAIL -->
     <script>
         document.getElementById('contact-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Evita che la pagina si ricarichi
+            event.preventDefault(); 
             
             const btn = document.getElementById('btn-submit');
             const statusMsg = document.getElementById('status-msg');
             
-            // Effetto visivo: Caricamento
             const originalText = btn.innerText;
             btn.innerText = 'TRASMISSIONE IN CORSO...';
             btn.style.opacity = '0.7';
-            btn.style.pointerEvents = 'none'; // Disabilita il click multiplo
+            btn.style.pointerEvents = 'none'; 
             statusMsg.style.display = 'none';
 
-            // MODIFICA QUESTE DUE RIGHE COSÌ:
             const serviceID = 'service_4xvl1j1';
             const templateID = 'template_fzcket8';
 
-            // Funzione di invio nativa di EmailJS
             emailjs.sendForm(serviceID, templateID, this)
                 .then(() => {
-                    // SUCCESSO
                     btn.innerText = 'DOSSIER INVIATO';
                     btn.style.background = '#4caf50';
                     btn.style.borderColor = '#4caf50';
@@ -157,9 +133,8 @@
                     statusMsg.style.color = "#4caf50";
                     statusMsg.style.display = "block";
                     
-                    this.reset(); // Svuota il form
+                    this.reset(); 
                     
-                    // Riporta il bottone allo stato originale dopo 5 secondi
                     setTimeout(() => {
                         btn.innerText = originalText;
                         btn.style.background = 'transparent';
@@ -171,7 +146,6 @@
                     }, 5000);
 
                 }, (err) => {
-                    // ERRORE
                     btn.innerText = 'ERRORE DI TRASMISSIONE';
                     btn.style.borderColor = '#ff5555';
                     btn.style.color = '#ff5555';
@@ -189,17 +163,20 @@
                     }, 5000);
                 });
         });
+    </script>
 
-        // (QoL Extra) Se l'utente è loggato, auto-compiliamo il suo nome e la sua email
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = localStorage.getItem('kripix_user');
-            if(currentUser) {
-                const db = JSON.parse(localStorage.getItem('kripix_database')) || [];
-                const userData = db.find(u => u.username === currentUser);
-                
-                if(userData) {
-                    document.querySelector('input[name="user_name"]').value = currentUser;
-                    document.querySelector('input[name="user_email"]').value = userData.email;
+    <!-- LOGICA AUTO-COMPLETAMENTO TRAMITE FIREBASE (FIX SICUREZZA) -->
+    <script type="module">
+        import { auth, db } from './script.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        onAuthStateChanged(auth, async (user) => {
+            if(user) {
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                if(userSnap.exists()) {
+                    document.querySelector('input[name="user_name"]').value = userSnap.data().username;
+                    document.querySelector('input[name="user_email"]').value = userSnap.data().email;
                 }
             }
         });

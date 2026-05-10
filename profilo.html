@@ -312,24 +312,57 @@
             const reqElements = [];
             const friendElements =[];
 
-            if (me.requests && me.requests.length > 0) {
-                for (const senderId of me.requests) {
-                    const userSnap = await getDoc(doc(db, "users", senderId));
+            if (me.friends && me.friends.length > 0) {
+                for (const friendId of me.friends) {
+                    const userSnap = await getDoc(doc(db, "users", friendId));
                     if (userSnap.exists()) {
-                        const senderData = userSnap.data();
+                        const fData = userSnap.data();
+                        
+                        // FIX SICUREZZA: CREAZIONE ELEMENTI NATIVI (Niente XSS)
                         const el = document.createElement('div');
-                        el.className = 'friend-item'; el.style.borderColor = 'var(--accent-gold)';
-                        el.innerHTML = `
-                            <div class="friend-info">
-                                <div class="friend-avatar" style="background-color: ${senderData.color || '#e3c66c'}">${senderData.username.charAt(0).toUpperCase()}</div>
-                                <div><div class="friend-name safe-name"></div><div class="friend-status" style="color:var(--accent-gold)">>> RICHIESTA IN ENTRATA</div></div>
-                            </div>
-                            <div><button class="btn-mini btn-accept acc-btn">ACCETTA</button><button class="btn-mini btn-reject rej-btn">RIFIUTA</button></div>
-                        `;
-                        el.querySelector('.safe-name').textContent = senderData.username;
-                        el.querySelector('.acc-btn').onclick = () => acceptRequest(senderId);
-                        el.querySelector('.rej-btn').onclick = () => rejectRequest(senderId);
-                        reqElements.push(el);
+                        el.className = 'friend-item';
+                        
+                        const friendInfo = document.createElement('div');
+                        friendInfo.className = 'friend-info';
+
+                        const fAvatar = document.createElement('div');
+                        fAvatar.className = 'friend-avatar';
+                        
+                        if (fData.avatar_img) {
+                            const img = document.createElement('img');
+                            img.src = fData.avatar_img; // Il browser non esegue script da qui
+                            img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+                            fAvatar.appendChild(img);
+                        } else {
+                            fAvatar.style.backgroundColor = fData.color || '#e3c66c';
+                            fAvatar.textContent = fData.username.charAt(0).toUpperCase();
+                        }
+
+                        let isOnline = (fData.onlineStatus === "online" && (!fData.privacy || fData.privacy.invisible !== true));
+                        
+                        const textDiv = document.createElement('div');
+                        const nameDiv = document.createElement('div');
+                        nameDiv.className = 'friend-name';
+                        nameDiv.textContent = fData.username;
+                        
+                        const statusDiv = document.createElement('div');
+                        statusDiv.className = 'friend-status';
+                        statusDiv.style.color = isOnline ? '#4caf50' : '#666';
+                        statusDiv.textContent = isOnline ? '● ONLINE' : '○ OFFLINE';
+
+                        textDiv.appendChild(nameDiv);
+                        textDiv.appendChild(statusDiv);
+                        friendInfo.appendChild(fAvatar);
+                        friendInfo.appendChild(textDiv);
+
+                        const remBtn = document.createElement('button');
+                        remBtn.className = 'btn-mini btn-reject';
+                        remBtn.textContent = 'RIMUOVI';
+                        remBtn.onclick = () => openRemoveModal(friendId, fData.username);
+
+                        el.appendChild(friendInfo);
+                        el.appendChild(remBtn);
+                        friendElements.push(el);
                     }
                 }
             }

@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCSCYzPprBLnd49x41WZ4jMBVyNDCOdJ64",
@@ -31,7 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.className = 'kripix-toast';
         let borderColor = type === 'success' ? '#4caf50' : type === 'error' ? '#ff5555' : 'var(--accent-gold)';
         toast.style.borderLeftColor = borderColor;
-        toast.innerHTML = `<div class="kripix-toast-title" style="color: ${borderColor}">>> ${title}</div><div>${message}</div>`;
+        
+        // Protezione XSS anche nelle notifiche usando textContent
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'kripix-toast-title';
+        titleDiv.style.color = borderColor;
+        titleDiv.textContent = `>> ${title}`;
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.textContent = message;
+
+        toast.appendChild(titleDiv);
+        toast.appendChild(msgDiv);
+        
         toastContainer.appendChild(toast);
         setTimeout(() => toast.classList.add('show'), 10);
         setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 5000);
@@ -39,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// NAVBAR DINAMICA & SICUREZZA
+// NAVBAR DINAMICA & SICUREZZA XSS
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const navbarList = document.querySelector('.nav-menu') || document.querySelector('.nav-links');
@@ -68,26 +80,59 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userSnap.exists()) {
                 const me = userSnap.data();
                 
-                let avatarHtmlContent = me.username.charAt(0).toUpperCase();
-                let avatarStyle = me.avatar_img ? `background-color: transparent; border: none;` : `background-color: ${me.color || '#e3c66c'}; border: none;`; 
-                if (me.avatar_img) avatarHtmlContent = `<img src="${me.avatar_img}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                // PULIZIA DEL CONTENITORE
+                li.innerHTML = '';
+                
+                // Creazione sicura dell'Avatar
+                const avatarDiv = document.createElement('div');
+                avatarDiv.className = 'user-avatar';
+                if(me.avatar_img) {
+                    avatarDiv.style.backgroundColor = 'transparent';
+                    avatarDiv.style.border = 'none';
+                    const img = document.createElement('img');
+                    img.src = me.avatar_img; // Sicuro, trattato come URL
+                    img.style.width = '100%'; img.style.height = '100%'; 
+                    img.style.borderRadius = '50%'; img.style.objectFit = 'cover';
+                    avatarDiv.appendChild(img);
+                } else {
+                    avatarDiv.style.backgroundColor = me.color || '#e3c66c';
+                    avatarDiv.style.border = 'none';
+                    avatarDiv.textContent = me.username.charAt(0).toUpperCase();
+                }
 
-                li.innerHTML = `
-                    <div class="user-avatar" style="${avatarStyle}">${avatarHtmlContent}</div>
-                    <div class="user-dropdown">
-                        <div class="user-header">
-                            <span class="user-name">${me.username}</span>
-                            <span class="user-role">${me.isAdmin ? 'OVERSEER' : 'Agente Operativo'}</span>
-                        </div>
-                        <a href="profilo.html">IL MIO PROFILO</a>
-                        <a href="libreria.html">Libreria Giochi</a>
-                        <a href="impostazioni.html">Configurazione</a>
-                        ${me.isAdmin ? '<a href="admin.html" style="color:var(--accent-gold)">Terminale Overseer</a>' : ''}
-                        <a href="#" id="action-logout" style="color:#ff5555">Disconnetti</a>
-                    </div>
-                `;
+                // Creazione sicura del Menu a Tendina
+                const dropdown = document.createElement('div');
+                dropdown.className = 'user-dropdown';
+                
+                const header = document.createElement('div');
+                header.className = 'user-header';
+                
+                const userNameSpan = document.createElement('span');
+                userNameSpan.className = 'user-name';
+                userNameSpan.textContent = me.username; // XSS Safe
+                
+                const userRoleSpan = document.createElement('span');
+                userRoleSpan.className = 'user-role';
+                userRoleSpan.textContent = me.isAdmin ? 'OVERSEER' : 'Agente Operativo';
+                
+                header.appendChild(userNameSpan);
+                header.appendChild(userRoleSpan);
+                dropdown.appendChild(header);
+
+                // Aggiunta dei link
+                dropdown.insertAdjacentHTML('beforeend', `
+                    <a href="profilo.html">IL MIO PROFILO</a>
+                    <a href="libreria.html">Libreria Giochi</a>
+                    <a href="impostazioni.html">Configurazione</a>
+                    ${me.isAdmin ? '<a href="admin.html" style="color:var(--accent-gold)">Terminale Overseer</a>' : ''}
+                    <a href="#" id="action-logout" style="color:#ff5555">Disconnetti</a>
+                `);
+
+                li.appendChild(avatarDiv);
+                li.appendChild(dropdown);
+
             } else {
-                // IL FIX D'EMERGENZA: Se l'account è fantasma, mostra questo.
+                // ACCOUNT FANTASMA (Esiste in Auth ma non nel Database)
                 li.innerHTML = `
                     <div class="user-avatar" style="background-color: #ff5555; border: none;" title="Errore Dati">!</div>
                     <div class="user-dropdown">
@@ -125,47 +170,48 @@ document.addEventListener('DOMContentLoaded', () => {
         // SISTEMA DI RILEVAMENTO PRESENZA (ONLINE/OFFLINE)
         // ==========================================
         if (user) {
-            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(async ({ doc, updateDoc, getDoc }) => {
-                const userRef = doc(db, "users", user.uid);
-                
-                // Funzione per andare Online (controlla se sei in modalità fantasma)
-                const goOnline = async () => {
-                    try {
-                        const snap = await getDoc(userRef);
-                        if (snap.exists() && (!snap.data().privacy || snap.data().privacy.invisible !== true)) {
-                            await updateDoc(userRef, { onlineStatus: "online" });
-                        }
-                    } catch(e) {}
-                };
-
-                // Funzione per andare Offline
-                const goOffline = () => {
-                    updateDoc(userRef, { onlineStatus: "offline" }).catch(()=>{});
-                };
-
-                // 1. Appena apri il sito, vai Online
-                goOnline();
-
-                // 2. Se cambi scheda nel browser o chiudi il sito a icona sul telefono, vai Offline
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible') {
-                        goOnline();
-                    } else {
-                        goOffline();
+            const userRef = doc(db, "users", user.uid);
+            
+            const goOnline = async () => {
+                try {
+                    const snap = await getDoc(userRef);
+                    if (snap.exists() && (!snap.data().privacy || snap.data().privacy.invisible !== true)) {
+                        await updateDoc(userRef, { onlineStatus: "online" });
                     }
-                });
+                } catch(e) {}
+            };
 
-                // 3. Se chiudi brutalmente la pagina, vai Offline
-                window.addEventListener('beforeunload', () => {
+            const goOffline = () => {
+                updateDoc(userRef, { onlineStatus: "offline" }).catch(()=>{});
+            };
+
+            goOnline();
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    goOnline();
+                } else {
                     goOffline();
-                });
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                goOffline();
             });
         }
     });
 });
 
+// ==========================================
+// MENU HAMBURGER (MOBILE)
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     const hamburger = document.querySelector(".hamburger");
     const navMenu = document.querySelector(".nav-menu");
-    if (hamburger && navMenu) hamburger.addEventListener("click", () => { hamburger.classList.toggle("active"); navMenu.classList.toggle("active"); });
+    if (hamburger && navMenu) {
+        hamburger.addEventListener("click", () => { 
+            hamburger.classList.toggle("active"); 
+            navMenu.classList.toggle("active"); 
+        });
+    }
 });
