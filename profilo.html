@@ -377,8 +377,62 @@
                 window.kripixNotify("SUCCESSO", `Richiesta inviata a ${targetData.username}.`, "success");
                 friendInputUI.value = ''; btnAddUI.classList.remove('ready');
 
-            } catch (error) { window.kripixNotify("ERRORE", "Impossibile completare la richiesta.", "error"); console.error(error); }
+            } catch (error) { window.kripixNotify("ERRORE SERVER", "Impossibile completare la richiesta.", "error"); console.error(error); }
             btnAddUI.innerText = "CERCA E INVIA";
+        };
+
+        // GESTIONE SICURA (CON CATTURA ERRORI)
+        window.cancelSentRequest = async function(targetUid) {
+            try {
+                await updateDoc(doc(db, "users", targetUid), { requests: arrayRemove(myUid) });
+                window.kripixNotify("ANNULLATA", "Richiesta ritirata con successo.", "info");
+            } catch (error) {
+                console.error(error);
+                window.kripixNotify("ERRORE", "Impossibile ritirare la richiesta.", "error");
+            }
+        };
+
+        window.acceptRequest = async function(senderId) {
+            try {
+                const batch = writeBatch(db);
+                // Aggiorno me stesso
+                batch.update(myDocRef, { friends: arrayUnion(senderId), requests: arrayRemove(senderId) });
+                // Aggiorno l'altro
+                batch.update(doc(db, "users", senderId), { friends: arrayUnion(myUid) });
+                await batch.commit();
+                window.kripixNotify("CONNESSIONE STABILITA", "Agente aggiunto alla rete.", "success");
+            } catch (error) {
+                console.error(error);
+                window.kripixNotify("ACCESSO NEGATO", "Il server ha bloccato l'accettazione.", "error");
+            }
+        };
+
+        window.rejectRequest = async function(senderId) { 
+            try {
+                await updateDoc(myDocRef, { requests: arrayRemove(senderId) }); 
+                window.kripixNotify("RIFIUTATA", "Richiesta annullata.", "error"); 
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        window.openRemoveModal = function(friendId, friendName) { currentlyRemovingFriendId = friendId; document.getElementById('remove-target-name').innerText = friendName; document.getElementById('remove-friend-modal').style.display = 'flex'; };
+        window.closeRemoveModal = function() { document.getElementById('remove-friend-modal').style.display = 'none'; currentlyRemovingFriendId = null; };
+        
+        window.confirmRemoveFriend = async function() {
+            if (!currentlyRemovingFriendId) return;
+            try {
+                const batch = writeBatch(db);
+                batch.update(myDocRef, { friends: arrayRemove(currentlyRemovingFriendId) });
+                batch.update(doc(db, "users", currentlyRemovingFriendId), { friends: arrayRemove(myUid) });
+                await batch.commit();
+                window.kripixNotify("INTERROTTA", "Agente rimosso.", "error");
+                closeRemoveModal();
+            } catch (error) {
+                console.error(error);
+                window.kripixNotify("ERRORE", "Impossibile rimuovere l'agente.", "error");
+                closeRemoveModal();
+            }
         };
 
         window.cancelSentRequest = async function(targetUid) {
