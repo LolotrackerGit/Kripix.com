@@ -836,3 +836,10 @@ footer {
 @media (max-width: 600px) {
     #kripix-cookie-banner { bottom: 0; left: 0; max-width: 100%; border-left: none; border-top: 4px solid var(--accent-gold); }
 }
+/* --- CLASSE PER I BOTTONI DI SUCCESSO (VERDI) --- */
+.btn-success {
+    background-color: #4caf50 !important;
+    color: #000 !important;
+    border-color: #4caf50 !important;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.4) !important;
+}

@@ -324,6 +324,7 @@
     });
 
     // ### 2. FUNZIONE PER AGGIORNARE L'INTERFACCIA DEL PROFILO ###
+    // ### 2. FUNZIONE PER AGGIORNARE L'INTERFACCIA DEL PROFILO ###
     function updateProfileUI(userData) {
         // --- ID Card (Sinistra) ---
         const avatar = document.getElementById('p-avatar');
@@ -339,6 +340,16 @@
         document.getElementById('p-id-num').innerText = `#${myUid.substring(0, 4).toUpperCase()}`;
         document.getElementById('p-games-count').innerText = userData.games ? userData.games.length : 0;
         document.getElementById('p-reg-date').innerText = new Date(userData.createdAt).toLocaleDateString('it-IT');
+
+        // --- NUOVO FIX: LIVELLO OVERSEER / AGENTE ---
+        const rankEl = document.getElementById('p-rank');
+        if (userData.isAdmin) {
+            rankEl.innerText = "OVERSEER - LIV. 5";
+            rankEl.style.color = "#ff5555"; // Rosso per Admin
+        } else {
+            rankEl.innerText = "AGENTE - LIV. 1"; 
+            rankEl.style.color = "var(--accent-gold)";
+        }
 
         // --- XP e Livello ---
         const xp = (userData.games ? userData.games.length * 50 : 0) + (userData.friends ? userData.friends.length * 10 : 0);
@@ -416,10 +427,10 @@
     }
 
     // ### 4. NUOVA LOGICA PER INVIARE RICHIESTE (SICURA) ###
+    // ### 4. NUOVA LOGICA PER INVIARE RICHIESTE (SICURA E CON PRIVACY) ###
     window.sendRequest = async function() {
         const friendInput = document.getElementById('friend-id-input');
         const targetName = friendInput.value.trim().toLowerCase();
-        const msgEl = document.getElementById('friend-msg');
 
         if (!targetName) return;
 
@@ -431,7 +442,7 @@
         }
 
         try {
-            // Cerchiamo l'utente tramite il suo nome in codice
+            // 1. Cerchiamo l'utente tramite il suo nome in codice
             const q = query(collection(db, "users"), where("username", "==", targetName));
             const querySnapshot = await getDocs(q);
 
@@ -444,7 +455,17 @@
             const targetUid = targetUserDoc.id;
             const targetData = targetUserDoc.data();
 
-            // Controlla se siete già amici o se hai già inviato una richiesta
+            // ==========================================
+            // NUOVO CONTROLLO: RISPETTO DELLA PRIVACY
+            // ==========================================
+            // Se l'oggetto privacy esiste E la visibilità è stata messa su false
+            if (targetData.privacy && targetData.privacy.visibility === false) {
+                window.kripixNotify("ACCESSO NEGATO", "L'Agente ha disattivato la rintracciabilità sulla rete (Privacy).", "error");
+                return; // INTERROMPE LA FUNZIONE QUI
+            }
+            // ==========================================
+
+            // 2. Controlla se siete già amici o se hai già inviato una richiesta
             if (targetData.friends && targetData.friends.includes(myUid)) {
                 window.kripixNotify("INFO", "Siete già connessi.", "info");
                 return;
@@ -454,7 +475,7 @@
                 return;
             }
 
-            // Aggiungo il MIO UID alla lista delle richieste del BERSAGLIO
+            // 3. Aggiungo il MIO UID alla lista delle richieste del BERSAGLIO
             await updateDoc(doc(db, "users", targetUid), {
                 requests: arrayUnion(myUid)
             });

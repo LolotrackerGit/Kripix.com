@@ -91,6 +91,8 @@
             <div class="settings-nav">
                 <button id="btn-tab-profile" class="active" onclick="switchTab('profile')">PROFILO AGENTE</button>
                 <button id="btn-tab-privacy" onclick="switchTab('privacy')">PRIVACY & DATI</button>
+                <!-- NUOVO BOTTONE DOCUMENTAZIONE -->
+                <button id="btn-tab-legal" onclick="switchTab('legal')">DOCUMENTAZIONE</button>
             </div>
 
             <!-- PANNELLO PROFILO -->
@@ -171,6 +173,21 @@
                 </label>
             </div>
         </div>
+
+        <!-- PANNELLO DOCUMENTAZIONE LEGALE -->
+            <div id="panel-legal" class="settings-panel" style="display:none;">
+                <h3 class="panel-title">ARCHIVIO LEGALE</h3>
+                <p style="color:#888; margin-bottom: 30px; font-family: 'Courier Prime'; font-size: 0.9rem;">
+                    Consulta le direttive operative e legali del Kripix Network.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; max-width: 400px;">
+                    <a href="eula.html" class="btn-outline full-width" style="text-align: center;">Dossier E.U.L.A.</a>
+                    <a href="dmr.html" class="btn-outline full-width" style="text-align: center;">Policy DRM</a>
+                    <!-- Se non hai ancora una pagina cookie, puoi linkarla a una che creerai -->
+                    <a href="cookies.html" class="btn-outline full-width" style="text-align: center;">Gestione Cookie</a>
+                </div>
+            </div>
     </section>
 
     <!-- MODALE: CAMBIO NICKNAME -->
@@ -298,11 +315,21 @@
         // ----------------------------------------
         // FUNZIONI UI ESPOSIZIONE GLOBALE
         // ----------------------------------------
+        // ----------------------------------------
+        // FUNZIONI UI ESPOSIZIONE GLOBALE
+        // ----------------------------------------
         window.switchTab = function(tabName) {
+            // Rimuovi 'active' da tutti
             document.getElementById('btn-tab-profile').classList.remove('active');
             document.getElementById('btn-tab-privacy').classList.remove('active');
+            document.getElementById('btn-tab-legal').classList.remove('active');
+            
+            // Nascondi tutti i pannelli
             document.getElementById('panel-profile').style.display = 'none';
             document.getElementById('panel-privacy').style.display = 'none';
+            document.getElementById('panel-legal').style.display = 'none';
+            
+            // Attiva solo quello cliccato
             document.getElementById('btn-tab-' + tabName).classList.add('active');
             document.getElementById('panel-' + tabName).style.display = 'block';
         }
