@@ -114,9 +114,12 @@
     <!-- SCRIPT FIREBASE -->
     <!-- SCRIPT FIREBASE -->
     <script type="module">
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        
-        // Inizializza le funzioni per poterle chiamare
+        // 1. Importa 'auth' da script.js per forzare l'inizializzazione dell'app Firebase
+        import { auth } from './script.js'; 
+        // 2. Importa dal pacchetto corretto (firebase-functions.js)
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+    
+        // Inizializza le funzioni
         const functions = getFunctions();
 
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
