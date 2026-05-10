@@ -135,6 +135,15 @@
                     <input type="checkbox" id="priv-vis" style="display:none;" onchange="savePrivacy()">
                     <div class="toggle"></div>
                 </label>
+
+                <label class="switch-label">
+                    <div>
+                        <span class="setting-label">MODALITÀ FANTASMA</span>
+                        <span class="switch-text" style="font-size:0.85rem;">Appari sempre offline a tutta la rete (stile Discord).</span>
+                    </div>
+                    <input type="checkbox" id="priv-inv" style="display:none;" onchange="savePrivacy()">
+                    <div class="toggle"></div>
+                </label>
                 
                 <label class="switch-label">
                     <div>
@@ -207,6 +216,13 @@
                 }
             } catch (error) { console.error("Errore recupero dati:", error); }
         });
+        if (userDataCache.privacy) {
+                        document.getElementById('priv-vis').checked = userDataCache.privacy.visibility !== false; 
+                        document.getElementById('priv-tel').checked = userDataCache.privacy.telemetry === true;
+                        document.getElementById('priv-news').checked = userDataCache.privacy.newsletter === true;
+                        // AGGIUNGI QUESTA RIGA QUI:
+                        document.getElementById('priv-inv').checked = userDataCache.privacy.invisible === true;
+                    }
 
         document.addEventListener('DOMContentLoaded', async () => {
             const avatarImages =["https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111","https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111"];
@@ -236,9 +252,19 @@
                 await updateDoc(userDocRef, { 
                     'privacy.visibility': document.getElementById('priv-vis').checked,
                     'privacy.telemetry': document.getElementById('priv-tel').checked,
-                    'privacy.newsletter': document.getElementById('priv-news').checked
+                    'privacy.newsletter': document.getElementById('priv-news').checked,
+                    // AGGIUNGI QUESTA RIGA:
+                    'privacy.invisible': document.getElementById('priv-inv').checked
                 }); 
                 if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy sincronizzate.", "success"); 
+                
+                // Forza l'aggiornamento dello stato online subito dopo aver cliccato
+                if(document.getElementById('priv-inv').checked) {
+                    await updateDoc(userDocRef, { onlineStatus: "offline" });
+                } else {
+                    await updateDoc(userDocRef, { onlineStatus: "online" });
+                }
+                
             } catch (e) { console.error(e); }
         }
 

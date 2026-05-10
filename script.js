@@ -120,6 +120,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     onAuthStateChanged(auth, (user) => {
         window.updateNavbarAvatarDisplay(user);
+
+        // ==========================================
+        // SISTEMA DI RILEVAMENTO PRESENZA (ONLINE/OFFLINE)
+        // ==========================================
+        if (user) {
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(async ({ doc, updateDoc, getDoc }) => {
+                const userRef = doc(db, "users", user.uid);
+                
+                // Funzione per andare Online (controlla se sei in modalità fantasma)
+                const goOnline = async () => {
+                    try {
+                        const snap = await getDoc(userRef);
+                        if (snap.exists() && (!snap.data().privacy || snap.data().privacy.invisible !== true)) {
+                            await updateDoc(userRef, { onlineStatus: "online" });
+                        }
+                    } catch(e) {}
+                };
+
+                // Funzione per andare Offline
+                const goOffline = () => {
+                    updateDoc(userRef, { onlineStatus: "offline" }).catch(()=>{});
+                };
+
+                // 1. Appena apri il sito, vai Online
+                goOnline();
+
+                // 2. Se cambi scheda nel browser o chiudi il sito a icona sul telefono, vai Offline
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        goOnline();
+                    } else {
+                        goOffline();
+                    }
+                });
+
+                // 3. Se chiudi brutalmente la pagina, vai Offline
+                window.addEventListener('beforeunload', () => {
+                    goOffline();
+                });
+            });
+        }
     });
 });
 

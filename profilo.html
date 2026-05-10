@@ -327,13 +327,26 @@
                         let fAvatar = `<div class="friend-avatar" style="background-color: ${fData.color || '#e3c66c'}">${fData.username.charAt(0).toUpperCase()}</div>`;
                         if (fData.avatar_img) fAvatar = `<div class="friend-avatar"><img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;"></div>`;
                         
+                        // =====================================
+                        // LOGICA ONLINE / OFFLINE
+                        // =====================================
+                        let isOnline = false;
+                        if (fData.onlineStatus === "online" && (!fData.privacy || fData.privacy.invisible !== true)) {
+                            isOnline = true;
+                        }
+
+                        let statusHtml = isOnline 
+                            ? `<div class="friend-status" style="color:#4caf50;">● ONLINE</div>` 
+                            : `<div class="friend-status" style="color:#666;">○ OFFLINE</div>`;
+                        // =====================================
+
                         friendsContainer.innerHTML += `
                             <div class="friend-item">
                                 <div class="friend-info">
                                     ${fAvatar}
                                     <div>
                                         <div class="friend-name">${fData.username}</div>
-                                        <div class="friend-status">● CONNESSO</div>
+                                        ${statusHtml} <!-- QUI INSERIAMO LO STATO DINAMICO -->
                                     </div>
                                 </div>
                                 <button class="btn-mini btn-reject" onclick="openRemoveModal('${friendId}', '${fData.username}')">RIMUOVI</button>
