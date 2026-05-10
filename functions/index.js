@@ -34,16 +34,17 @@ function generateKripixKey(uid, gameCode, editionCode) {
 
 // ---------------- NUOVA FUNZIONE DI REGISTRAZIONE SICURA ----------------
 exports.createUserAccount = functions.https.onCall(async (data, context) => {
-    const { email, password, username } = data;
+    // FIX: Assicuriamoci di estrarre i dati correttamente anche se Firebase li ha annidati
+    const payload = data.data ? data.data : data;
+    const { email, password, username } = payload;
+
+    // Aggiungiamo un log per Firebase
+    console.log("Payload ricevuto dal sito:", payload);
 
     // 1. Controlli di validazione base sul server
     if (!email || !password || !username) {
         throw new functions.https.HttpsError('invalid-argument', 'Email, password e username sono richiesti.');
     }
-    if (username.length < 3) {
-        throw new functions.https.HttpsError('invalid-argument', 'Username troppo corto.');
-    }
-
     // 2. Controllo se l'username è già in uso (atomico e sicuro)
     const usernameRef = db.collection('usernames').doc(username.toLowerCase());
     const usernameDoc = await usernameRef.get();
