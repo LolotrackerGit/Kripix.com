@@ -4,13 +4,11 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
-// ALFABETO BASE32 (32 caratteri, rimosse I, O, 0, 1 per evitare confusione)
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-// IL GENERATORE DELL'ALGORITMO KRIPIX
 function generateKripixKey(uid, gameCode, editionCode) {
     const block1 = "KRPX";
-    const block2 = `${gameCode}${editionCode}A`; // Es: HW (Harrow) D (Deluxe) A (Lotto 1)
+    const block2 = `${gameCode}${editionCode}A`; 
     
     const timestamp = Date.now().toString();
     const uidSnippet = uid.substring(0, 2).toUpperCase(); 
@@ -32,20 +30,18 @@ function generateKripixKey(uid, gameCode, editionCode) {
     return `${block1}-${block2}-${block3}-${block4}`;
 }
 
-// ---------------- NUOVA FUNZIONE DI REGISTRAZIONE SICURA ----------------
 exports.createUserAccount = functions.https.onCall(async (data, context) => {
-    // FIX: Assicuriamoci di estrarre i dati correttamente anche se Firebase li ha annidati
+    // Gestione sicura dei parametri
     const payload = data.data ? data.data : data;
     const { email, password, username } = payload;
 
-    // Aggiungiamo un log per Firebase
-    console.log("Payload ricevuto dal sito:", payload);
-
-    // 1. Controlli di validazione base sul server
     if (!email || !password || !username) {
         throw new functions.https.HttpsError('invalid-argument', 'Email, password e username sono richiesti.');
     }
-    // 2. Controllo se l'username è già in uso (atomico e sicuro)
+    if (username.length < 3) {
+        throw new functions.https.HttpsError('invalid-argument', 'Username troppo corto.');
+    }
+
     const usernameRef = db.collection('usernames').doc(username.toLowerCase());
     const usernameDoc = await usernameRef.get();
     if (usernameDoc.exists) {
@@ -53,67 +49,52 @@ exports.createUserAccount = functions.https.onCall(async (data, context) => {
     }
 
     try {
-        // 3. Creazione utente nel sistema di autenticazione di Firebase
+        // Creazione Auth
         const userRecord = await admin.auth().createUser({
             email: email,
             password: password,
             displayName: username
         });
         
-        // 4. Se la creazione ha successo, creiamo i documenti nel database
         const uid = userRecord.uid;
         const batch = db.batch();
 
-        // Documento pubblico
         const userRef = db.collection('users').doc(uid);
         batch.set(userRef, {
             uid: uid,
             username: username,
             color: '#e3c66c',
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            games: [],
+            games:[],
             friends: [],
-            requests: [],
+            requests:[],
             privacy: { visibility: true, telemetry: false, newsletter: false, invisible: false }
         });
         
-        // Documento privato (il caveau)
         const privateRef = userRef.collection('private').doc('dossier');
         batch.set(privateRef, { email: email, keys: {} });
-
-        // Documento per la ricerca dell'username
         batch.set(usernameRef, { uid: uid });
 
         await batch.commit();
 
-        // 5. Invia email di verifica
-        const verificationLink = await admin.auth().generateEmailVerificationLink(email);
-        // (In un progetto reale, qui invieresti una email personalizzata tramite un servizio come SendGrid usando il link)
-        
+        // RIGA PROBLEMATICA RIMOSSA. Ora il server risponde "success" immediatamente!
         return { status: 'success', uid: uid };
 
     } catch (error) {
         console.error("Errore creazione utente:", error);
-        // Se qualcosa va storto, Firebase è abbastanza intelligente da non creare l'utente
-        // o da permetterci di cancellarlo in caso di fallimento parziale.
         if (error.code === 'auth/email-already-exists') {
             throw new functions.https.HttpsError('already-exists', 'Questa email è già registrata.');
         }
-        throw new functions.https.HttpsError('internal', 'Errore del server durante la creazione dell\'account.');
+        throw new functions.https.HttpsError('internal', 'Errore del server durante la creazione account.');
     }
 });
 
-
-// FUNZIONE DI ACQUISTO (invariata)
+// MANTIENI LA TUA FUNZIONE securePurchaseGame INVARIATA QUI SOTTO
 exports.securePurchaseGame = functions.https.onCall(async (data, context) => {
-    if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'Devi essere loggato per procedere.');
-    }
+    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Devi essere loggato.');
     const uid = context.auth.uid;
     const gameId = data.gameId; 
-    if (gameId !== "harrow") {
-        throw new functions.https.HttpsError('invalid-argument', 'Gioco non trovato nel database.');
-    }
+    if (gameId !== "harrow") throw new functions.https.HttpsError('invalid-argument', 'Gioco non trovato.');
     const userRef = db.collection('users').doc(uid);
     const privateRef = userRef.collection('private').doc('dossier');
     const userDoc = await userRef.get();
@@ -122,16 +103,8 @@ exports.securePurchaseGame = functions.https.onCall(async (data, context) => {
     }
     const newKey = generateKripixKey(uid, "HW", "D");
     const batch = db.batch();
-    batch.update(userRef, {
-        games: admin.firestore.FieldValue.arrayUnion(gameId)
-    });
-    batch.set(privateRef, {
-        [`keys.${gameId}`]: newKey
-    }, { merge: true });
+    batch.update(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) });
+    batch.set(privateRef, { [`keys.${gameId}`]: newKey }, { merge: true });
     await batch.commit();
-    return { 
-        status: "success", 
-        message: "Licenza acquisita con successo.",
-        game: gameId 
-    };
+    return { status: "success", message: "Licenza acquisita con successo.", game: gameId };
 });
