@@ -279,59 +279,246 @@
     <script type="module" src="script.js"></script>
 
     <!-- LOGICA DELLA PAGINA PROFILO -->
-    <script type="module">
-        import { auth, db } from './script.js';
-        import { doc, onSnapshot, query, collection, where, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    <!-- Incolla questo alla fine di profilo.html, sostituendo il vecchio <script> -->
+<script type="module">
+    import { auth, db } from './script.js';
+    import { doc, getDoc, onSnapshot, query, collection, where, getDocs, updateDoc, arrayUnion, arrayRemove, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        let myDocRef = null;
+    let myDocRef = null;
+    let myUid = null;
+    let currentlyRemovingFriendId = null; // Variabile per sapere chi stiamo rimuovendo
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) { window.location.href = 'login.html'; return; }
-            
-            myDocRef = doc(db, "users", user.uid);
+    // --- EFFETTO VISIVO INPUT/BOTTONE ---
+    const friendInputUI = document.getElementById('friend-id-input');
+    const btnAddUI = document.getElementById('btn-add-friend');
+    
+    if(friendInputUI && btnAddUI) {
+        friendInputUI.addEventListener('input', function() {
+            if(this.value.trim().length > 0) {
+                btnAddUI.classList.add('ready');
+            } else {
+                btnAddUI.classList.remove('ready');
+            }
+        });
+    }
+    // ------------------------------------
 
-            onSnapshot(myDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const me = docSnap.data();
-                    document.getElementById('p-username').innerText = me.username;
-                    // ... qui aggiorni avatar, xp e amici come facevi prima ...
-                    // La differenza è che ora sei SICURO che i dati sono del proprietario.
+    // ### 1. LISTENER PRINCIPALE PER L'AUTENTICAZIONE ###
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+        myUid = user.uid;
+        myDocRef = doc(db, "users", myUid);
+
+        // onSnapshot ascolta le modifiche in tempo reale al tuo profilo
+        onSnapshot(myDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const me = docSnap.data();
+                updateProfileUI(me);
+                updateFriendsAndRequestsUI(me);
+            }
+        });
+    });
+
+    // ### 2. FUNZIONE PER AGGIORNARE L'INTERFACCIA DEL PROFILO ###
+    function updateProfileUI(userData) {
+        // --- ID Card (Sinistra) ---
+        const avatar = document.getElementById('p-avatar');
+        if (userData.avatar_img) {
+            avatar.innerHTML = `<img src="${userData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`;
+            avatar.style.backgroundColor = 'transparent';
+        } else {
+            avatar.innerHTML = userData.username.charAt(0).toUpperCase();
+            avatar.style.backgroundColor = userData.color || '#e3c66c';
+        }
+
+        document.getElementById('p-username').innerText = userData.username;
+        document.getElementById('p-id-num').innerText = `#${myUid.substring(0, 4).toUpperCase()}`;
+        document.getElementById('p-games-count').innerText = userData.games ? userData.games.length : 0;
+        document.getElementById('p-reg-date').innerText = new Date(userData.createdAt).toLocaleDateString('it-IT');
+
+        // --- XP e Livello ---
+        const xp = (userData.games ? userData.games.length * 50 : 0) + (userData.friends ? userData.friends.length * 10 : 0);
+        const xpNeeded = 100;
+        document.getElementById('xp-text').innerText = `${xp} / ${xpNeeded} XP`;
+        document.getElementById('xp-bar').style.width = `${(xp / xpNeeded) * 100}%`;
+
+        // --- Achievement / Medagliere ---
+        const badgeInvestigator = document.getElementById('badge-investigator');
+        if (userData.games && userData.games.includes('harrow')) {
+            badgeInvestigator.classList.add('unlocked');
+            document.getElementById('log-purchase').style.display = 'block';
+        } else {
+            badgeInvestigator.classList.remove('unlocked');
+        }
+    }
+
+    // ### 3. FUNZIONE PER GESTIRE AMICI E RICHIESTE ###
+    async function updateFriendsAndRequestsUI(me) {
+        const requestsContainer = document.getElementById('requests-area');
+        const friendsContainer = document.getElementById('friends-list-container');
+        requestsContainer.innerHTML = '';
+        friendsContainer.innerHTML = '<p style="font-family:\'Courier Prime\'; color:#666;">>> Nessuna connessione attiva.</p>';
+
+        // Mostra richieste in arrivo
+        if (me.requests && me.requests.length > 0) {
+            for (const senderId of me.requests) {
+                const userSnap = await getDoc(doc(db, "users", senderId));
+                if (userSnap.exists()) {
+                    const senderData = userSnap.data();
+                    requestsContainer.innerHTML += `
+                        <div class="friend-item" style="border-color: var(--accent-gold);">
+                            <div class="friend-info">
+                                <div class="friend-avatar" style="background-color: ${senderData.color || '#e3c66c'}">${senderData.username.charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <div class="friend-name">${senderData.username}</div>
+                                    <div class="friend-status" style="color:var(--accent-gold)">>> RICHIESTA IN ENTRATA</div>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn-mini btn-accept" onclick="acceptRequest('${senderId}')">ACCETTA</button>
+                                <button class="btn-mini btn-reject" onclick="rejectRequest('${senderId}')">RIFIUTA</button>
+                            </div>
+                        </div>`;
                 }
+            }
+        }
+
+        // Mostra lista amici
+        if (me.friends && me.friends.length > 0) {
+            friendsContainer.innerHTML = ''; // Svuota il messaggio di default
+            for (const friendId of me.friends) {
+                const userSnap = await getDoc(doc(db, "users", friendId));
+                if (userSnap.exists()) {
+                    const friendData = userSnap.data();
+                    let friendAvatar = `<div class="friend-avatar" style="background-color: ${friendData.color || '#e3c66c'}">${friendData.username.charAt(0).toUpperCase()}</div>`;
+                    if (friendData.avatar_img) {
+                        friendAvatar = `<div class="friend-avatar"><img src="${friendData.avatar_img}" style="width:100%; height:100%; object-fit:cover;"></div>`;
+                    }
+                    
+                    friendsContainer.innerHTML += `
+                        <div class="friend-item">
+                            <div class="friend-info">
+                                ${friendAvatar}
+                                <div>
+                                    <div class="friend-name">${friendData.username}</div>
+                                    <div class="friend-status">● CONNESSO</div>
+                                </div>
+                            </div>
+                            <button class="btn-mini btn-reject" onclick="openRemoveModal('${friendId}', '${friendData.username}')">RIMUOVI</button>
+                        </div>`;
+                }
+            }
+        }
+    }
+
+    // ### 4. NUOVA LOGICA PER INVIARE RICHIESTE (SICURA) ###
+    window.sendRequest = async function() {
+        const friendInput = document.getElementById('friend-id-input');
+        const targetName = friendInput.value.trim().toLowerCase();
+        const msgEl = document.getElementById('friend-msg');
+
+        if (!targetName) return;
+
+        // Non puoi aggiungere te stesso
+        const myUsername = document.getElementById('p-username').innerText.toLowerCase();
+        if (targetName === myUsername) {
+            window.kripixNotify("ERRORE", "Non puoi aggiungere te stesso.", "error");
+            return;
+        }
+
+        try {
+            // Cerchiamo l'utente tramite il suo nome in codice
+            const q = query(collection(db, "users"), where("username", "==", targetName));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                window.kripixNotify("NEGATIVO", "Agente non trovato nel database.", "error");
+                return;
+            }
+
+            const targetUserDoc = querySnapshot.docs[0];
+            const targetUid = targetUserDoc.id;
+            const targetData = targetUserDoc.data();
+
+            // Controlla se siete già amici o se hai già inviato una richiesta
+            if (targetData.friends && targetData.friends.includes(myUid)) {
+                window.kripixNotify("INFO", "Siete già connessi.", "info");
+                return;
+            }
+            if (targetData.requests && targetData.requests.includes(myUid)) {
+                window.kripixNotify("ATTESA", "Richiesta già inviata a questo agente.", "info");
+                return;
+            }
+
+            // Aggiungo il MIO UID alla lista delle richieste del BERSAGLIO
+            await updateDoc(doc(db, "users", targetUid), {
+                requests: arrayUnion(myUid)
             });
+
+            window.kripixNotify("SUCCESSO", `Richiesta inviata a ${targetUserDoc.data().username}.`, "success");
+            friendInput.value = '';
+
+        } catch (error) {
+            window.kripixNotify("ERRORE SERVER", "Impossibile completare la richiesta.", "error");
+            console.error("Errore invio richiesta:", error);
+        }
+    };
+
+    // ### 5. FUNZIONI PER ACCETTARE/RIFIUTARE/RIMUOVERE (SICURE) ###
+    window.acceptRequest = async function(senderId) {
+        const batch = writeBatch(db);
+
+        // Aggiungo il sender ai miei amici e rimuovo la sua richiesta
+        batch.update(myDocRef, {
+            friends: arrayUnion(senderId),
+            requests: arrayRemove(senderId)
         });
 
-        // Nuova logica invio amicizia sicura (Cerca l'UID del bersaglio dal suo username)
-        window.sendRequest = async function() {
-            const targetName = document.getElementById('friend-id-input').value.trim();
-            if(!targetName) return;
+        // Aggiungo ME STESSO agli amici del sender
+        const senderDocRef = doc(db, "users", senderId);
+        batch.update(senderDocRef, {
+            friends: arrayUnion(myUid)
+        });
 
-            try {
-                // Troviamo chi è l'utente cercato
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, where("username", "==", targetName));
-                const querySnapshot = await getDocs(q);
+        await batch.commit();
+        window.kripixNotify("CONNESSIONE STABILITA", "Agente aggiunto alla rete.", "success");
+    };
 
-                if (querySnapshot.empty) {
-                    window.kripixNotify("ERRORE", "Agente inesistente.", "error"); return; 
-                }
+    window.rejectRequest = async function(senderId) {
+        await updateDoc(myDocRef, { requests: arrayRemove(senderId) });
+        window.kripixNotify("RIFIUTATA", "Richiesta di connessione annullata.", "error");
+    };
 
-                const targetDoc = querySnapshot.docs[0]; // Prendiamo il primo risultato
-                const targetUid = targetDoc.id;
+    window.openRemoveModal = function(friendId, friendName) {
+        currentlyRemovingFriendId = friendId;
+        document.getElementById('remove-target-name').innerText = friendName;
+        document.getElementById('remove-friend-modal').style.display = 'flex';
+    };
 
-                // Modifica le richieste
-                // ATTENZIONE: Per fare questo in modo sicurissimo servirebbe una Cloud Function.
-                // Per ora, le tue regole base impediscono l'hijacking totale.
-                await updateDoc(doc(db, "users", targetUid), {
-                    requests: arrayUnion(auth.currentUser.uid) // Salviamo l'UID, non il nome!
-                });
+    window.closeRemoveModal = function() {
+        document.getElementById('remove-friend-modal').style.display = 'none';
+        currentlyRemovingFriendId = null;
+    };
 
-                window.kripixNotify("TRASMESSA", "Richiesta inviata.", "success");
-            } catch (error) {
-                console.error(error);
-                window.kripixNotify("ERRORE", "Accesso negato o errore.", "error");
-            }
-        };
-    </script>
+    window.confirmRemoveFriend = async function() {
+        if (!currentlyRemovingFriendId) return;
+
+        const batch = writeBatch(db);
+        const friendDocRef = doc(db, "users", currentlyRemovingFriendId);
+
+        // Rimuovo l'amico dalla MIA lista
+        batch.update(myDocRef, { friends: arrayRemove(currentlyRemovingFriendId) });
+        // Rimuovo ME STESSO dalla sua lista
+        batch.update(friendDocRef, { friends: arrayRemove(myUid) });
+
+        await batch.commit();
+        window.kripixNotify("CONNESSIONE INTERROTTA", "Agente rimosso dalla rete.", "error");
+        closeRemoveModal();
+    };
+</script>
 </body>
 </html>

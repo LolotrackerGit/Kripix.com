@@ -162,7 +162,6 @@
                 // Se una delle due operazioni fallisce, falliscono entrambe.
                 const batch = writeBatch(db);
                 
-                // Documento del profilo utente
                 const userDocRef = doc(db, "users", firebaseUser.uid);
                 batch.set(userDocRef, {
                     uid: firebaseUser.uid,
@@ -170,9 +169,19 @@
                     email: email,
                     isAdmin: false,
                     color: '#e3c66c',
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    
+                    // --- NUOVI CAMPI INIZIALIZZATI ---
+                    games:[],         // Array vuoto per i giochi
+                    keys: {},          // Oggetto vuoto per le licenze
+                    friends:[],       // Array vuoto per gli amici
+                    requests:[],      // Array vuoto per le richieste in entrata
+                    privacy: {         // Impostazioni privacy di base
+                        visibility: true,
+                        telemetry: false,
+                        newsletter: false
+                    }
                 });
-
                 // Documento dello username per il controllo unicità
                 batch.set(usernameDocRef, { uid: firebaseUser.uid });
 
