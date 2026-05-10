@@ -6,7 +6,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyCSCYzPprBLnd49x41WZ4jMBVyNDCOdJ64",
     authDomain: "kripix-ent.firebaseapp.com",
     projectId: "kripix-ent",
-    storageBucket: "kripix-ent.firebasestorage.app",
+    storageBucket: "kripix-ent.appspot.com", // <-- CORRETTO!
     messagingSenderId: "778855676026",
     appId: "1:778855676026:web:0dc74f1108e2971f4da3c3"
 };
@@ -16,7 +16,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 // ==========================================
-// SISTEMA DI NOTIFICHE
+// SISTEMA DI NOTIFICHE (Il tuo codice è già perfetto)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     let toastContainer = document.getElementById('kripix-toast-container');
@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let borderColor = type === 'success' ? '#4caf50' : type === 'error' ? '#ff5555' : 'var(--accent-gold)';
         toast.style.borderLeftColor = borderColor;
         
-        // Protezione XSS anche nelle notifiche usando textContent
         const titleDiv = document.createElement('div');
         titleDiv.className = 'kripix-toast-title';
         titleDiv.style.color = borderColor;
@@ -51,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// NAVBAR DINAMICA & SICUREZZA XSS
+// NAVBAR DINAMICA & SICUREZZA XSS (Il tuo codice è già perfetto)
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const navbarList = document.querySelector('.nav-menu') || document.querySelector('.nav-links');
@@ -80,17 +79,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userSnap.exists()) {
                 const me = userSnap.data();
                 
-                // PULIZIA DEL CONTENITORE
                 li.innerHTML = '';
                 
-                // Creazione sicura dell'Avatar
                 const avatarDiv = document.createElement('div');
                 avatarDiv.className = 'user-avatar';
                 if(me.avatar_img) {
                     avatarDiv.style.backgroundColor = 'transparent';
                     avatarDiv.style.border = 'none';
                     const img = document.createElement('img');
-                    img.src = me.avatar_img; // Sicuro, trattato come URL
+                    img.src = me.avatar_img;
                     img.style.width = '100%'; img.style.height = '100%'; 
                     img.style.borderRadius = '50%'; img.style.objectFit = 'cover';
                     avatarDiv.appendChild(img);
@@ -100,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     avatarDiv.textContent = me.username.charAt(0).toUpperCase();
                 }
 
-                // Creazione sicura del Menu a Tendina
                 const dropdown = document.createElement('div');
                 dropdown.className = 'user-dropdown';
                 
@@ -109,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const userNameSpan = document.createElement('span');
                 userNameSpan.className = 'user-name';
-                userNameSpan.textContent = me.username; // XSS Safe
+                userNameSpan.textContent = me.username;
                 
                 const userRoleSpan = document.createElement('span');
                 userRoleSpan.className = 'user-role';
@@ -119,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 header.appendChild(userRoleSpan);
                 dropdown.appendChild(header);
 
-                // Aggiunta dei link
                 dropdown.insertAdjacentHTML('beforeend', `
                     <a href="profilo.html">IL MIO PROFILO</a>
                     <a href="libreria.html">Libreria Giochi</a>
@@ -132,13 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.appendChild(dropdown);
 
             } else {
-                // ACCOUNT FANTASMA (Esiste in Auth ma non nel Database)
                 li.innerHTML = `
                     <div class="user-avatar" style="background-color: #ff5555; border: none;" title="Errore Dati">!</div>
                     <div class="user-dropdown">
-                        <div class="user-header">
-                            <span class="user-name" style="color:#ff5555">ACCOUNT FANTASMA</span>
-                        </div>
+                        <div class="user-header"><span class="user-name" style="color:#ff5555">ACCOUNT FANTASMA</span></div>
                         <a href="#" id="action-logout" style="color:#ff5555">Scollegati (Errore Database)</a>
                     </div>
                 `;
@@ -166,9 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, (user) => {
         window.updateNavbarAvatarDisplay(user);
 
-        // ==========================================
-        // SISTEMA DI RILEVAMENTO PRESENZA (ONLINE/OFFLINE)
-        // ==========================================
         if (user) {
             const userRef = doc(db, "users", user.uid);
             
@@ -188,22 +177,17 @@ document.addEventListener('DOMContentLoaded', () => {
             goOnline();
 
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') {
-                    goOnline();
-                } else {
-                    goOffline();
-                }
+                if (document.visibilityState === 'visible') { goOnline(); } 
+                else { goOffline(); }
             });
 
-            window.addEventListener('beforeunload', () => {
-                goOffline();
-            });
+            window.addEventListener('beforeunload', () => { goOffline(); });
         }
     });
 });
 
 // ==========================================
-// MENU HAMBURGER (MOBILE)
+// MENU HAMBURGER (Il tuo codice è già perfetto)
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     const hamburger = document.querySelector(".hamburger");
