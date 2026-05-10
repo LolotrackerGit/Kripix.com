@@ -168,9 +168,7 @@
                     return;
                 }
 
-                // --------- INSERISCI QUI LA TUA REGIONE CORRETTA! ---------
-                const functions = getFunctions(app);
-                // -----------------------------------------------------------
+                const functions = getFunctions(app); // <-- FIX: RIMOSSA LA REGIONE!
 
                 try { // FORZA IL REFRESH DEL TOKEN DI SICUREZZA
                     await user.getIdToken(true);

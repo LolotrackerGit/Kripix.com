@@ -200,6 +200,7 @@
     <script type="module" src="script.js"></script>
 
     <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
+    <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
     <script type="module">
         import { app, auth, db } from './script.js';
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
@@ -216,11 +217,9 @@
                     return;
                 }
 
-                // --------- INSERISCI QUI LA TUA REGIONE CORRETTA! ---------
-                const functions = getFunctions(app);
-                // -----------------------------------------------------------
+                const functions = getFunctions(app); // Regione rimossa
                 
-                try { // FORZA IL REFRESH DEL TOKEN DI SICUREZZA
+                try { // <-- FIX FONDAMENTALE: FORZA IL REFRESH DEL TOKEN DI SICUREZZA
                     await user.getIdToken(true);
                 } catch (tokenError) {
                     alert("Errore di sincronizzazione account. Prova a fare il logout e il login. Dettagli: " + tokenError.message);
