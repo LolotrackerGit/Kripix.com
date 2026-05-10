@@ -165,6 +165,8 @@
 
     <script type="module" src="script.js"></script>
     
+   <!-- (Mantieni tutto l'html e lo stile di index.html uguale, cambia solo questo script alla fine del file) -->
+
     <!-- LOGICA FIREBASE NEWS -->
     <script type="module">
         import { db } from './script.js';
@@ -174,7 +176,6 @@
             const feedContainer = document.getElementById('news-feed-container');
 
             try {
-                // Prende le ultime 6 news
                 const q = query(collection(db, "news"), orderBy("date", "desc"), limit(6));
                 const querySnapshot = await getDocs(q);
 
@@ -186,7 +187,7 @@
                 }
 
                 let highPriorityNews = [];
-                let normalNews = [];
+                let normalNews =[];
 
                 querySnapshot.forEach((doc) => {
                     const news = doc.data();
@@ -197,26 +198,41 @@
                     }
                 });
 
-                const sortedNews = [...highPriorityNews, ...normalNews];
+                const sortedNews =[...highPriorityNews, ...normalNews];
 
+                // FIX SICUREZZA: Creazione Nodi DOM Sicuri contro attacchi XSS
                 sortedNews.forEach((news) => {
                     const d = new Date(news.date);
                     const formattedDate = d.toLocaleDateString('it-IT');
                     
-                    const priorityClass = news.priority === 'high' ? 'priority-high' : '';
-                    const tagType = news.link ? 'a' : 'div';
-                    const hrefAttr = news.link ? `href="${news.link}"` : '';
-                    const linkIcon = news.link ? '<span class="link-icon">↗</span>' : '';
+                    const cardNode = document.createElement(news.link ? 'a' : 'div');
+                    cardNode.className = `news-card ${news.priority === 'high' ? 'priority-high' : ''}`;
+                    if (news.link) cardNode.href = news.link; // Assicurati che news.link sia validato in futuro!
 
-                    const newsCard = `
-                        <${tagType} ${hrefAttr} class="news-card ${priorityClass}">
-                            ${linkIcon}
-                            <div class="news-card-title">${news.title}</div>
-                            <div class="news-card-date">${formattedDate} | Kripix Overseer</div>
-                            <div class="news-card-body">${news.body}</div>
-                        </${tagType}>
-                    `;
-                    feedContainer.innerHTML += newsCard;
+                    if (news.link) {
+                        const iconSpan = document.createElement('span');
+                        iconSpan.className = 'link-icon';
+                        iconSpan.textContent = '↗';
+                        cardNode.appendChild(iconSpan);
+                    }
+
+                    const titleDiv = document.createElement('div');
+                    titleDiv.className = 'news-card-title';
+                    titleDiv.textContent = news.title; // SICURO: textContent non esegue script html
+
+                    const dateDiv = document.createElement('div');
+                    dateDiv.className = 'news-card-date';
+                    dateDiv.textContent = `${formattedDate} | Kripix Overseer`;
+
+                    const bodyDiv = document.createElement('div');
+                    bodyDiv.className = 'news-card-body';
+                    bodyDiv.textContent = news.body; // SICURO
+
+                    cardNode.appendChild(titleDiv);
+                    cardNode.appendChild(dateDiv);
+                    cardNode.appendChild(bodyDiv);
+
+                    feedContainer.appendChild(cardNode);
                 });
 
             } catch (error) {

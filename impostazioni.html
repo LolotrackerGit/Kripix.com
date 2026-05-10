@@ -139,7 +139,7 @@
                 <label class="switch-label">
                     <div>
                         <span class="setting-label">MODALITÀ FANTASMA</span>
-                        <span class="switch-text" style="font-size:0.85rem;">Appari sempre offline a tutta la rete (stile Discord).</span>
+                        <span class="switch-text" style="font-size:0.85rem;">Appari sempre offline a tutta la rete.</span>
                     </div>
                     <input type="checkbox" id="priv-inv" style="display:none;" onchange="savePrivacy()">
                     <div class="toggle"></div>
@@ -205,29 +205,32 @@
                 const userSnap = await getDoc(userDocRef);
                 if (userSnap.exists()) {
                     userDataCache = userSnap.data();
-                    document.getElementById('disp-user').innerText = userDataCache.username;
-                    document.getElementById('disp-email').innerText = userDataCache.email;
+                    // PROTEZIONE XSS SU TEXT CONTENT
+                    document.getElementById('disp-user').textContent = userDataCache.username;
+                    document.getElementById('disp-email').textContent = userDataCache.email;
                     
                     if (userDataCache.privacy) {
-                        document.getElementById('priv-vis').checked = userDataCache.privacy.visibility !== false; // Default true
+                        document.getElementById('priv-vis').checked = userDataCache.privacy.visibility !== false;
                         document.getElementById('priv-tel').checked = userDataCache.privacy.telemetry === true;
                         document.getElementById('priv-news').checked = userDataCache.privacy.newsletter === true;
+                        document.getElementById('priv-inv').checked = userDataCache.privacy.invisible === true;
                     }
                 }
             } catch (error) { console.error("Errore recupero dati:", error); }
         });
-        if (userDataCache.privacy) {
-                        document.getElementById('priv-vis').checked = userDataCache.privacy.visibility !== false; 
-                        document.getElementById('priv-tel').checked = userDataCache.privacy.telemetry === true;
-                        document.getElementById('priv-news').checked = userDataCache.privacy.newsletter === true;
-                        // AGGIUNGI QUESTA RIGA QUI:
-                        document.getElementById('priv-inv').checked = userDataCache.privacy.invisible === true;
-                    }
 
         document.addEventListener('DOMContentLoaded', async () => {
             const avatarImages =["https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111","https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111"];
             const avatarGrid = document.getElementById('avatar-choices');
-            avatarImages.forEach(imgUrl => { avatarGrid.innerHTML += `<div class="avatar-option" onclick="selectAvatarImage('${imgUrl}')"><img src="${imgUrl}"></div>`; });
+            avatarImages.forEach(imgUrl => { 
+                const div = document.createElement('div');
+                div.className = 'avatar-option';
+                div.onclick = () => selectAvatarImage(imgUrl);
+                const img = document.createElement('img');
+                img.src = imgUrl; // Dicebear link sicuri
+                div.appendChild(img);
+                avatarGrid.appendChild(div);
+            });
         });
 
         window.switchTab = function(tabName) {
@@ -243,22 +246,19 @@
             document.getElementById(modalId).querySelectorAll('.error-msg').forEach(msg => msg.style.display = 'none');
         }
 
-        function showError(input, msgEl, text) { input.classList.add('error-border'); msgEl.innerText = '>> ' + text; msgEl.style.display = 'block'; setTimeout(() => input.classList.remove('error-border'), 500); }
-        function showSuccess(msg) { document.getElementById('success-text').innerText = msg; document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); document.getElementById('success-modal').style.display = 'flex'; }
+        function showError(input, msgEl, text) { input.classList.add('error-border'); msgEl.textContent = '>> ' + text; msgEl.style.display = 'block'; setTimeout(() => input.classList.remove('error-border'), 500); }
+        function showSuccess(msg) { document.getElementById('success-text').textContent = msg; document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); document.getElementById('success-modal').style.display = 'flex'; }
 
-        // SALVATAGGIO PRIVACY CHIRURGICO
         window.savePrivacy = async function() {
             try { 
                 await updateDoc(userDocRef, { 
                     'privacy.visibility': document.getElementById('priv-vis').checked,
                     'privacy.telemetry': document.getElementById('priv-tel').checked,
                     'privacy.newsletter': document.getElementById('priv-news').checked,
-                    // AGGIUNGI QUESTA RIGA:
                     'privacy.invisible': document.getElementById('priv-inv').checked
                 }); 
                 if(window.kripixNotify) window.kripixNotify("SISTEMA", "Impostazioni Privacy sincronizzate.", "success"); 
                 
-                // Forza l'aggiornamento dello stato online subito dopo aver cliccato
                 if(document.getElementById('priv-inv').checked) {
                     await updateDoc(userDocRef, { onlineStatus: "offline" });
                 } else {
@@ -271,15 +271,14 @@
         window.changeColor = async function(newColor) { try { await updateDoc(userDocRef, { color: newColor, avatar_img: null }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success"); } catch (e) { console.error(e); } };
         window.selectAvatarImage = async function(imgUrl) { try { await updateDoc(userDocRef, { avatar_img: imgUrl }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success"); } catch (e) { console.error(e); } };
 
-        // Resto delle funzioni (nomi, password, delete...)
         window.openNameModal = () => document.getElementById('name-modal').style.display = 'flex';
-        window.confirmNameChange = async function() { /* ... codice esistente ... */ }
+        window.confirmNameChange = async function() { /* ... logica esistente ... */ }
         window.openEmailModal = () => document.getElementById('email-modal').style.display = 'flex';
-        window.confirmEmailChange = async function() { /* ... codice esistente ... */ }
+        window.confirmEmailChange = async function() { /* ... logica esistente ... */ }
         window.openPassModal = () => document.getElementById('pass-modal').style.display = 'flex';
-        window.confirmPassChange = async function() { /* ... codice esistente ... */ }
+        window.confirmPassChange = async function() { /* ... logica esistente ... */ }
         window.openDeleteModal = () => document.getElementById('delete-modal').style.display = 'flex';
-        window.confirmDelete = async function() { /* ... codice esistente ... */ }
+        window.confirmDelete = async function() { /* ... logica esistente ... */ }
     </script>
 </body>
 </html>
