@@ -168,14 +168,14 @@
                     return;
                 }
 
-                // --------- INSERISCI QUI LA TUA REGIONE! ---------
-                const functions = getFunctions(app, 'us-west1'); // Esempio: 'europe-west1' o 'us-central1'
-                // ---------------------------------------------------
+                // --------- INSERISCI QUI LA TUA REGIONE CORRETTA! ---------
+                const functions = getFunctions(app, 'europe-west1'); // Sostituisci 'europe-west1' se necessario
+                // -----------------------------------------------------------
 
-                try { // Test di connessione automatica
-                    await httpsCallable(functions, 'checkAuth')();
-                } catch (error) {
-                    alert("ERRORE CRITICO: Impossibile stabilire una connessione autenticata con il server. La regione delle Cloud Functions nel tuo codice JS potrebbe essere sbagliata. Errore: " + error.message);
+                try { // FORZA IL REFRESH DEL TOKEN DI SICUREZZA
+                    await user.getIdToken(true);
+                } catch (tokenError) {
+                    alert("Errore di sincronizzazione account. Prova a fare il logout e il login. Dettagli: " + tokenError.message);
                     return;
                 }
 
