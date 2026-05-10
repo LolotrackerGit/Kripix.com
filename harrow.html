@@ -168,7 +168,9 @@
                     return;
                 }
 
-                const functions = getFunctions(app); // <-- FIX: RIMOSSA LA REGIONE!
+                // --------- INSERISCI QUI LA TUA REGIONE CORRETTA! ---------
+                const functions = getFunctions(app, 'europe-west1');
+                // -----------------------------------------------------------
 
                 try { // FORZA IL REFRESH DEL TOKEN DI SICUREZZA
                     await user.getIdToken(true);

@@ -217,7 +217,7 @@
                     return;
                 }
 
-                const functions = getFunctions(app); // Regione rimossa
+                const functions = getFunctions(app, 'europe-west1');
                 
                 try { // <-- FIX FONDAMENTALE: FORZA IL REFRESH DEL TOKEN DI SICUREZZA
                     await user.getIdToken(true);
