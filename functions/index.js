@@ -91,20 +91,46 @@ exports.createUserAccount = functions.https.onCall(async (data, context) => {
 
 // MANTIENI LA TUA FUNZIONE securePurchaseGame INVARIATA QUI SOTTO
 exports.securePurchaseGame = functions.https.onCall(async (data, context) => {
-    if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Devi essere loggato.');
+    // 1. Controllo sicurezza (Deve essere loggato)
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'Devi essere loggato per procedere.');
+    }
+    
     const uid = context.auth.uid;
-    const gameId = data.gameId; 
-    if (gameId !== "harrow") throw new functions.https.HttpsError('invalid-argument', 'Gioco non trovato.');
+    
+    // FIX: Estrazione sicura del payload come nella registrazione
+    const payload = data.data ? data.data : data;
+    const gameId = payload.gameId; 
+
+    if (gameId !== "harrow") {
+        throw new functions.https.HttpsError('invalid-argument', 'Gioco non trovato nel database.');
+    }
+
     const userRef = db.collection('users').doc(uid);
     const privateRef = userRef.collection('private').doc('dossier');
     const userDoc = await userRef.get();
+
     if (userDoc.exists && userDoc.data().games && userDoc.data().games.includes(gameId)) {
         throw new functions.https.HttpsError('already-exists', 'Possiedi già questa licenza.');
     }
+
+    // 2. Genera la chiave VERA
     const newKey = generateKripixKey(uid, "HW", "D");
+    
     const batch = db.batch();
-    batch.update(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) });
-    batch.set(privateRef, { [`keys.${gameId}`]: newKey }, { merge: true });
+    batch.update(userRef, {
+        games: admin.firestore.FieldValue.arrayUnion(gameId)
+    });
+    // 3. Salva la chiave VERA solo nel DOSSIER PRIVATO
+    batch.set(privateRef, {
+        [`keys.${gameId}`]: newKey
+    }, { merge: true });
+
     await batch.commit();
-    return { status: "success", message: "Licenza acquisita con successo.", game: gameId };
+
+    return { 
+        status: "success", 
+        message: "Licenza acquisita con successo.",
+        game: gameId 
+    };
 });

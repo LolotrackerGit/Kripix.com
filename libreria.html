@@ -130,14 +130,8 @@
     <!-- LOGICA LIBRERIA CLOUD -->
     <script type="module">
         import { auth, db } from './script.js';
-        import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-
-        function generateGameKey() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            const segment = () => Array.from({length: 4}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-            return `KRPX-${segment()}-${segment()}-${segment()}`;
-        }
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { window.location.href = 'login.html'; return; }
@@ -145,8 +139,9 @@
             const grid = document.getElementById('library-grid');
             const emptyMsg = document.getElementById('empty-msg');
             
-            // Usiamo il VERO UID di Firebase, inattaccabile
             const userRef = doc(db, "users", user.uid);
+            // IL COLLEGAMENTO AL DOSSIER SEGRETO
+            const privateRef = doc(db, "users", user.uid, "private", "dossier");
 
             try {
                 const userSnap = await getDoc(userRef);
@@ -154,11 +149,13 @@
                     const userData = userSnap.data();
                     
                     if (userData.games && userData.games.includes('harrow')) {
-                        let gameKey = userData.keys?.harrow;
-
-                        if (!gameKey) {
-                            gameKey = generateGameKey();
-                            await updateDoc(userRef, { [`keys.harrow`]: gameKey });
+                        
+                        // RECUPERA LA CHIAVE VERA DAL DOSSIER PRIVATO
+                        const privateSnap = await getDoc(privateRef);
+                        let gameKey = "ERRORE-LETTURA-CHIAVE";
+                        
+                        if (privateSnap.exists() && privateSnap.data().keys) {
+                            gameKey = privateSnap.data().keys.harrow || gameKey;
                         }
 
                         const gameCard = `
@@ -186,7 +183,9 @@
                             </div>
                         `;
                         grid.innerHTML = gameCard;
-                    } else { emptyMsg.style.display = 'block'; }
+                    } else { 
+                        emptyMsg.style.display = 'block'; 
+                    }
                 }
             } catch (error) { console.error(error); }
         });

@@ -152,58 +152,52 @@
     </div>
 
     <!-- LOGICA ACQUISTO SICURA -->
+    <!-- LOGICA ACQUISTO SICURA -->
     <script type="module">
         import { auth, db } from './script.js';
-        import { doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        function generateGameKey() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            const segment = () => Array.from({length: 4}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-            return `KRPX-${segment()}-${segment()}-${segment()}`;
-        }
+        const functions = getFunctions();
 
         document.addEventListener('DOMContentLoaded', () => {
             const buyBtn = document.getElementById('btn-buy-harrow-page');
-            let currentUserRef = null;
 
-            // SOSTITUITO IL CONTROLLO LOCALSTORAGE CON AUTH DI FIREBASE
             onAuthStateChanged(auth, async (user) => {
                 if (!user) {
                     buyBtn.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'login.html'; });
                     return;
                 }
 
-                currentUserRef = doc(db, "users", user.uid);
-                
                 try {
-                    const userSnap = await getDoc(currentUserRef);
+                    const userSnap = await getDoc(doc(db, "users", user.uid));
                     if (userSnap.exists() && userSnap.data().games && userSnap.data().games.includes('harrow')) {
                         buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
                         buyBtn.style.background = '#4caf50'; 
                         buyBtn.style.color = '#000'; 
                         buyBtn.style.borderColor = '#4caf50';
                         buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
-                        return; // Ferma l'esecuzione se ha già il gioco
+                        return; 
                     }
-                } catch (error) { console.error("Errore recupero info gioco:", error); }
+                } catch (error) { console.error("Errore recupero info:", error); }
 
-                // Se non ha il gioco, abilitiamo l'acquisto
                 buyBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
                     const btn = this;
-                    btn.innerText = 'ELABORAZIONE...';
+                    btn.innerText = 'ELABORAZIONE TRANSAZIONE... (Server Cloud)';
                     btn.style.pointerEvents = 'none';
 
                     try {
-                        const newKey = generateGameKey();
-                        await updateDoc(currentUserRef, {
-                            games: arrayUnion('harrow'),
-                            [`keys.harrow`]: newKey 
-                        });
-                        document.getElementById('custom-modal').style.display = 'flex';
+                        // CHIAMATA ALLA CLOUD FUNCTION
+                        const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
+                        const result = await securePurchaseGame({ gameId: 'harrow' });
+
+                        if (result.data.status === 'success') {
+                            document.getElementById('custom-modal').style.display = 'flex';
+                        }
                     } catch (error) {
-                        btn.innerText = 'ERRORE';
+                        btn.innerText = 'ERRORE TRANSAZIONE';
                         btn.style.borderColor = '#ff5555';
                         console.error("Errore acquisto:", error);
                     }
