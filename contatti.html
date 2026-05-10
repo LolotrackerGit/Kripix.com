@@ -165,7 +165,7 @@
         });
     </script>
 
-    <!-- LOGICA AUTO-COMPLETAMENTO TRAMITE FIREBASE (FIX SICUREZZA) -->
+   <!-- LOGICA AUTO-COMPLETAMENTO TRAMITE FIREBASE (FIX SICUREZZA) -->
     <script type="module">
         import { auth, db } from './script.js';
         import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -173,10 +173,13 @@
 
         onAuthStateChanged(auth, async (user) => {
             if(user) {
+                // 1. Prendiamo l'email direttamente dal sistema di autenticazione!
+                document.querySelector('input[name="user_email"]').value = user.email;
+                
+                // 2. Dal database leggiamo solo l'username pubblico
                 const userSnap = await getDoc(doc(db, "users", user.uid));
                 if(userSnap.exists()) {
                     document.querySelector('input[name="user_name"]').value = userSnap.data().username;
-                    document.querySelector('input[name="user_email"]').value = userSnap.data().email;
                 }
             }
         });

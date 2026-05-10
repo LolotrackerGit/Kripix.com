@@ -201,60 +201,70 @@
 
     <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
     <script type="module">
-        import { auth, db } from './script.js';
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // FIX: Importiamo anche 'app' per forzare la sincronizzazione del token Auth!
+        import { app, auth, db } from './script.js';
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-// Inizializza le funzioni Cloud
-const functions = getFunctions();
+        // Inizializziamo le funzioni FORZANDO l'app corretta
+        const functions = getFunctions(app);
 
-onAuthStateChanged(auth, async (user) => {
-    const buyBtn = document.getElementById('btn-buy-kripix');
-    if (!buyBtn) return;
+        document.addEventListener('DOMContentLoaded', () => {
+            const buyBtn = document.getElementById('btn-buy-kripix');
+            if (!buyBtn) return;
 
-    if (!user) {
-        buyBtn.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'login.html'; });
-        return;
-    }
+            onAuthStateChanged(auth, async (user) => {
+                
+                // Se NON è loggato, rimuoviamo vecchi eventi e mandiamo al login
+                if (!user) {
+                    buyBtn.onclick = (e) => { 
+                        e.preventDefault(); 
+                        window.location.href = 'login.html'; 
+                    };
+                    return;
+                }
 
-    const userRef = doc(db, "users", user.uid);
-    
-    try {
-        const userSnap = await getDoc(userRef);
-        // Verifichiamo dal dato PUBBLICO se ha il gioco
-        if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
-            buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
-            buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000'; buyBtn.href = 'libreria.html'; buyBtn.id = '';
-            return;
-        }
-    } catch (error) { console.error(error); }
+                const userRef = doc(db, "users", user.uid);
+                
+                try {
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
+                        buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
+                        buyBtn.style.background = '#4caf50'; 
+                        buyBtn.style.color = '#000'; 
+                        buyBtn.onclick = (e) => { 
+                            e.preventDefault(); 
+                            window.location.href = 'libreria.html'; 
+                        };
+                        return; // Ferma tutto se ha già il gioco
+                    }
+                } catch (error) { console.error(error); }
 
-    // GESTIONE DEL CLICK
-    buyBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
-        const btn = this;
-        btn.innerText = 'ELABORAZIONE TRANSAZIONE... (Server Cloud)';
-        btn.style.pointerEvents = 'none';
+                // SE È LOGGATO E NON HA IL GIOCO:
+                buyBtn.onclick = async function(e) {
+                    e.preventDefault();
+                    const btn = this;
+                    btn.innerText = 'ELABORAZIONE TRANSAZIONE...';
+                    btn.style.pointerEvents = 'none';
 
-        try {
-            // CHIAMIAMO IL SERVER! Nessuna logica nel browser.
-            const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
-            const result = await securePurchaseGame({ gameId: 'harrow' });
+                    try {
+                        const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
+                        const result = await securePurchaseGame({ gameId: 'harrow' });
 
-            // Se il server dice OK, mostriamo il modale di successo
-            if (result.data.status === 'success') {
-                document.getElementById('custom-modal').style.display = 'flex';
-            }
-            
-        } catch (error) {
-            console.error(error);
-            btn.innerText = 'ERRORE TRANSAZIONE';
-            btn.style.borderColor = '#ff5555';
-            if(window.kripixNotify) window.kripixNotify("ERRORE", error.message, "error");
-        }
-    });
-});
+                        if (result.data.status === 'success') {
+                            document.getElementById('custom-modal').style.display = 'flex';
+                        }
+                        
+                    } catch (error) {
+                        console.error(error);
+                        btn.innerText = 'ERRORE TRANSAZIONE';
+                        btn.style.borderColor = '#ff5555';
+                        if(window.kripixNotify) window.kripixNotify("ERRORE", error.message, "error");
+                    }
+                };
+            });
+        });
     </script>
 </body>
 </html>

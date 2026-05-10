@@ -290,7 +290,12 @@
             document.getElementById('p-username').textContent = userData.username; // SICUREZZA
             document.getElementById('p-id-num').textContent = `#${myUid.substring(0, 4).toUpperCase()}`;
             document.getElementById('p-games-count').textContent = userData.games ? userData.games.length : 0;
-            document.getElementById('p-reg-date').textContent = new Date(userData.createdAt).toLocaleDateString('it-IT');
+            // FIX DATA: Convertiamo il Timestamp di Firebase in una data leggibile
+            let regDate = "Sconosciuta";
+            if (userData.createdAt) {
+                regDate = userData.createdAt.toDate().toLocaleDateString('it-IT');
+            }
+            document.getElementById('p-reg-date').textContent = regDate;
 
             const rankEl = document.getElementById('p-rank');
             if (userData.isAdmin) { rankEl.textContent = "OVERSEER - LIV. 5"; rankEl.style.color = "#ff5555"; } 
