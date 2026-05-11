@@ -242,14 +242,17 @@
                 buyBtn.onclick = async function(e) {
                     e.preventDefault();
                     this.innerText = 'ELABORAZIONE...'; this.style.pointerEvents = 'none';
-                    // --- INIZIO TEST DIAGNOSTICO ---
-    try {
-        const checkAuth = httpsCallable(functions, 'checkAuth');
-        const result = await checkAuth();
-        alert('RISPOSTA DAL SERVER: ' + result.data.message);
-    } catch (error) {
-        alert('ERRORE DI AUTENTICAZIONE: ' + error.message);
-    }
+                    
+                    const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
+                    try {
+                        const result = await securePurchaseGame({ gameId: 'harrow' });
+                        if (result.data.status === 'success') {
+                            document.getElementById('custom-modal').style.display = 'flex';
+                        }
+                    } catch (error) {
+                        this.innerText = 'ERRORE TRANSAZIONE'; this.style.borderColor = '#ff5555';
+                        alert('ERRORE: ' + error.message);
+                    }
                 };
             });
         });

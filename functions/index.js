@@ -56,14 +56,21 @@ exports.securePurchaseGame = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Devi essere loggato.');
     const uid = request.auth.uid, gameId = request.data.gameId;
     if (gameId !== "harrow") throw new HttpsError('invalid-argument', 'Gioco non trovato.');
-    const userRef = db.collection('users').doc(uid), privateRef = userRef.collection('private').doc('dossier');
+    
+    const userRef = db.collection('users').doc(uid);
+    const privateRef = userRef.collection('private').doc('dossier');
     const userDoc = await userRef.get();
-    const userGames = userDoc.exists() ? (userDoc.data().games || []) :[];
+    
+    const userGames = userDoc.exists ? (userDoc.data().games || []) :[];
     if (userGames.includes(gameId)) throw new HttpsError('already-exists', 'Possiedi già questa licenza.');
+    
     const newKey = generateKripixKey(uid, "HW", "D");
     const batch = db.batch();
-    batch.update(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) });
-    batch.set(privateRef, {[`keys.${gameId}`]: newKey }, { merge: true });
+    
+    // USIAMO SET CON MERGE INVECE DI UPDATE: ZERO CRASH!
+    batch.set(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) }, { merge: true });
+    batch.set(privateRef, { [`keys.${gameId}`]: newKey }, { merge: true });
+    
     await batch.commit();
     return { status: "success" };
 });
