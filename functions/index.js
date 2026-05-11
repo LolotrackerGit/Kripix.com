@@ -33,22 +33,70 @@ exports.checkAuth = onCall(europeWest1, (request) => {
     return { status: 'success', message: `Autenticazione OK per UID: ${request.auth.uid}` };
 });
 
-exports.createUserAccount = onCall(europeWest1, async (request) => {
-    const { email, password, username } = request.data;
-    if (!email || !password || !username) throw new HttpsError('invalid-argument', 'Email, password e username sono richiesti.');
-    const usernameRef = db.collection('usernames').doc(username.toLowerCase());
-    if ((await usernameRef.get()).exists) throw new HttpsError('already-exists', 'Questo username è già stato scelto.');
+exports.createUserAccount = onCall({ region: "europe-west1", cors: true }, async (request) => {
     try {
+        console.log(">> REGISTRAZIONE: Inizio procedura.");
+        const { email, password, username } = request.data;
+        
+        if (!email || !password || !username) {
+            throw new HttpsError('invalid-argument', 'Email, password e username sono richiesti.');
+        }
+
+        const usernameLower = username.toLowerCase();
+        const usernameRef = db.collection('usernames').doc(usernameLower);
+
+        console.log(">> REGISTRAZIONE: Controllo se l'username esiste.");
+        const usernameDoc = await usernameRef.get();
+        if (usernameDoc.exists) {
+            throw new HttpsError('already-exists', 'Questo username è già stato scelto.');
+        }
+
+        console.log(">> REGISTRAZIONE: Creo l'utente su Firebase Auth...");
         const userRecord = await admin.auth().createUser({ email, password, displayName: username });
-        const { uid } = userRecord, batch = db.batch();
-        batch.set(db.collection('users').doc(uid), { uid, username, color: '#e3c66c', createdAt: admin.firestore.FieldValue.serverTimestamp(), games:[], friends:[], requests:[], privacy: { visibility: true, telemetry: false, newsletter: false, invisible: false } });
-        batch.set(db.collection('users').doc(uid).collection('private').doc('dossier'), { email, keys: {} });
-        batch.set(usernameRef, { uid });
+        const { uid } = userRecord;
+        console.log(`>> REGISTRAZIONE: Utente creato con UID: ${uid}. Preparo il batch per Firestore.`);
+
+        const batch = db.batch();
+
+        // 1. Creo il profilo PUBBLICO (SENZA EMAIL)
+        batch.set(db.collection('users').doc(uid), {
+            uid: uid,
+            username: username,
+            color: '#e3c66c',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            games: [],
+            friends: [],
+            requests: [],
+            privacy: { visibility: true, telemetry: false, newsletter: false, invisible: false }
+        });
+
+        // 2. Creo il dossier PRIVATO (CON L'EMAIL)
+        batch.set(db.collection('users').doc(uid).collection('private').doc('dossier'), {
+            email: email,
+            keys: {}
+        });
+
+        // 3. Creo il documento per la ricerca dell'username
+        batch.set(usernameRef, { uid: uid });
+
+        console.log(">> REGISTRAZIONE: Eseguo il commit del batch.");
         await batch.commit();
-        return { status: 'success', uid };
+        
+        console.log(">> REGISTRAZIONE: Procedura completata con successo.");
+        return { status: 'success', uid: uid };
+
     } catch (error) {
-        if (error.code === 'auth/email-already-exists') throw new HttpsError('already-exists', 'Questa email è già registrata.');
-        throw new HttpsError('internal', 'Errore server durante la creazione account.');
+        console.error(">> CRASH REGISTRAZIONE:", error);
+        
+        if (error.code === 'auth/email-already-exists') {
+            throw new HttpsError('already-exists', 'Questa email è già registrata.');
+        }
+        if (error.code === 'auth/invalid-password') {
+            throw new HttpsError('invalid-argument', 'La password deve avere almeno 6 caratteri.');
+        }
+        
+        // Per tutti gli altri errori, lanciamo un messaggio specifico
+        throw new HttpsError('internal', `Errore server: ${error.message}`);
     }
 });
 
