@@ -72,7 +72,7 @@
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
     import { signInWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     
-    const functions = getFunctions();
+    const functions = getFunctions(app, 'europe-west1');
 
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
         e.preventDefault(); 
