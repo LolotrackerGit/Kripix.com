@@ -309,14 +309,19 @@
             const badgeInvestigator = document.getElementById('badge-investigator');
             if (userData.games && userData.games.includes('harrow')) { badgeInvestigator.classList.add('unlocked'); document.getElementById('log-purchase').style.display = 'block'; } 
             else { badgeInvestigator.classList.remove('unlocked'); }
-            // Gestione Stato Fantasma
+            // Gestione Stato Fantasma (Logica Potenziata)
             const statusEl = document.getElementById('p-status');
-            if (userData.privacy && userData.privacy.invisible === true) {
+            const isGhost = userData.privacy && userData.privacy.invisible === true;
+            
+            if (isGhost) {
                 statusEl.textContent = "OFFLINE (FANTASMA)";
                 statusEl.style.color = "#666";
-            } else {
+            } else if (userData.onlineStatus === "online") {
                 statusEl.textContent = "ATTIVO (ONLINE)";
                 statusEl.style.color = "#4caf50";
+            } else {
+                statusEl.textContent = "OFFLINE";
+                statusEl.style.color = "#666";
             }
         }
 

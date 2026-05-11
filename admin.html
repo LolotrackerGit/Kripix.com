@@ -165,7 +165,7 @@
                     if (hasHarrow) totGames++; 
                     if (userData.privacy && userData.privacy.newsletter) totNewsletter++;
                     
-                    let dateStr = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('it-IT') : "N/A";
+                    let dateStr = userData.createdAt ? userData.createdAt.toDate().toLocaleDateString('it-IT') : "N/A";
                     const roleTag = userData.isAdmin ? `<span class="tag-admin">OVERSEER</span>` : `<span class="tag-user">AGENTE</span>`;
                     const gameTag = hasHarrow ? `<span style="color:#4caf50;">POSSEDUTA</span>` : `<span style="color:#ff5555;">NON ACQUISITA</span>`;
                     
