@@ -154,8 +154,10 @@
                         const privateSnap = await getDoc(privateRef);
                         let gameKey = "ERRORE-LETTURA-CHIAVE";
                         
-                        if (privateSnap.exists() && privateSnap.data().keys) {
-                            gameKey = privateSnap.data().keys.harrow || gameKey;
+                        if (privateSnap.exists()) {
+                            const pData = privateSnap.data();
+                            // Controlla sia se è in una cartella, sia se è una stringa letterale!
+                            gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'] || gameKey;
                         }
 
                         const gameCard = `

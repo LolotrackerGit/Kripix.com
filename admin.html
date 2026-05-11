@@ -178,7 +178,8 @@
                     tdUser.appendChild(strongUser);
                     
                     const tdEmail = document.createElement('td');
-                    tdEmail.textContent = userData.email; // Sicuro
+                    tdEmail.textContent = userData.email || "[CRYPTATA NEL DOSSIER]"; 
+                    tdEmail.style.color = "#888";
 
                     const tdGame = document.createElement('td');
                     tdGame.innerHTML = gameTag; 

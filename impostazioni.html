@@ -206,7 +206,7 @@
                 if (userSnap.exists()) {
                     userDataCache = userSnap.data();
                     document.getElementById('disp-user').textContent = userDataCache.username;
-                    document.getElementById('disp-email').textContent = userDataCache.email;
+                    document.getElementById('disp-email').textContent = user.email;
                     
                     if (userDataCache.privacy) {
                         document.getElementById('priv-vis').checked = userDataCache.privacy.visibility !== false;

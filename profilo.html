@@ -100,7 +100,7 @@
                     </div>
                     <div class="stat-row">
                         <span style="color:#666">STATO</span>
-                        <span style="color:#4caf50">ATTIVO</span>
+                        <span id="p-status" style="color:#4caf50">ATTIVO</span>
                     </div>
                     <div class="stat-row">
                         <span style="color:#666">GIOCHI</span>
@@ -309,6 +309,15 @@
             const badgeInvestigator = document.getElementById('badge-investigator');
             if (userData.games && userData.games.includes('harrow')) { badgeInvestigator.classList.add('unlocked'); document.getElementById('log-purchase').style.display = 'block'; } 
             else { badgeInvestigator.classList.remove('unlocked'); }
+            // Gestione Stato Fantasma
+            const statusEl = document.getElementById('p-status');
+            if (userData.privacy && userData.privacy.invisible === true) {
+                statusEl.textContent = "OFFLINE (FANTASMA)";
+                statusEl.style.color = "#666";
+            } else {
+                statusEl.textContent = "ATTIVO (ONLINE)";
+                statusEl.style.color = "#4caf50";
+            }
         }
 
         async function updateFriendsAndRequestsUI(me) {
