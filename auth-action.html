@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inizializzazione Rete - Kripix</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Legge i parametri magici di Firebase dall'URL
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+
+            // Mantieni tutti i parametri per passarli alla pagina corretta
+            const allParams = window.location.search;
+
+            if (mode === 'resetPassword') {
+                window.location.href = 'reset.html' + allParams;
+            } else if (mode === 'verifyEmail') {
+                window.location.href = 'verify.html' + allParams;
+            } else {
+                // Se non capisce cos'è, lo manda alla home
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</head>
+<body style="background-color: #05070a; color: #e3c66c; font-family: monospace; text-align: center; padding-top: 20%;">
+    <h2>>> ANALISI SEGNALE CRITTOGRAFATO IN CORSO...</h2>
+</body>
+</html>
