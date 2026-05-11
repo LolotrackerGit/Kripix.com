@@ -1,12 +1,11 @@
 // NUOVA SINTASSI V2 - PIÙ STABILE
-const { onCall } = require("firebase-functions/v2/https");
-const { HttpsError } = require("firebase-functions/v2/https");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// Funzione KripixKey (invariata)
+// Funzione KripixKey (Generatore di chiavi di gioco)
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 function generateKripixKey(uid, gameCode, editionCode) {
     const block1 = "KRPX", block2 = `${gameCode}${editionCode}A`, timestamp = Date.now().toString();
@@ -22,9 +21,12 @@ function generateKripixKey(uid, gameCode, editionCode) {
     return `${block1}-${block2}-${block3}-${block4}`;
 }
 
-// ---- NUOVA SINTASSI PER LE FUNZIONI ----
-// Impostiamo la regione una volta per tutte, così il frontend la troverà sempre.
-const europeWest1 = { region: "europe-west1" };
+// Impostiamo la regione una volta per tutte
+const europeWest1 = { region: "europe-west1", cors: true };
+
+// ==========================================
+// 1. FUNZIONI DI BASE & ACCOUNT
+// ==========================================
 
 exports.checkAuth = onCall(europeWest1, (request) => {
     if (!request.auth) {
@@ -33,7 +35,7 @@ exports.checkAuth = onCall(europeWest1, (request) => {
     return { status: 'success', message: `Autenticazione OK per UID: ${request.auth.uid}` };
 });
 
-exports.createUserAccount = onCall({ region: "europe-west1", cors: true }, async (request) => {
+exports.createUserAccount = onCall(europeWest1, async (request) => {
     try {
         console.log(">> REGISTRAZIONE: Inizio procedura.");
         const { email, password, username } = request.data;
@@ -66,7 +68,7 @@ exports.createUserAccount = onCall({ region: "europe-west1", cors: true }, async
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             games: [],
             friends: [],
-            requests: [],
+            requests:[],
             privacy: { visibility: true, telemetry: false, newsletter: false, invisible: false }
         });
 
@@ -95,39 +97,34 @@ exports.createUserAccount = onCall({ region: "europe-west1", cors: true }, async
             throw new HttpsError('invalid-argument', 'La password deve avere almeno 6 caratteri.');
         }
         
-        // Per tutti gli altri errori, lanciamo un messaggio specifico
         throw new HttpsError('internal', `Errore server: ${error.message}`);
     }
 });
 
+// ==========================================
+// 2. FUNZIONI DELLO STORE (ACQUISTI)
+// ==========================================
+
 exports.securePurchaseGame = onCall(europeWest1, async (request) => {
     try {
-        // 1. Controllo Autenticazione
         if (!request.auth) throw new Error("Utente non autenticato (Manca il Token).");
         
         const uid = request.auth.uid;
         const gameId = request.data.gameId;
         
-        // 2. Controllo ID Gioco
         if (gameId !== "harrow") throw new Error("ID gioco non valido: " + gameId);
         
         const userRef = db.collection('users').doc(uid);
         const privateRef = userRef.collection('private').doc('dossier');
         
-        // 3. Lettura dal Database
         const userDoc = await userRef.get();
-        
-        // ATTENZIONE: Nel server Node.js "exists" è una proprietà (senza parentesi!)
-        // Nel vecchio codice avevi le parentesi exists() e questo faceva crashare il server!
         const userData = userDoc.exists ? userDoc.data() : {};
         const userGames = userData.games ||[];
         
-        // 4. Controllo Libreria
         if (userGames.includes(gameId)) {
             throw new Error("Possiedi già questa licenza.");
         }
         
-        // 5. Generazione Chiave e Salvataggio Sicuro (Batch)
         const newKey = generateKripixKey(uid, "HW", "D");
         const batch = db.batch();
         
@@ -139,10 +136,101 @@ exports.securePurchaseGame = onCall(europeWest1, async (request) => {
         return { status: "success" };
         
     } catch (error) {
-        // Stampiamo l'errore nei log interni di Google Cloud
         console.error("ERRORE TRANSAZIONE:", error);
-        
-        // Usiamo 'aborted' invece di 'internal' così Firebase MOSTRA l'errore sul tuo schermo!
         throw new HttpsError('aborted', "Causa del crash: " + error.message);
     }
+});
+
+// ==========================================
+// 3. FUNZIONI DELLA RETE OPERATIVA (AMICI)
+// ==========================================
+
+// INVIA RICHIESTA DI AMICIZIA
+exports.sendFriendRequest = onCall(europeWest1, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    
+    const senderUid = request.auth.uid;
+    const targetUsername = request.data.targetUsername.toLowerCase();
+
+    try {
+        const usernameDoc = await db.collection('usernames').doc(targetUsername).get();
+        if (!usernameDoc.exists) throw new HttpsError('not-found', 'Agente non trovato.');
+        
+        const targetUid = usernameDoc.data().uid;
+        if (senderUid === targetUid) throw new HttpsError('invalid-argument', 'Non puoi aggiungere te stesso.');
+
+        const targetUserRef = db.collection('users').doc(targetUid);
+        const targetUserDoc = await targetUserRef.get();
+        const targetData = targetUserDoc.data();
+
+        if (targetData.privacy && targetData.privacy.visibility === false) {
+            throw new HttpsError('permission-denied', 'L\'Agente ha disattivato la rintracciabilità.');
+        }
+        if (targetData.friends && targetData.friends.includes(senderUid)) {
+            throw new HttpsError('already-exists', 'Siete già connessi.');
+        }
+        if (targetData.requests && targetData.requests.includes(senderUid)) {
+            throw new HttpsError('already-exists', 'Richiesta già inviata in precedenza.');
+        }
+
+        // Aggiunge l'UID del mittente alle richieste del target
+        await targetUserRef.update({
+            requests: admin.firestore.FieldValue.arrayUnion(senderUid)
+        });
+
+        return { status: 'success' };
+    } catch (error) {
+        throw new HttpsError(error.code || 'internal', error.message);
+    }
+});
+
+// ACCETTA RICHIESTA DI AMICIZIA
+exports.acceptFriendRequest = onCall(europeWest1, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    
+    const myUid = request.auth.uid;
+    const senderUid = request.data.senderUid;
+
+    const batch = db.batch();
+    const myRef = db.collection('users').doc(myUid);
+    const senderRef = db.collection('users').doc(senderUid);
+
+    // Rimuove la richiesta in sospeso e aggiunge agli amici per l'utente corrente
+    batch.update(myRef, {
+        requests: admin.firestore.FieldValue.arrayRemove(senderUid),
+        friends: admin.firestore.FieldValue.arrayUnion(senderUid)
+    });
+
+    // Aggiunge l'utente corrente agli amici del mittente
+    batch.update(senderRef, {
+        friends: admin.firestore.FieldValue.arrayUnion(myUid)
+    });
+
+    await batch.commit();
+    return { status: 'success' };
+});
+
+// RIMUOVI AMICO O ANNULLA RICHIESTA
+exports.removeConnection = onCall(europeWest1, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    
+    const myUid = request.auth.uid;
+    const targetUid = request.data.targetUid;
+
+    const batch = db.batch();
+    const myRef = db.collection('users').doc(myUid);
+    const targetRef = db.collection('users').doc(targetUid);
+
+    // Rimuove da entrambe le parti, pulendo sia la lista amici che eventuali richieste pendenti
+    batch.update(myRef, {
+        friends: admin.firestore.FieldValue.arrayRemove(targetUid),
+        requests: admin.firestore.FieldValue.arrayRemove(targetUid)
+    });
+    batch.update(targetRef, {
+        friends: admin.firestore.FieldValue.arrayRemove(myUid),
+        requests: admin.firestore.FieldValue.arrayRemove(myUid)
+    });
+
+    await batch.commit();
+    return { status: 'success' };
 });
