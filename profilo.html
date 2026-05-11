@@ -275,7 +275,7 @@
                                 <div class="friend-status" style="color:#888">>> IN ATTESA DI RISPOSTA</div>
                             </div>
                         </div>
-                        <button class="btn-mini btn-reject cancel-btn">ANNULLA INVIO</button>
+                        <button class="btn-mini cancel-btn" style="border-color: #666; color: #aaa; transition: 0.3s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#fff';" onmouseout="this.style.color='#aaa'; this.style.borderColor='#666';">ANNULLA INVIO</button>
                     `;
                     el.querySelector('.safe-name').textContent = targetData.username;
                     el.querySelector('.cancel-btn').onclick = () => window.cancelSentRequest(docSnap.id);
