@@ -66,12 +66,12 @@
     </div>
 
     <!-- SCRIPT FIREBASE -->
-    <!-- SCRIPT FIREBASE -->
 <script type="module">
-    import { app, auth } from './script.js';
+    import { app, auth } from './script.js'; // <-- ECCO IL FIX!
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
     import { signInWithEmailAndPassword, sendEmailVerification, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     
+    // Ora 'app' esiste e questa riga non andrà in crash
     const functions = getFunctions(app, 'europe-west1');
 
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
@@ -103,26 +103,26 @@
         btnSubmit.innerHTML = 'INIZIALIZZAZIONE...';
         btnSubmit.disabled = true;
         serverMsg.style.display = 'block';
+        serverMsg.style.color = "var(--text-main)";
 
         try {
             // FASE 1: Creazione account sul Server (Cloud Function)
             serverMsg.innerText = ">> FASE 1: Creazione dossier nel Cloud...";
-            serverMsg.style.color = "var(--text-main)";
-
+            
             const createUserAccount = httpsCallable(functions, 'createUserAccount');
             const result = await createUserAccount({ email, password, username });
 
             if (result.data.status === 'success') {
                 
-                // FASE 2: Eseguiamo il login invisibile
+                // FASE 2: Eseguiamo il login invisibile per poter mandare la mail
                 serverMsg.innerText = ">> FASE 2: Connessione per l'invio mail...";
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 
-                // FASE 3: Mandiamo la Mail di Default di Firebase
+                // FASE 3: Mandiamo la Mail di Verifica di Firebase
                 serverMsg.innerText = ">> FASE 3: Trasmissione mail di sistema Firebase in corso...";
                 await sendEmailVerification(userCredential.user);
                 
-                // Slogghiamo l'utente
+                // Slogghiamo l'utente, così deve verificare l'email prima di entrare
                 await signOut(auth);
 
                 // FATTO!
@@ -134,6 +134,7 @@
             }
 
         } catch (error) {
+            // L'errore ora verrà mostrato correttamente
             serverMsg.innerText = '>> ERRORE: ' + error.message;
             serverMsg.style.color = '#ff5555';
             btnSubmit.innerHTML = 'CREA ACCOUNT';
