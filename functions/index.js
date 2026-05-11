@@ -53,24 +53,48 @@ exports.createUserAccount = onCall(europeWest1, async (request) => {
 });
 
 exports.securePurchaseGame = onCall(europeWest1, async (request) => {
-    if (!request.auth) throw new HttpsError('unauthenticated', 'Devi essere loggato.');
-    const uid = request.auth.uid, gameId = request.data.gameId;
-    if (gameId !== "harrow") throw new HttpsError('invalid-argument', 'Gioco non trovato.');
-    
-    const userRef = db.collection('users').doc(uid);
-    const privateRef = userRef.collection('private').doc('dossier');
-    const userDoc = await userRef.get();
-    
-    const userGames = userDoc.exists ? (userDoc.data().games || []) :[];
-    if (userGames.includes(gameId)) throw new HttpsError('already-exists', 'Possiedi già questa licenza.');
-    
-    const newKey = generateKripixKey(uid, "HW", "D");
-    const batch = db.batch();
-    
-    // USIAMO SET CON MERGE INVECE DI UPDATE: ZERO CRASH!
-    batch.set(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) }, { merge: true });
-    batch.set(privateRef, { [`keys.${gameId}`]: newKey }, { merge: true });
-    
-    await batch.commit();
-    return { status: "success" };
+    try {
+        // 1. Controllo Autenticazione
+        if (!request.auth) throw new Error("Utente non autenticato (Manca il Token).");
+        
+        const uid = request.auth.uid;
+        const gameId = request.data.gameId;
+        
+        // 2. Controllo ID Gioco
+        if (gameId !== "harrow") throw new Error("ID gioco non valido: " + gameId);
+        
+        const userRef = db.collection('users').doc(uid);
+        const privateRef = userRef.collection('private').doc('dossier');
+        
+        // 3. Lettura dal Database
+        const userDoc = await userRef.get();
+        
+        // ATTENZIONE: Nel server Node.js "exists" è una proprietà (senza parentesi!)
+        // Nel vecchio codice avevi le parentesi exists() e questo faceva crashare il server!
+        const userData = userDoc.exists ? userDoc.data() : {};
+        const userGames = userData.games ||[];
+        
+        // 4. Controllo Libreria
+        if (userGames.includes(gameId)) {
+            throw new Error("Possiedi già questa licenza.");
+        }
+        
+        // 5. Generazione Chiave e Salvataggio Sicuro (Batch)
+        const newKey = generateKripixKey(uid, "HW", "D");
+        const batch = db.batch();
+        
+        batch.set(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) }, { merge: true });
+        batch.set(privateRef, {[`keys.${gameId}`]: newKey }, { merge: true });
+        
+        await batch.commit();
+        
+        return { status: "success" };
+        
+    } catch (error) {
+        // Stampiamo l'errore nei log interni di Google Cloud
+        console.error("ERRORE TRANSAZIONE:", error);
+        
+        // Usiamo 'aborted' invece di 'internal' così Firebase MOSTRA l'errore sul tuo schermo!
+        throw new HttpsError('aborted', "Causa del crash: " + error.message);
+    }
 });
