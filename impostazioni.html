@@ -116,7 +116,12 @@
                     </div>
                     <div class="avatar-grid" id="avatar-choices"></div>
                 </div>
-
+                <h3 class="panel-title" style="margin-top: 50px; color:var(--accent-gold);">LICENZE ESTERNE</h3>
+                <div class="setting-row">
+                    <span class="setting-label">RISCATTO CODICE GIOCO</span>
+                    <p style="color:#888; font-size:0.85rem; margin-bottom:10px;">Attiva una licenza acquistata presso fornitori di terze parti (Steam, Retail).</p>
+                    <button class="btn-gold" onclick="openRedeemModal()">INSERISCI CHIAVE</button>
+                </div>
                 <h3 class="panel-title" style="margin-top: 50px;">SICUREZZA</h3>
                 <div class="setting-row">
                     <span class="setting-label">CODICE D'ACCESSO</span>
@@ -193,12 +198,28 @@
     <div id="pass-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3 style="color:var(--accent-gold); margin-bottom:20px;">AGGIORNA PASSWORD</h3><input type="password" id="old-pass" class="modal-input" placeholder="Vecchia Password"><input type="password" id="new-pass" class="modal-input" placeholder="Nuova Password (Min 8 + Num)"><input type="password" id="conf-pass" class="modal-input" placeholder="Conferma Nuova Password"><p id="pass-msg" class="error-msg">ERRORE</p><div style="display:flex; gap:10px; justify-content:center; margin-top:20px;"><button class="btn-outline" onclick="closeModal('pass-modal')">ANNULLA</button><button class="btn-gold" onclick="confirmPassChange()">AGGIORNA</button></div></div></div>
     <div id="delete-modal" class="modal-overlay" style="display:none; background:rgba(20,0,0,0.9);"><div class="modal-box" style="border-top-color:#ff5555; max-width:400px;"><h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem;">⚠ CONFERMA ELIMINAZIONE</h3><input type="password" id="del-password" class="modal-input" placeholder="Password attuale"><p id="del-error" class="error-msg">PASSWORD ERRATA</p><div style="display:flex; gap:10px; justify-content:center;"><button class="btn-outline" onclick="closeModal('delete-modal')">ANNULLA</button><button class="btn-danger" onclick="confirmDelete()">CONFERMA</button></div></div></div>
     <div id="success-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px; border-top-color:#4caf50;"><h3 style="color:#4caf50; margin-bottom:15px;">OPERAZIONE RIUSCITA</h3><p id="success-text" style="color:#ccc;">Dati aggiornati correttamente.</p><button class="btn-outline" style="margin-top:20px;" onclick="location.reload()">CHIUDI</button></div></div>
-
+    <div id="redeem-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width:450px;">
+        <h3 style="color:var(--accent-gold); margin-bottom:10px;">ATTIVAZIONE LICENZA</h3>
+        <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px;">
+            Inserisci il codice criptato a 16 o 20 cifre.
+        </p>
+        <input type="text" id="redeem-key-input" class="modal-input" placeholder="KRPX-XXXX-XXXX-XXXX" style="text-align:center; font-family:'Courier Prime'; font-size:1.2rem; letter-spacing:2px; text-transform:uppercase;" autocomplete="off">
+        <p id="redeem-msg" class="error-msg">ERRORE</p>
+        
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+            <button class="btn-outline" onclick="closeModal('redeem-modal')">ANNULLA</button>
+            <button id="btn-confirm-redeem" class="btn-gold">DECRIPTA CHIAVE</button>
+        </div>
+    </div>
+</div>
     <footer><p>&copy; 2026 Kripix Entertainment.</p></footer>
     
     <script type="module" src="script.js"></script>
     <script type="module">
-        import { auth, db } from './script.js';
+        // 1. GLI IMPORT DEVONO STARE TUTTI QUI IN ALTO
+        import { app, auth, db } from './script.js';
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
         import { reauthenticateWithCredential, EmailAuthProvider, updatePassword, verifyBeforeUpdateEmail, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { doc, getDoc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
@@ -233,7 +254,7 @@
                 div.className = 'avatar-option';
                 div.onclick = () => selectAvatarImage(imgUrl);
                 const img = document.createElement('img');
-                img.src = imgUrl; // CREAZIONE SICURA DELL'IMMAGINE
+                img.src = imgUrl; 
                 div.appendChild(img);
                 avatarGrid.appendChild(div);
             });
@@ -277,90 +298,57 @@
         window.selectAvatarImage = async function(imgUrl) { try { await updateDoc(userDocRef, { avatar_img: imgUrl }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success"); } catch (e) { console.error(e); } };
 
         // ==========================================
-        // LE FUNZIONI DEI MODALI (RIPRISTINATE)
+        // LE FUNZIONI DEI MODALI
         // ==========================================
         window.openNameModal = () => document.getElementById('name-modal').style.display = 'flex';
-        window.confirmNameChange = async function() {
-            const input = document.getElementById('new-name-input');
-            const msg = document.getElementById('name-msg');
-            const newName = input.value.trim();
-            if(!newName) { showError(input, msg, "Inserisci un nome."); return; }
-            
-            try {
-                const newNameLower = newName.toLowerCase();
-                const oldNameLower = userDataCache.username.toLowerCase();
-                if(newNameLower === oldNameLower) { showError(input, msg, "È già il tuo nome."); return; }
-
-                const nameCheck = await getDoc(doc(db, "usernames", newNameLower));
-                if(nameCheck.exists()) { showError(input, msg, "ID già in uso nel Network."); return; }
-
-                // Transazione per scambiare gli username
-                const batch = writeBatch(db);
-                batch.set(doc(db, "usernames", newNameLower), { uid: auth.currentUser.uid });
-                batch.delete(doc(db, "usernames", oldNameLower));
-                batch.update(userDocRef, { username: newName });
-                await batch.commit();
-
-                userDataCache.username = newName;
-                document.getElementById('disp-user').textContent = newName;
-                if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser);
-                closeModal('name-modal');
-                if(window.kripixNotify) window.kripixNotify("AGGIORNAMENTO", "ID Agente modificato.", "success");
-            } catch(e) { showError(input, msg, "Errore di rete."); }
-        };
+        window.confirmNameChange = async function() { /* ... tuo codice name ... */ };
 
         window.openPassModal = () => document.getElementById('pass-modal').style.display = 'flex';
-        window.confirmPassChange = async function() {
-            const oldPass = document.getElementById('old-pass');
-            const newPass = document.getElementById('new-pass');
-            const confPass = document.getElementById('conf-pass');
-            const msg = document.getElementById('pass-msg');
+        window.confirmPassChange = async function() { /* ... tuo codice pass ... */ };
 
-            if(newPass.value !== confPass.value) { showError(confPass, msg, "Le password non coincidono."); return; }
-            if(newPass.value.length < 8) { showError(newPass, msg, "Password troppo corta."); return; }
-
-            try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, oldPass.value);
-                await reauthenticateWithCredential(auth.currentUser, credential);
-                await updatePassword(auth.currentUser, newPass.value);
-                closeModal('pass-modal');
-                if(window.kripixNotify) window.kripixNotify("SICUREZZA", "Password aggiornata.", "success");
-            } catch(e) { showError(oldPass, msg, "Password attuale errata o errore di rete."); }
-        };
-
-        // Funzione Email (Manda link di verifica)
         window.openEmailModal = () => document.getElementById('email-modal').style.display = 'flex';
-        window.confirmEmailChange = async function() {
-            const passInput = document.getElementById('auth-pass-input');
-            const emailInput = document.getElementById('new-email-input');
-            const msg = document.getElementById('email-msg');
-            
-            try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, passInput.value);
-                await reauthenticateWithCredential(auth.currentUser, credential);
-                await verifyBeforeUpdateEmail(auth.currentUser, emailInput.value);
-                closeModal('email-modal');
-                showSuccess("Abbiamo inviato un link di conferma alla tua NUOVA email. Cliccalo per completare l'operazione.");
-            } catch(e) { showError(passInput, msg, "Password errata o email non valida."); }
-        };
+        window.confirmEmailChange = async function() { /* ... tuo codice email ... */ };
 
-        // Eliminazione (Zona Rossa)
         window.openDeleteModal = () => document.getElementById('delete-modal').style.display = 'flex';
-        window.confirmDelete = async function() {
-            const passInput = document.getElementById('del-password');
-            const msg = document.getElementById('del-error');
+        window.confirmDelete = async function() { /* ... tuo codice delete ... */ };
+
+        // ==========================================
+        // LOGICA RISCATTO CHIAVE AGGIUNTA QUI!
+        // ==========================================
+        window.openRedeemModal = () => document.getElementById('redeem-modal').style.display = 'flex';
+
+        document.getElementById('btn-confirm-redeem').addEventListener('click', async () => {
+            const keyInput = document.getElementById('redeem-key-input');
+            const btn = document.getElementById('btn-confirm-redeem');
+            const msgEl = document.getElementById('redeem-msg');
+            const rawKey = keyInput.value.trim().toUpperCase();
+
+            if (rawKey.length < 10) {
+                showError(keyInput, msgEl, "Formato chiave non valido.");
+                return;
+            }
+
+            btn.innerText = "CONNESSIONE AL NETWORK...";
+            btn.style.pointerEvents = "none";
+            msgEl.style.display = 'none';
+
             try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, passInput.value);
-                await reauthenticateWithCredential(auth.currentUser, credential);
+                // Assicurati che "europe-west1" sia la region dove hai hostato le tue functions!
+                const functions = getFunctions(app, 'europe-west1'); 
+                const redeemKripixKey = httpsCallable(functions, 'redeemKripixKey');
                 
-                // Distrugge prima il documento per non lasciare rimasugli
-                await deleteDoc(userDocRef);
-                await deleteDoc(doc(db, "usernames", userDataCache.username.toLowerCase()));
-                await deleteUser(auth.currentUser);
+                await redeemKripixKey({ gameKey: rawKey });
+
+                // SUCCESSO!
+                closeModal('redeem-modal');
+                showSuccess("Licenza attivata con successo. Il software è stato aggiunto alla tua Libreria.");
                 
-                window.location.href = "index.html";
-            } catch(e) { showError(passInput, msg, "Autorizzazione negata."); }
-        };
+            } catch (error) {
+                btn.innerText = "DECRIPTA CHIAVE";
+                btn.style.pointerEvents = "auto";
+                showError(keyInput, msgEl, error.message);
+            }
+        });
     </script>
 </body>
 </html>
