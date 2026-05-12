@@ -234,3 +234,96 @@ exports.removeConnection = onCall(europeWest1, async (request) => {
     await batch.commit();
     return { status: 'success' };
 });
+// Aggiungi questo in alto nel tuo file index.js (se non c'è già)
+const crypto = require("crypto"); 
+
+// ==========================================
+// 4. SISTEMA DI RISCATTO CHIAVI (ANTI-KEYGEN)
+// ==========================================
+
+exports.redeemKripixKey = onCall(europeWest1, async (request) => {
+    // 1. Controllo Autenticazione
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', 'Accesso negato. Agente non identificato.');
+    }
+
+    const uid = request.auth.uid;
+    const rawKey = request.data.gameKey; // Es: KRPX-A1B2-C3D4-E5F6
+    
+    if (!rawKey || rawKey.length < 10) {
+        throw new HttpsError('invalid-argument', 'Formato chiave non valido.');
+    }
+
+    // Normalizza la chiave (rimuove spazi, tutto maiuscolo)
+    const formattedKey = rawKey.toUpperCase().trim();
+    
+    // Riferimenti al Database
+    const keyRef = db.collection('game_keys').doc(formattedKey);
+    const userRef = db.collection('users').doc(uid);
+    const privateDossierRef = userRef.collection('private').doc('dossier');
+
+    try {
+        // Avviamo una TRANSAZIONE: blocca il documento finché non abbiamo finito
+        // Questo impedisce i "Race Conditions" (es. attivazioni doppie simultanee)
+        await db.runTransaction(async (transaction) => {
+            const keyDoc = await transaction.get(keyRef);
+
+            // 2. Controllo: La chiave esiste nel nostro database?
+            if (!keyDoc.exists) {
+                throw new Error("CODICE_INESISTENTE");
+            }
+
+            const keyData = keyDoc.data();
+
+            // 3. Controllo: La chiave è già stata usata?
+            if (keyData.isUsed === true) {
+                throw new Error("CODICE_BRUCIATO");
+            }
+
+            // 4. Recupero i dati dell'utente per evitare che attivi un gioco che ha già
+            const userDoc = await transaction.get(userRef);
+            const userGames = userDoc.exists ? (userDoc.data().games || []) :[];
+
+            if (userGames.includes(keyData.gameId)) {
+                throw new Error("GIOCO_GIA_POSSEDUTO");
+            }
+
+            // 5. TUTTO OK! PROCEDIAMO ALL'ATTIVAZIONE (SOVRASCRITTURA DATI)
+            
+            // A) Bruciamo la chiave
+            transaction.update(keyRef, { 
+                isUsed: true, 
+                usedBy: uid, 
+                redeemedAt: admin.firestore.FieldValue.serverTimestamp() 
+            });
+
+            // B) Aggiungiamo il gioco al profilo pubblico dell'utente
+            transaction.update(userRef, { 
+                games: admin.firestore.FieldValue.arrayUnion(keyData.gameId) 
+            });
+
+            // C) Salviamo la chiave nel suo dossier privato per la Libreria
+            transaction.set(privateDossierRef, { 
+                [`keys.${keyData.gameId}`]: formattedKey 
+            }, { merge: true });
+        });
+
+        return { status: "success", message: "Licenza acquisita e registrata." };
+
+    } catch (error) {
+        console.error(`[SECURITY ALERT] Tentativo riscatto fallito UID ${uid}:`, error.message);
+        
+        // Traduciamo gli errori del server in messaggi utente
+        if (error.message === "CODICE_INESISTENTE") {
+            throw new HttpsError('not-found', 'Chiave crittografica non riconosciuta dal Network.');
+        }
+        if (error.message === "CODICE_BRUCIATO") {
+            throw new HttpsError('already-exists', 'Questa licenza è già stata rivendicata da un altro Agente.');
+        }
+        if (error.message === "GIOCO_GIA_POSSEDUTO") {
+            throw new HttpsError('failed-precondition', 'Il tuo account possiede già questa licenza.');
+        }
+        
+        throw new HttpsError('internal', 'Errore di sincronizzazione col server.');
+    }
+});
