@@ -199,3 +199,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+import { initTranslator, switchLanguage } from './translator.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+    initTranslator();
+    
+    // Rende la funzione disponibile globalmente per poterla usare nei bottoni HTML
+    window.cambiaLingua = switchLanguage;
+});
