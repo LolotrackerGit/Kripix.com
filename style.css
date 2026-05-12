@@ -843,3 +843,28 @@ footer {
     border-color: #4caf50 !important;
     box-shadow: 0 0 15px rgba(76, 175, 80, 0.4) !important;
 }
+/* --- SELETTORE LINGUA --- */
+.lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.lang-switcher span:not(.lang-separator) {
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Effetto quando passi sopra col mouse (diventa Oro) */
+.lang-switcher span:not(.lang-separator):hover {
+    color: var(--accent-gold);
+}
+
+/* Stile per la stanghetta divisoria */
+.lang-separator {
+    color: #333;
+    user-select: none;
+}
