@@ -4,39 +4,50 @@
     <meta charset="UTF-8">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
-    <link rel="icon" href="favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OVERSEER - Kripix Admin</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
     
     <style>
-        body { background-color: #020202; } 
-        .admin-header { border-bottom: 1px dashed var(--accent-red); padding-bottom: 20px; margin-bottom: 40px; }
-        .admin-header h1 { color: var(--accent-red); font-size: 2.5rem; letter-spacing: 5px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 50px; }
-        .stat-card { background: rgba(139, 35, 35, 0.05); border: 1px solid var(--accent-red); padding: 20px; text-align: center; }
-        .stat-number { font-size: 3rem; font-weight: 900; color: var(--text-main); line-height: 1; margin-bottom: 5px; }
-        .stat-label { font-family: 'Courier Prime'; font-size: 0.8rem; color: var(--accent-red); }
-        .section-title-admin { color:white; margin-bottom:15px; border-left: 3px solid var(--accent-gold); padding-left:10px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
-        .collapse-arrow { font-size: 1.2rem; transition: transform 0.3s; }
-        .collapse-arrow.collapsed { transform: rotate(180deg); }
-        .collapsible-content { max-height: 2000px; overflow: hidden; transition: max-height 0.5s ease-out; }
-        .collapsible-content.collapsed { max-height: 0; }
-        .admin-table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); font-size: 0.9rem; }
-        .admin-table th { background: #0a0a0a; color: var(--accent-gold); font-family: 'Courier Prime'; padding: 15px; text-align: left; border-bottom: 2px solid #333; }
-        .admin-table td { padding: 15px; border-bottom: 1px solid #222; color: #ccc; }
-        .admin-table tr:hover td { background: rgba(227, 198, 108, 0.05); }
-        .tag-admin { background: var(--accent-red); color: white; padding: 2px 8px; font-size: 0.7rem; font-weight: bold; border-radius: 2px; }
-        .tag-user { background: #333; color: #888; padding: 2px 8px; font-size: 0.7rem; font-weight: bold; border-radius: 2px; }
-        .admin-input { width: 100%; padding: 15px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; font-family: 'Montserrat', sans-serif; font-size: 1rem; transition: 0.3s; }
-        .admin-input:focus { outline: none; border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(227, 198, 108, 0.2); }
-        .btn-danger { display: inline-block; padding: 5px 10px; font-size: 0.7rem; border: 1px solid #8b2323; color: #ff5555; background: transparent; font-weight: bold; cursor: pointer; transition: 0.3s; font-family: 'Montserrat'; text-transform: uppercase; }
-        .btn-danger:hover { background: #8b2323; color: white; }
+        body { background-color: #020202; overflow-x: hidden; } 
+        .admin-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; margin-top: 20px; }
+        
+        /* Modulo News */
+        .news-module { background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 25px; }
+        .admin-input { width: 100%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #333; color: white; font-family: 'Montserrat', sans-serif; transition: 0.3s; }
+        .admin-input:focus { outline: none; border-color: var(--accent-gold); }
+        
+        /* IL TERMINALE KRIPX OS */
+        .kripix-shell { 
+            background: #000; border: 1px solid #333; border-top: 3px solid var(--accent-gold); 
+            height: 600px; display: flex; flex-direction: column; font-family: 'Courier Prime', monospace; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,1); position: relative;
+        }
+        .shell-header { background: #111; padding: 10px; font-size: 0.8rem; color: #888; display: flex; justify-content: space-between; border-bottom: 1px solid #333;}
+        .shell-output { flex: 1; padding: 20px; overflow-y: auto; color: #ccc; font-size: 0.9rem; line-height: 1.5; }
+        .shell-output p { margin-bottom: 5px; word-break: break-all; }
+        
+        /* Colori Output Terminale */
+        .sys-msg { color: var(--accent-gold); }
+        .err-msg { color: #ff5555; }
+        .success-msg { color: #4caf50; }
+        .info-msg { color: #888; }
+        .cmd-echo { color: white; font-weight: bold; }
+        
+        /* Riga di Input */
+        .shell-input-line { display: flex; align-items: center; padding: 15px 20px; background: #050505; border-top: 1px dashed #333; }
+        .shell-prompt { color: var(--accent-gold); margin-right: 10px; font-weight: bold; }
+        .shell-input { flex: 1; background: transparent; border: none; color: white; font-family: 'Courier Prime', monospace; font-size: 1rem; outline: none; }
+        
+        /* Fix scrollbar terminale */
+        .shell-output::-webkit-scrollbar { width: 5px; }
+        .shell-output::-webkit-scrollbar-thumb { background: #333; }
+        
         #access-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#05070a; z-index: 99999; display: flex; align-items:center; justify-content:center; flex-direction:column; }
         @keyframes pulseRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        @media(max-width: 900px) { .admin-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -51,90 +62,64 @@
         <a href="index.html" class="back-link">← ESCI DAL TERMINALE</a>
     </nav>
 
-    <section class="section-padding" style="padding-top: 150px;">
+    <section class="section-padding" style="padding-top: 120px;">
         <div class="container">
             
-            <div class="admin-header">
-                <h1>TERMINALE OVERSEER</h1>
+            <div style="border-bottom: 1px dashed var(--accent-red); padding-bottom: 20px; margin-bottom: 30px;">
+                <h1 style="color: var(--accent-red); font-size: 2.5rem; letter-spacing: 5px;">TERMINALE OVERSEER</h1>
                 <p style="font-family:'Courier Prime'; color:#888;">Accesso di Livello 5. Autorizzazione concessa.</p>
             </div>
 
-            <div class="stats-grid">
-                 <div class="stat-card">
-                    <div class="stat-number" id="stat-tot-users">-</div>
-                    <div class="stat-label">AGENTI TOTALI REGISTRATI</div>
+            <div class="admin-layout">
+                
+                <!-- PANNELLO BROADCAST -->
+                <div class="news-module">
+                    <h3 style="color:white; margin-bottom:20px; border-left: 3px solid var(--accent-gold); padding-left:10px;">BROADCAST DI RETE</h3>
+                    <select id="news-priority" class="admin-input" style="cursor:pointer;">
+                        <option value="normal">Priorità: NORMALE</option>
+                        <option value="high">Priorità: ALTA</option>
+                    </select>
+                    <input type="text" id="news-title" class="admin-input" placeholder="Titolo Comunicazione..." autocomplete="off">
+                    <textarea id="news-body" class="admin-input" rows="4" placeholder="Testo del messaggio..."></textarea>
+                    <input type="text" id="news-link" class="admin-input" placeholder="URL Destinazione (Opzionale)" autocomplete="off">
+                    <button id="btn-broadcast" class="btn-gold full-width">TRASMETTI NEL NETWORK</button>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="stat-tot-games">-</div>
-                    <div class="stat-label">LICENZE "HARROW" VENDUTE</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="stat-tot-news">-</div>
-                    <div class="stat-label">ISCRITTI ALLA NEWSLETTER</div>
-                </div>
-            </div>
 
-            <div class="section-title-admin" id="toggle-users">
-                <h3>DATABASE AGENTI</h3>
-                <span id="arrow-users" class="collapse-arrow">^</span>
-            </div>
-            <div class="collapsible-content" id="content-users">
-                <div style="overflow-x: auto; margin-bottom: 60px;">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>USERNAME</th>
-                                <th>EMAIL</th>
-                                <th>LICENZA GIOCO</th>
-                                <th>DATA REG.</th>
-                                <th>LIVELLO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-table-body"></tbody>
-                    </table>
+                <!-- TERMINALE KRIPIX OS -->
+                <div class="kripix-shell" onclick="document.getElementById('cli-input').focus()">
+                    <div class="shell-header">
+                        <span>KRIPIX_OS v2.0.4</span>
+                        <span style="color:#4caf50;">STATUS: ONLINE</span>
+                    </div>
+                    
+                    <div class="shell-output" id="cli-output">
+                        <p class="sys-msg">Inizializzazione shell...</p>
+                        <p class="sys-msg">Connessione al core database Firebase: STABILITA.</p>
+                        <p class="info-msg">Digita 'help' per visualizzare i comandi disponibili.</p>
+                        <p>&nbsp;</p>
+                    </div>
+
+                    <div class="shell-input-line">
+                        <span class="shell-prompt">root@overseer:~$</span>
+                        <input type="text" id="cli-input" class="shell-input" autocomplete="off" spellcheck="false">
+                    </div>
                 </div>
-            </div>
 
-            <h3 style="color:white; margin-bottom:15px; border-left: 3px solid var(--accent-red); padding-left:10px;">BROADCAST DI RETE (NEWS)</h3>
-            <div style="background: rgba(255,255,255,0.02); border: 1px solid #333; padding: 30px; margin-bottom: 50px;">
-                <select id="news-priority" class="admin-input" style="cursor:pointer;">
-                    <option value="normal">Priorità: NORMALE</option>
-                    <option value="high">Priorità: ALTA</option>
-                </select>
-                <input type="text" id="news-title" class="admin-input" placeholder="Titolo Comunicazione..." autocomplete="off">
-                <textarea id="news-body" class="admin-input" rows="3" placeholder="Testo..."></textarea>
-                <input type="text" id="news-link" class="admin-input" placeholder="URL Destinazione (Opzionale)" autocomplete="off">
-                <button id="btn-broadcast" class="btn-gold full-width">TRASMETTI</button>
-                <p id="news-msg" style="display:none; margin-top:15px;"></p>
             </div>
-
-            <div class="section-title-admin" id="toggle-news">
-                <h3>STORICO COMUNICAZIONI</h3>
-                <span id="arrow-news" class="collapse-arrow">^</span>
-            </div>
-            <div class="collapsible-content" id="content-news">
-                <div style="overflow-x: auto; margin-bottom: 100px;">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>TITOLO</th>
-                                <th>DATA</th>
-                                <th>PRIORITÀ</th>
-                                <th>AZIONE</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-news-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
         </div>
     </section>
 
     <script type="module">
-        import { auth, db } from './script.js';
-        import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { app, auth, db } from './script.js';
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+        import { doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // Variabili Globali Terminale
+        const cliInput = document.getElementById('cli-input');
+        const cliOutput = document.getElementById('cli-output');
+        let commandHistory =[];
+        let historyIndex = -1;
 
         // 1. CANCELLO DI SICUREZZA
         onAuthStateChanged(auth, async (user) => {
@@ -143,112 +128,109 @@
             const userRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userRef);
 
+            // Controllo rigoroso. Se non sei admin, vieni cacciato.
             if (!userSnap.exists() || userSnap.data().isAdmin !== true) { window.location.href = "404.html"; return; }
 
             document.getElementById('access-overlay').style.display = 'none';
-            loadDashboardData();
-            loadNewsData();
+            cliInput.focus();
         });
 
-        // 2. FUNZIONI CARICAMENTO E SICUREZZA XSS
-        async function loadDashboardData() {
+        // ==========================================
+        // LOGICA TERMINALE
+        // ==========================================
+        
+        function printToShell(text, className = '') {
+            const p = document.createElement('p');
+            p.textContent = text;
+            if (className) p.className = className;
+            cliOutput.appendChild(p);
+            cliOutput.scrollTop = cliOutput.scrollHeight; // Auto-scroll in basso
+        }
+
+        cliInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                const cmdString = cliInput.value.trim();
+                if (!cmdString) return;
+
+                // Salva nella cronologia e resetta input
+                commandHistory.push(cmdString);
+                historyIndex = commandHistory.length;
+                cliInput.value = '';
+
+                // Stampa a schermo il comando inserito dall'utente
+                printToShell(`root@overseer:~$ ${cmdString}`, 'cmd-echo');
+
+                await executeCommand(cmdString);
+            } 
+            // Navigazione cronologia comandi (Frecce Su/Giù)
+            else if (e.key === 'ArrowUp') {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    cliInput.value = commandHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    cliInput.value = commandHistory[historyIndex];
+                } else {
+                    historyIndex = commandHistory.length;
+                    cliInput.value = '';
+                }
+            }
+        });
+
+        // PARSER DEI COMANDI
+        async function executeCommand(cmdString) {
+            const args = cmdString.split(' ').filter(Boolean); // Divide la frase in parole
+            const command = args[0].toLowerCase();
+
+            if (command === 'clear') {
+                cliOutput.innerHTML = '';
+                return;
+            }
+
+            if (command === 'help') {
+                printToShell("COMANDI DISPONIBILI:", "sys-msg");
+                printToShell("  find -u [username]      : Trova informazioni su un agente.");
+                printToShell("  find -e [email]         : Trova agente tramite email.");
+                printToShell("  license grant [uid] [id]: Regala una licenza a un utente.");
+                printToShell("  license revoke [uid] [id]: Revoca una licenza.");
+                printToShell("  keys purge              : Elimina tutte le chiavi vergini/inutilizzate.");
+                printToShell("  clear                   : Pulisce il terminale.");
+                printToShell(" ");
+                return;
+            }
+
+            // COMUNICAZIONE COL SERVER
+            printToShell("Esecuzione protocollo remoto...", "info-msg");
+            
             try {
-                const usersSnapshot = await getDocs(collection(db, "users"));
-                let totUsers = 0, totGames = 0, totNewsletter = 0;
-                const tbody = document.getElementById('admin-table-body');
-                tbody.innerHTML = '';
+                const functions = getFunctions(app, 'europe-west1');
+                const overseerCommand = httpsCallable(functions, 'overseerCommand');
                 
-                usersSnapshot.forEach((doc) => {
-                    const userData = doc.data(); 
-                    totUsers++;
-                    const hasHarrow = userData.games && userData.games.includes('harrow'); 
-                    if (hasHarrow) totGames++; 
-                    if (userData.privacy && userData.privacy.newsletter) totNewsletter++;
-                    
-                    let dateStr = userData.createdAt ? userData.createdAt.toDate().toLocaleDateString('it-IT') : "N/A";
-                    const roleTag = userData.isAdmin ? `<span class="tag-admin">OVERSEER</span>` : `<span class="tag-user">AGENTE</span>`;
-                    const gameTag = hasHarrow ? `<span style="color:#4caf50;">POSSEDUTA</span>` : `<span style="color:#ff5555;">NON ACQUISITA</span>`;
-                    
-                    // COSTRUZIONE SICURA DEL NODO DOM (Previene XSS)
-                    const tr = document.createElement('tr');
-                    
-                    const tdUser = document.createElement('td');
-                    const strongUser = document.createElement('strong');
-                    strongUser.textContent = userData.username; // Sicuro
-                    tdUser.appendChild(strongUser);
-                    
-                    const tdEmail = document.createElement('td');
-                    tdEmail.textContent = userData.email || "[CRYPTATA NEL DOSSIER]"; 
-                    tdEmail.style.color = "#888";
-
-                    const tdGame = document.createElement('td');
-                    tdGame.innerHTML = gameTag; 
-
-                    const tdDate = document.createElement('td');
-                    tdDate.textContent = dateStr;
-
-                    const tdRole = document.createElement('td');
-                    tdRole.innerHTML = roleTag;
-
-                    tr.append(tdUser, tdEmail, tdGame, tdDate, tdRole);
-                    tbody.appendChild(tr);
-                });
+                // Invio il comando grezzo alla Cloud Function (sarà lei a decidere cosa fare)
+                const result = await overseerCommand({ command: cmdString });
                 
-                document.getElementById('stat-tot-users').innerText = totUsers;
-                document.getElementById('stat-tot-games').innerText = totGames;
-                document.getElementById('stat-tot-news').innerText = totNewsletter;
-            } catch(e) {
-                console.error("Errore caricamento dati: Assicurati di aver impostato la regola 'allow list: if request.auth != null && isAdmin();' in Firebase.", e);
+                // La Cloud function ci risponderà con un testo da stampare
+                if (result.data.status === 'success') {
+                    // Stampa ogni riga di risposta separatamente
+                    const lines = result.data.output.split('\n');
+                    lines.forEach(line => printToShell(line, "success-msg"));
+                } else {
+                    printToShell(`[ERRORE]: ${result.data.output}`, "err-msg");
+                }
+                printToShell(" "); // Riga vuota spaziatrice
+
+            } catch (error) {
+                printToShell(`[CRASH SISTEMA]: Errore di connessione o autorizzazione negata.`, "err-msg");
+                console.error(error);
+                printToShell(" ");
             }
         }
 
-        async function loadNewsData() {
-            const q = query(collection(db, "news"), orderBy("date", "desc"));
-            const newsSnapshot = await getDocs(q);
-            const tbody = document.getElementById('admin-news-table-body');
-            tbody.innerHTML = '';
-            
-            newsSnapshot.forEach((newsDoc) => {
-                const news = newsDoc.data();
-                const formattedDate = new Date(news.date).toLocaleDateString('it-IT');
-                const priorityTag = news.priority === 'high' ? `<span style="color:#ff5555;">ALTA</span>` : `<span style="color:#aaa;">NORMALE</span>`;
-                
-                const tr = document.createElement('tr');
-                
-                const tdTitle = document.createElement('td');
-                const strongTitle = document.createElement('strong');
-                strongTitle.textContent = news.title; // Sicuro
-                tdTitle.appendChild(strongTitle);
-
-                const tdDate = document.createElement('td');
-                tdDate.textContent = formattedDate;
-
-                const tdPriority = document.createElement('td');
-                tdPriority.innerHTML = priorityTag;
-
-                const tdAction = document.createElement('td');
-                const btnDel = document.createElement('button');
-                btnDel.className = 'btn-danger';
-                btnDel.textContent = 'DISTRUGGI';
-                btnDel.onclick = () => deleteNews(newsDoc.id);
-                tdAction.appendChild(btnDel);
-
-                tr.append(tdTitle, tdDate, tdPriority, tdAction);
-                tbody.appendChild(tr);
-            });
-        }
-
-        // 3. LOGICA UI
-        document.getElementById('toggle-users').addEventListener('click', () => {
-            document.getElementById('content-users').classList.toggle('collapsed');
-            document.getElementById('arrow-users').classList.toggle('collapsed');
-        });
-
-        document.getElementById('toggle-news').addEventListener('click', () => {
-            document.getElementById('content-news').classList.toggle('collapsed');
-            document.getElementById('arrow-news').classList.toggle('collapsed');
-        });
-        
+        // ==========================================
+        // BROADCAST NEWS (Mantenuto identico)
+        // ==========================================
         document.getElementById('btn-broadcast').addEventListener('click', async () => {
             const priority = document.getElementById('news-priority').value;
             const title = document.getElementById('news-title').value.trim(); 
@@ -258,27 +240,18 @@
             
             if(!title || !body) return;
             
-            btn.innerText = "TRASMISSIONE..."; btn.disabled = true;
+            btn.innerText = "TRASMISSIONE IN CORSO..."; btn.disabled = true;
             try {
                 await addDoc(collection(db, "news"), { priority, title, body, link, date: new Date().toISOString(), author: "Kripix Overseer" });
                 document.getElementById('news-title').value = ''; document.getElementById('news-body').value = ''; document.getElementById('news-link').value = '';
-                loadNewsData(); 
-                if(window.kripixNotify) window.kripixNotify("BROADCAST", "Comunicazione inviata e salvata nel cloud.", "success");
+                
+                printToShell(`[BROADCAST]: Notizia "${title}" trasmessa al network.`, "sys-msg");
+                if(window.kripixNotify) window.kripixNotify("BROADCAST", "Comunicazione inviata.", "success");
             } catch (e) {
-                if(window.kripixNotify) window.kripixNotify("ERRORE", "Trasmissione fallita: " + e.message, "error");
+                if(window.kripixNotify) window.kripixNotify("ERRORE", "Trasmissione fallita.", "error");
             }
-            btn.innerText = "TRASMETTI"; btn.disabled = false;
+            btn.innerText = "TRASMETTI NEL NETWORK"; btn.disabled = false;
         });
-
-        window.deleteNews = async function(newsId) {
-            try {
-                await deleteDoc(doc(db, "news", newsId));
-                loadNewsData(); 
-                if(window.kripixNotify) window.kripixNotify("PROTOCOLLO ESEGUITO", "Comunicazione distrutta.", "error");
-            } catch (error) {
-                if(window.kripixNotify) window.kripixNotify("ERRORE", "Impossibile distruggere la comunicazione.", "error");
-            }
-        };
     </script>
 </body>
 </html>

@@ -327,3 +327,141 @@ exports.redeemKripixKey = onCall(europeWest1, async (request) => {
         throw new HttpsError('internal', 'Errore di sincronizzazione col server.');
     }
 });
+// ==========================================
+// 5. KRIPIX OS - CONSOLE DEI COMANDI OVERSEER
+// ==========================================
+
+exports.overseerCommand = onCall(europeWest1, async (request) => {
+    // 1. SCUDO DI SICUREZZA ASSOLUTO
+    if (!request.auth) {
+        return { status: 'error', output: 'ACCESSO NEGATO: Nessuna identificazione rilevata.' };
+    }
+
+    const uid = request.auth.uid;
+    const adminDoc = await db.collection('users').doc(uid).get();
+
+    // Verifichiamo direttamente dal server che l'utente sia admin
+    if (!adminDoc.exists || adminDoc.data().isAdmin !== true) {
+        console.error(`[SECURITY BREACH] L'Agente UID: ${uid} ha tentato di inviare un comando Admin.`);
+        return { status: 'error', output: 'ACCESSO NEGATO: Privilegi insufficienti. L\'incidente è stato registrato.' };
+    }
+
+    // 2. PARSING DEL COMANDO
+    const cmdString = request.data.command || "";
+    // Divide la stringa in un array, ignorando gli spazi multipli
+    const args = cmdString.trim().split(/\s+/); 
+    const action = args[0].toLowerCase();
+
+    try {
+        // ==========================================
+        // COMANDO: find (Ricerca Agenti)
+        // Uso: find -u [username] oppure find -e [email]
+        // ==========================================
+        if (action === 'find') {
+            const flag = args[1];
+            const target = args[2];
+            let targetUid = null;
+
+            if (!flag || !target) return { status: 'error', output: 'Sintassi errata. Uso: find -u [username] o find -e [email]' };
+
+            // Ricerca tramite Username
+            if (flag === '-u') {
+                const unDoc = await db.collection('usernames').doc(target.toLowerCase()).get();
+                if (!unDoc.exists) return { status: 'error', output: `Nessun Agente trovato con il nome in codice: ${target}` };
+                targetUid = unDoc.data().uid;
+            } 
+            // Ricerca tramite Email (usa l'Auth di Firebase)
+            else if (flag === '-e') {
+                try {
+                    const userRecord = await admin.auth().getUserByEmail(target);
+                    targetUid = userRecord.uid;
+                } catch(e) {
+                    return { status: 'error', output: `Nessun account associato all'email: ${target}` };
+                }
+            } else {
+                return { status: 'error', output: 'Flag sconosciuto. Usa "-u" (username) o "-e" (email).' };
+            }
+
+            // Otteniamo il Dossier Pubblico e Privato
+            const uDoc = await db.collection('users').doc(targetUid).get();
+            const pDoc = await db.collection('users').doc(targetUid).collection('private').doc('dossier').get();
+            
+            const uData = uDoc.exists ? uDoc.data() : {};
+            const pData = pDoc.exists ? pDoc.data() : {};
+            
+            // Creiamo l'output stile terminale
+            let output = `--- DOSSIER AGENTE DECRIPTATO ---\n`;
+            output += `UID      : ${targetUid}\n`;
+            output += `USERNAME : ${uData.username}\n`;
+            output += `EMAIL    : ${pData.email || '[NON DISPONIBILE]'}\n`;
+            output += `STATUS   : ${uData.onlineStatus ? uData.onlineStatus.toUpperCase() : 'OFFLINE'}\n`;
+            output += `VISIBILE : ${uData.privacy && uData.privacy.invisible ? 'FALSO (FANTASMA)' : 'VERO'}\n`;
+            output += `LICENZE  : ${uData.games && uData.games.length > 0 ? uData.games.join(', ').toUpperCase() : 'NESSUNA'}`;
+            
+            return { status: 'success', output: output };
+        }
+
+        // ==========================================
+        // COMANDO: license (Gestione Software)
+        // Uso: license grant [uid] [id] oppure license revoke [uid] [id]
+        // ==========================================
+        if (action === 'license') {
+            const subAction = args[1]; // 'grant' o 'revoke'
+            const targetUid = args[2];
+            const gameId = args[3]; // Es: 'harrow'
+
+            if (!subAction || !targetUid || !gameId) return { status: 'error', output: 'Sintassi errata. Uso: license grant/revoke [uid] [game_id]' };
+
+            const userRef = db.collection('users').doc(targetUid);
+            const dossierRef = userRef.collection('private').doc('dossier');
+
+            if (subAction === 'grant') {
+                await userRef.update({ games: admin.firestore.FieldValue.arrayUnion(gameId) });
+                // Inseriamo una chiave "fittizia" nel dossier privato per far capire che è un regalo admin
+                await dossierRef.set({ [`keys.${gameId}`]: "OVERSEER_DIRECT_GRANT" }, { merge: true });
+                return { status: 'success', output: `[SUCCESSO] Licenza '${gameId.toUpperCase()}' concessa manualmente all'UID: ${targetUid}` };
+            } 
+            else if (subAction === 'revoke') {
+                await userRef.update({ games: admin.firestore.FieldValue.arrayRemove(gameId) });
+                // Elimina la chiave dal dossier
+                await dossierRef.update({ [`keys.${gameId}`]: admin.firestore.FieldValue.delete() });
+                return { status: 'success', output: `[SUCCESSO] Licenza '${gameId.toUpperCase()}' revocata e rimossa dal profilo UID: ${targetUid}` };
+            } 
+            else {
+                return { status: 'error', output: "Azione sconosciuta. Usa 'grant' o 'revoke'." };
+            }
+        }
+
+        // ==========================================
+        // COMANDO: keys purge (Pulizia Database)
+        // Uso: keys purge
+        // ==========================================
+        if (action === 'keys' && args[1] === 'purge') {
+            // Cerchiamo tutte le chiavi nel database in cui isUsed è false
+            const snapshot = await db.collection('game_keys').where('isUsed', '==', false).get();
+            
+            if (snapshot.empty) {
+                return { status: 'success', output: "Nessuna chiave vergine trovata. Il database è già pulito." };
+            }
+
+            // Usiamo il batch per cancellarle tutte in un colpo solo
+            const batch = db.batch();
+            let count = 0;
+            
+            snapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+                count++;
+            });
+            
+            await batch.commit(); 
+            return { status: 'success', output: `[PROTOCOLLO PURGE COMPLETATO] Distrutte ${count} chiavi crittografiche non utilizzate.` };
+        }
+
+        // Se il comando non è riconosciuto
+        return { status: 'error', output: `Comando non riconosciuto: ${action}. Digita 'help' per la sintassi corretta.` };
+
+    } catch (error) {
+        console.error(`[OVERSEER ERROR] Fallimento comando '${cmdString}':`, error);
+        return { status: 'error', output: `Errore critico di sistema: ${error.message}` };
+    }
+});
