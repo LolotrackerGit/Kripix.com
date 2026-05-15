@@ -355,6 +355,19 @@
             } else {
                 statusEl.textContent = "OFFLINE"; statusEl.style.color = "#666";
             }
+            const discordText = document.getElementById('discord-status-text');
+            const dBtn = document.getElementById('btn-sync-discord');
+            
+            if (userData.discordUsername && dBtn && discordText) {
+                discordText.innerText = `> Collegato come: ${userData.discordUsername}`;
+                discordText.style.color = '#4caf50';
+                
+                dBtn.innerText = "SINCRONIZZATO";
+                dBtn.style.pointerEvents = "none";
+                dBtn.style.background = "rgba(76, 175, 80, 0.1)"; // Leggero sfondino verde
+                dBtn.style.borderColor = "#4caf50";
+                dBtn.style.color = "#4caf50";
+            }
         }
 
         // AGGIORNA LISTA AMICI E RICHIESTE RICEVUTE
