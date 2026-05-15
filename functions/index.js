@@ -516,7 +516,17 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
 
         const tokenRes = await fetch('https://discord.com/api/oauth2/token', { method: 'POST', body: tokenParams, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
         const tokenData = await tokenRes.json();
-        if (!tokenData.access_token) return res.status(400).send("Autenticazione con Discord fallita.");
+        if (!tokenData.access_token) {
+    console.error("ERRORE DISCORD SEGRETO:", tokenData);
+    return res.status(400).send(`
+        <body style="background:#05070a; color:white; font-family:monospace; padding:50px; text-align:center;">
+            <h2 style="color:#ff5555;">ACCESSO NEGATO DA DISCORD</h2>
+            <p>Discord ha rifiutato la stretta di mano. Ecco il vero motivo:</p>
+            <pre style="background:#111; border:1px solid #e3c66c; color:#4caf50; padding:20px; text-align:left; display:inline-block;">${JSON.stringify(tokenData, null, 2)}</pre>
+            <p style="margin-top:30px;">Mandami uno screenshot di questa scatola verde!</p>
+        </body>
+    `);
+}
 
         // 3. ID Discord
         const userRes = await fetch('https://discord.com/api/users/@me', { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } });
