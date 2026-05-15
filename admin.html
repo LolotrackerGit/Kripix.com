@@ -334,12 +334,16 @@
 
             if (command === 'help') {
                 printToShell("COMANDI DISPONIBILI:", "sys-msg");
-                printToShell("  find -u [username]       : Trova informazioni su un agente.");
-                printToShell("  find -e [email]          : Trova agente tramite email.");
-                printToShell("  license grant [uid] [id] : Regala una licenza a un utente.");
-                printToShell("  license revoke [uid] [id]: Revoca una licenza.");
-                printToShell("  keys purge               : Elimina tutte le chiavi vergini/inutilizzate.");
-                printToShell("  clear                    : Pulisce il terminale.");
+                printToShell("  find -u [username]               : Trova informazioni su un agente.");
+                printToShell("  find -e [email]                  : Trova agente tramite email.");
+                printToShell("  license grant [uid] [id]         : Regala una licenza a un utente.");
+                printToShell("  license revoke [uid] [id]        : Revoca una licenza.");
+                printToShell("  keys purge                       : Elimina tutte le chiavi vergini.");
+                printToShell("  network ban [uid] (motivo)       : Blocca permanentemente l'accesso all'account.");
+                printToShell("  network unban [uid]              : Rimuove il blocco di accesso.");
+                printToShell("  network suspend [uid] (motivo)   : Applica un avviso rosso sul profilo dell'agente.");
+                printToShell("  network unsuspend [uid]          : Rimuove l'avviso di sospensione.");
+                printToShell("  clear                            : Pulisce il terminale.");
                 printToShell(" ");
                 return;
             }
