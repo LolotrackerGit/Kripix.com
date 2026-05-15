@@ -1,5 +1,5 @@
 // NUOVA SINTASSI V2 - PIÙ STABILE
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
@@ -463,5 +463,102 @@ exports.overseerCommand = onCall(europeWest1, async (request) => {
     } catch (error) {
         console.error(`[OVERSEER ERROR] Fallimento comando '${cmdString}':`, error);
         return { status: 'error', output: `Errore critico di sistema: ${error.message}` };
+    }
+});
+// ==========================================
+// 6. PROTOCOLLO SINCRONIZZAZIONE DISCORD
+// ==========================================
+
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+const DISCORD_REDIRECT_URI = "https://europe-west1-kripix-ent.cloudfunctions.net/discordCallback";
+
+// Gli ID numerici del server non sono segreti, possono restare nel codice
+const GUILD_ID = "1503069828439740618";
+const ROLE_VERIFIED = "1503076001729744987";
+const ROLE_DETECTIVE = "1504131716443541615";
+const ROLE_OVERSEER = "1503075406402687159";
+
+exports.getDiscordAuthUrl = onCall(europeWest1, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    const uid = request.auth.uid;
+    
+    // Generiamo l'esagono di sicurezza
+    const state = crypto.randomBytes(16).toString("hex");
+    await db.collection("discord_states").doc(state).set({ uid: uid, createdAt: admin.firestore.FieldValue.serverTimestamp() });
+
+    // Link autorizzazione Discord
+    const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}`;
+    return { status: 'success', url: url };
+});
+
+exports.discordCallback = onRequest(europeWest1, async (req, res) => {
+    const code = req.query.code;
+    const state = req.query.state;
+
+    if (!code || !state) return res.status(400).send("Protocollo Fallito: Parametri mancanti.");
+
+    try {
+        // 1. Verifica Sicurezza
+        const stateDocRef = db.collection("discord_states").doc(state);
+        const stateDoc = await stateDocRef.get();
+        if (!stateDoc.exists) return res.status(403).send("Sessione scaduta o non valida.");
+        const uid = stateDoc.data().uid;
+
+        // 2. Acquisizione Token Utente
+        const tokenParams = new URLSearchParams();
+        tokenParams.append('client_id', DISCORD_CLIENT_ID);
+        tokenParams.append('client_secret', DISCORD_CLIENT_SECRET);
+        tokenParams.append('grant_type', 'authorization_code');
+        tokenParams.append('code', code);
+        tokenParams.append('redirect_uri', DISCORD_REDIRECT_URI);
+
+        const tokenRes = await fetch('https://discord.com/api/oauth2/token', { method: 'POST', body: tokenParams, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+        const tokenData = await tokenRes.json();
+        if (!tokenData.access_token) return res.status(400).send("Autenticazione con Discord fallita.");
+
+        // 3. ID Discord
+        const userRes = await fetch('https://discord.com/api/users/@me', { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } });
+        const discordUser = await userRes.json();
+
+        // 4. Leggiamo i dati dal Dossier Kripix (per sapere quali ruoli dargli)
+        const kripixUserDoc = await db.collection("users").doc(uid).get();
+        const kripixData = kripixUserDoc.exists ? kripixUserDoc.data() : {};
+
+        // Prepariamo la lista dei ruoli da assegnare
+        const rolesToAdd = [ROLE_VERIFIED]; // Ruolo base per tutti
+        if (kripixData.games && kripixData.games.includes("harrow")) {
+            rolesToAdd.push(ROLE_DETECTIVE);
+        }
+        if (kripixData.isAdmin === true) {
+            rolesToAdd.push(ROLE_OVERSEER);
+        }
+
+        // 5. Assegniamo i ruoli fisicamente su Discord!
+        for (const roleId of rolesToAdd) {
+            await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordUser.id}/roles/${roleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+                    'Content-Length': '0' // API richiede un body vuoto per il PUT
+                }
+            });
+        }
+
+        // 6. Salviamo l'ID Discord su Firebase
+        await kripixUserDoc.ref.update({
+            discordId: discordUser.id,
+            discordUsername: discordUser.username
+        });
+
+        await stateDocRef.delete();
+
+        // 7. Ritorno alla base (Cambia il link con quello del tuo sito!)
+        res.redirect('https://kripix.netlify.app/profilo.html?sync=success');
+
+    } catch (error) {
+        console.error("[CRASH OAUTH]:", error);
+        res.status(500).send("Errore critico durante l'interfacciamento col Kripix Network.");
     }
 });

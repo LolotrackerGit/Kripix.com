@@ -174,13 +174,23 @@
                     <div class="friend-list" id="friends-list-container"></div>
                 </div>
 
-                <div class="section-box dev-access-card">
-                    <div class="dev-text">
-                        <h4>PROGRAMMA PIXEL OTROS</h4>
-                        <p>> Accesso al motore grafico sperimentale.</p>
-                    </div>
-                    <a href="engine.html" class="btn-dev-action">SCARICA DEV-KIT</a>
-                </div>
+                <!-- Modulo Programma DEV -->
+<div class="section-box dev-access-card">
+    <div class="dev-text">
+        <h4>PROGRAMMA PIXEL OTROS</h4>
+        <p>> Accesso al motore grafico sperimentale.</p>
+    </div>
+    <a href="engine.html" class="btn-dev-action">SCARICA DEV-KIT</a>
+</div>
+
+<!-- Modulo Discord OAuth -->
+<div class="section-box dev-access-card" style="border-color: #5865F2; background: rgba(88, 101, 242, 0.05);">
+    <div class="dev-text">
+        <h4 style="color: #5865F2;">INTEGRAZIONE DISCORD</h4>
+        <p id="discord-status-text">> Sincronizza il tuo Dossier per ottenere i ruoli sul server.</p>
+    </div>
+    <button id="btn-sync-discord" class="btn-dev-action" style="border-color: #5865F2; color: #5865F2;">COLLEGA ACCOUNT</button>
+</div>
 
                 <div class="section-box">
                     <h3 class="box-header">LOG ATTIVITÀ RECENTI</h3>
@@ -517,29 +527,50 @@
         // ==========================================
         // FUNZIONE BOT DISCORD (Collegata al bottone HTML)
         // ==========================================
-        window.generateDiscordCode = async function() {
-            const code = "KRPX-" + Math.floor(1000 + Math.random() * 9000);
-            try {
-                await updateDoc(myDocRef, { discordCode: code });
-                
-                let displayEl = document.getElementById('discord-code-display');
-                if(!displayEl) {
-                    // Crea l'elemento se non l'hai ancora aggiunto nell'HTML
-                    displayEl = document.createElement('p');
-                    displayEl.id = 'discord-code-display';
-                    displayEl.style.color = 'var(--accent-gold)';
-                    displayEl.style.fontFamily = "'Courier Prime'";
-                    displayEl.style.marginTop = '10px';
-                    document.querySelector('.dev-access-card').parentNode.insertBefore(displayEl, document.querySelector('.dev-access-card'));
-                }
-                displayEl.innerText = `[SISTEMA]: Scrivi sul server Discord -> !verifica ${code}`;
-                displayEl.style.display = 'block';
-                
-                window.kripixNotify("SISTEMA", "Codice generato con successo.", "success");
-            } catch (e) {
-                window.kripixNotify("ERRORE", "Impossibile generare codice.", "error");
-            }
+        // Aggiungi queste variabili globali in alto, subito sotto gli import di Firebase
+const callDiscordAuth = httpsCallable(functions, 'getDiscordAuthUrl');
+
+// Ascoltiamo l'URL per vedere se siamo tornati indietro con successo
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('sync') === 'success') {
+        // Puliamo l'URL per estetica
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Mostriamo il messaggio verde
+        setTimeout(() => {
+            if(window.kripixNotify) window.kripixNotify("SINCRONIZZAZIONE COMPLETATA", "Ruoli assegnati su Discord.", "success");
+        }, 1000);
+    }
+});
+
+// Aggiungi la funzione per controllare se è già collegato dentro 'updateProfileUI(userData)'
+// Mettilo verso la fine della funzione updateProfileUI
+if (userData.discordUsername) {
+    document.getElementById('discord-status-text').innerText = `> Collegato come: ${userData.discordUsername}`;
+    document.getElementById('discord-status-text').style.color = '#4caf50';
+    const dBtn = document.getElementById('btn-sync-discord');
+    dBtn.innerText = "SINCRONIZZATO";
+    dBtn.style.pointerEvents = "none";
+    dBtn.style.opacity = "0.5";
+}
+
+// Logica del bottone
+document.getElementById('btn-sync-discord').addEventListener('click', async function() {
+    this.innerText = "CONNESSIONE IN CORSO...";
+    this.style.pointerEvents = "none";
+    
+    try {
+        const result = await callDiscordAuth();
+        if (result.data.status === 'success') {
+            // Reindirizziamo fisicamente la pagina verso i server di Discord!
+            window.location.href = result.data.url;
         }
+    } catch (error) {
+        if(window.kripixNotify) window.kripixNotify("ERRORE", "Impossibile contattare i server di Discord.", "error");
+        this.innerText = "COLLEGA ACCOUNT";
+        this.style.pointerEvents = "auto";
+    }
+});
     </script>
 </body>
 </html>
