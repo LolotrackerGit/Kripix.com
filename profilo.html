@@ -358,9 +358,17 @@
             const discordText = document.getElementById('discord-status-text');
             const dBtn = document.getElementById('btn-sync-discord');
             
-           // Mostra l'avviso di sospensione se presente
+           // ==========================================
+            // GESTIONE BANNER SOSPENSIONE
+            // ==========================================
+            // 1. Rimuovi il banner vecchio se esiste già (evita cloni!)
+            const oldBanner = document.getElementById('suspension-banner-alert');
+            if (oldBanner) oldBanner.remove();
+
+            // 2. Se è sospeso, creane uno nuovo
             if (userData.accountStatus && userData.accountStatus.isSuspended) {
                 const suspensionBanner = document.createElement('div');
+                suspensionBanner.id = 'suspension-banner-alert'; // Assegniamo un ID per riconoscerlo
                 suspensionBanner.style = "background: rgba(139, 35, 35, 0.2); border: 1px solid var(--accent-red); padding: 20px; margin-bottom: 40px; text-align: center;";
                 suspensionBanner.innerHTML = `
                     <h4 style="color:#ff5555; margin-bottom:10px; font-size: 1.1rem; text-transform:uppercase;">ACCOUNT SOSPESO</h4>
@@ -368,6 +376,7 @@
                         <strong>Motivo:</strong> ${userData.accountStatus.reason}
                     </p>
                 `;
+                
                 // Inseriamo il banner sopra il blocco del devkit
                 const devCard = document.querySelector('.dev-access-card');
                 if (devCard) {
