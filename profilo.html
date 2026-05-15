@@ -184,12 +184,14 @@
 </div>
 
 <!-- Modulo Discord OAuth -->
+<!-- Modulo Discord OAuth -->
 <div class="section-box dev-access-card" style="border-color: #5865F2; background: rgba(88, 101, 242, 0.05);">
     <div class="dev-text">
         <h4 style="color: #5865F2;">INTEGRAZIONE DISCORD</h4>
         <p id="discord-status-text">> Sincronizza il tuo Dossier per ottenere i ruoli sul server.</p>
     </div>
-    <button id="btn-sync-discord" class="btn-dev-action" style="border-color: #5865F2; color: #5865F2;">COLLEGA ACCOUNT</button>
+    <!-- FIX: Sostituito btn-dev-action con btn-discord -->
+    <button id="btn-sync-discord" class="btn-discord">COLLEGA ACCOUNT</button>
 </div>
 
                 <div class="section-box">
@@ -524,51 +526,44 @@
             }
         };
 
-        // ==========================================
-        // FUNZIONE BOT DISCORD (Collegata al bottone HTML)
-        // ==========================================
-        // Aggiungi queste variabili globali in alto, subito sotto gli import di Firebase
+// ==========================================
+// LOGICA DISCORD OAUTH2 (Assicurati che sia alla fine del file JS)
+// ==========================================
+
+// Inizializza la chiamata al server (usa "functions" già dichiarato a inizio script)
 const callDiscordAuth = httpsCallable(functions, 'getDiscordAuthUrl');
 
-// Ascoltiamo l'URL per vedere se siamo tornati indietro con successo
+const btnSyncDiscord = document.getElementById('btn-sync-discord');
+if (btnSyncDiscord) {
+    btnSyncDiscord.addEventListener('click', async function() {
+        this.innerText = "CONNESSIONE...";
+        this.style.pointerEvents = "none";
+        
+        try {
+            const result = await callDiscordAuth();
+            if (result.data && result.data.status === 'success') {
+                // REDIRECT A DISCORD!
+                window.location.href = result.data.url;
+            } else {
+                throw new Error("Risposta anomala dal server.");
+            }
+        } catch (error) {
+            console.error("ERRORE DISCORD AUTH:", error); // Utile se devi debuggare la console F12
+            if(window.kripixNotify) window.kripixNotify("ERRORE", "Impossibile contattare i server Discord.", "error");
+            this.innerText = "COLLEGA ACCOUNT";
+            this.style.pointerEvents = "auto";
+        }
+    });
+}
+
+// Controlla l'URL per vedere se siamo tornati indietro con successo
 window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('sync') === 'success') {
-        // Puliamo l'URL per estetica
         window.history.replaceState({}, document.title, window.location.pathname);
-        // Mostriamo il messaggio verde
         setTimeout(() => {
-            if(window.kripixNotify) window.kripixNotify("SINCRONIZZAZIONE COMPLETATA", "Ruoli assegnati su Discord.", "success");
+            if(window.kripixNotify) window.kripixNotify("SINCRONIZZAZIONE", "Ruoli assegnati su Discord.", "success");
         }, 1000);
-    }
-});
-
-// Aggiungi la funzione per controllare se è già collegato dentro 'updateProfileUI(userData)'
-// Mettilo verso la fine della funzione updateProfileUI
-if (userData.discordUsername) {
-    document.getElementById('discord-status-text').innerText = `> Collegato come: ${userData.discordUsername}`;
-    document.getElementById('discord-status-text').style.color = '#4caf50';
-    const dBtn = document.getElementById('btn-sync-discord');
-    dBtn.innerText = "SINCRONIZZATO";
-    dBtn.style.pointerEvents = "none";
-    dBtn.style.opacity = "0.5";
-}
-
-// Logica del bottone
-document.getElementById('btn-sync-discord').addEventListener('click', async function() {
-    this.innerText = "CONNESSIONE IN CORSO...";
-    this.style.pointerEvents = "none";
-    
-    try {
-        const result = await callDiscordAuth();
-        if (result.data.status === 'success') {
-            // Reindirizziamo fisicamente la pagina verso i server di Discord!
-            window.location.href = result.data.url;
-        }
-    } catch (error) {
-        if(window.kripixNotify) window.kripixNotify("ERRORE", "Impossibile contattare i server di Discord.", "error");
-        this.innerText = "COLLEGA ACCOUNT";
-        this.style.pointerEvents = "auto";
     }
 });
     </script>

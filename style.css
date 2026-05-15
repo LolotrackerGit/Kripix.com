@@ -625,6 +625,27 @@ footer {
     transition: 0.3s;
 }
 
+/* --- BOTTONE DISCORD --- */
+.btn-discord {
+    background: var(--bg-darker);
+    border: 1px solid #5865F2; /* Blu Discord */
+    color: #5865F2;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-family: 'Montserrat', sans-serif; /* FIX FONT: Forza il font corretto! */
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: 0.3s;
+    cursor: pointer; /* FIX: Mostra la manina quando ci passi sopra */
+    text-transform: uppercase;
+}
+
+.btn-discord:hover {
+    background: #5865F2;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(88, 101, 242, 0.4);
+}
+
 .btn-dev-action:hover {
     background: var(--accent-gold);
     color: #000;
