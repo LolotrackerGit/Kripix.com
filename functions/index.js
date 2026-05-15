@@ -565,7 +565,7 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
         await stateDocRef.delete();
 
         // 7. Ritorno alla base (Cambia il link con quello del tuo sito!)
-        res.redirect('https://kripix.netlify.app/profilo.html?sync=success');
+        res.redirect('https://lolotrackergit.github.io/Kripix.com/profilo.html?sync=success');
 
     } catch (error) {
         console.error("[CRASH OAUTH]:", error);
