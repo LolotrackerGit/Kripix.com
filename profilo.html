@@ -358,6 +358,23 @@
             const discordText = document.getElementById('discord-status-text');
             const dBtn = document.getElementById('btn-sync-discord');
             
+           // Mostra l'avviso di sospensione se presente
+            if (userData.accountStatus && userData.accountStatus.isSuspended) {
+                const suspensionBanner = document.createElement('div');
+                suspensionBanner.style = "background: rgba(139, 35, 35, 0.2); border: 1px solid var(--accent-red); padding: 20px; margin-bottom: 40px; text-align: center;";
+                suspensionBanner.innerHTML = `
+                    <h4 style="color:#ff5555; margin-bottom:10px; font-size: 1.1rem; text-transform:uppercase;">ACCOUNT SOSPESO</h4>
+                    <p style="color:#ccc; font-family:'Courier Prime'; font-size:0.9rem;">
+                        <strong>Motivo:</strong> ${userData.accountStatus.reason}
+                    </p>
+                `;
+                // Inseriamo il banner sopra il blocco del devkit
+                const devCard = document.querySelector('.dev-access-card');
+                if (devCard) {
+                    devCard.parentNode.insertBefore(suspensionBanner, devCard);
+                }
+            }
+           
             if (userData.discordUsername && dBtn && discordText) {
                 discordText.innerText = `> Collegato come: ${userData.discordUsername}`;
                 discordText.style.color = '#4caf50';

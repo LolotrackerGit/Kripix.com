@@ -161,13 +161,20 @@
                 btn.classList.add('btn-success');
                 setTimeout(() => { window.location.href = 'index.html'; }, 1000);
             } catch (error) {
-                if(error.message !== "email-not-verified") {
-                   msg.innerText = '>> ERRORE CLOUD: EMAIL O PASSWORD NON VALIDE';
-                   msg.style.display = 'block';
-                }
-                btn.innerHTML = 'VERIFICA CREDENZIALI';
-                btn.style.pointerEvents = 'auto';
+            // AGGIUNGI QUESTO CONTROLLO QUI
+            if (error.code === 'auth/user-disabled') {
+                msg.innerText = '>> ACCESSO REVOCATO: Questo account ha violato i termini di servizio del Kripix Network.';
+                msg.style.display = 'block';
+            } 
+            // La gestione degli altri errori
+            else if (error.message !== "email-not-verified") {
+               msg.innerText = '>> ERRORE CLOUD: EMAIL O PASSWORD NON VALIDE';
+               msg.style.display = 'block';
             }
+            
+            btn.innerHTML = 'VERIFICA CREDENZIALI';
+            btn.style.pointerEvents = 'auto';
+        }
         });
 
         // --- LOGICA ACCESSO CON GOOGLE ---

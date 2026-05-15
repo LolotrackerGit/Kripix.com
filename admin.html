@@ -125,7 +125,7 @@
                 </div>
 
                 <!-- COLONNA DESTRA: TERMINALE KRIPIX OS -->
-                <div class="kripix-shell" onclick="document.getElementById('cli-input').focus()">
+               <div class="kripix-shell">
                     <div class="shell-header">
                         <span>KRIPIX_OS v2.0.4</span>
                         <span style="color:#4caf50;">STATUS: ONLINE</span>
@@ -369,6 +369,15 @@
                 printToShell(" ");
             }
         }
+
+        document.querySelector('.kripix-shell').addEventListener('click', (e) => {
+    // Se l'utente sta cliccando sull'input o ha già del testo selezionato, non fare nulla.
+    if (e.target.id === 'cli-input' || !window.getSelection().isCollapsed) {
+        return; 
+    }
+    // Altrimenti, metti a fuoco l'input per permettergli di scrivere.
+    cliInput.focus();
+});
     </script>
 </body>
 </html>

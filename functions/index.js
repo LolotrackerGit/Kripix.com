@@ -433,6 +433,52 @@ exports.overseerCommand = onCall(europeWest1, async (request) => {
         }
 
         // ==========================================
+        // COMANDO: network (Ban & Sospensione)
+        // Uso: network [ban|suspend|unban|unsuspend] [uid] (motivo opzionale)
+        // ==========================================
+        if (action === 'network') {
+            const subAction = args[1];
+            const targetUid = args[2];
+            
+            // Uniamo il resto degli argomenti per formare il "motivo"
+            const reason = args.slice(3).join(' ') || "Nessun motivo specificato.";
+
+            if (!subAction || !targetUid) return { status: 'error', output: 'Sintassi errata. Uso: network [azione] [uid] (motivo)' };
+            
+            const userRef = db.collection('users').doc(targetUid);
+
+            switch (subAction) {
+                case 'ban':
+                    // Disabilita l'account a livello di autenticazione Firebase
+                    await admin.auth().updateUser(targetUid, { disabled: true });
+                    // Potremmo anche salvare il motivo nel database per nostro storico
+                    await userRef.set({ accountStatus: { isBanned: true, reason: reason } }, { merge: true });
+                    
+                    // TODO: Qui possiamo inserire la logica per inviare la mail di notifica!
+
+                    return { status: 'success', output: `[PROTOCOLLO BAN ESEGUITO] L'accesso dell'Agente ${targetUid} è stato revocato permanentemente.` };
+
+                case 'unban':
+                    await admin.auth().updateUser(targetUid, { disabled: false });
+                    await userRef.update({ 'accountStatus.isBanned': false });
+                    return { status: 'success', output: `[PROTOCOLLO ANNULLATO] L'Agente ${targetUid} è stato riabilitato.` };
+                
+                case 'suspend':
+                    // Scrive solo nel database Firestore, non blocca il login
+                    await userRef.set({ accountStatus: { isSuspended: true, reason: reason } }, { merge: true });
+                    return { status: 'success', output: `[PROTOCOLLO SOSPENSIONE ATTIVO] L'Agente ${targetUid} è stato sospeso. Vedrà un avviso sul suo profilo.` };
+
+                case 'unsuspend':
+                    // Rimuove il campo 'accountStatus' per pulire il profilo
+                    await userRef.update({ accountStatus: admin.firestore.FieldValue.delete() });
+                    return { status: 'success', output: `[PROTOCOLLO ANNULLATO] La sospensione per l'Agente ${targetUid} è stata revocata.` };
+                
+                default:
+                    return { status: 'error', output: "Azione sconosciuta. Usa 'ban', 'unban', 'suspend' o 'unsuspend'." };
+            }
+        }
+
+        // ==========================================
         // COMANDO: keys purge (Pulizia Database)
         // Uso: keys purge
         // ==========================================
