@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCSCYzPprBLnd49x41WZ4jMBVyNDCOdJ64",
@@ -12,6 +13,11 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+// INIZIALIZZAZIONE SCUDO ANTI-BOT (App Check)
+initializeAppCheck(app, {
+  provider: new ReCaptchaEnterpriseProvider('6Lc3qOssAAAAAEfpajCskCO7Rzo5oNVpT0KVnpUE'),
+  isTokenAutoRefreshEnabled: true // Mantiene lo scudo sempre attivo
+});
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
