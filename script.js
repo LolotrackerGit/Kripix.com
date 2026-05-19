@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// MENU HAMBURGER (Il tuo codice è già perfetto)
+// MENU HAMBURGER (FIX SCROLL MOBILE)
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     const hamburger = document.querySelector(".hamburger");
@@ -202,6 +202,10 @@ document.addEventListener("DOMContentLoaded", () => {
         hamburger.addEventListener("click", () => { 
             hamburger.classList.toggle("active"); 
             navMenu.classList.toggle("active"); 
+            
+            // --> AGGIUNGI QUESTA RIGA <--
+            // Se il menu ha la classe 'active', blocchiamo lo scroll, altrimenti lo sblocchiamo.
+            document.body.classList.toggle("no-scroll", navMenu.classList.contains("active"));
         });
     }
 });

@@ -251,27 +251,39 @@
 </body>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const MESE_FONDAZIONE = 4; // Maggio (0 = Gennaio)
+        const MESE_FONDAZIONE = 4; // Maggio
         const GIORNO_FONDAZIONE = 19;
         const oggi = new Date();
-        
+
         if (oggi.getMonth() === MESE_FONDAZIONE && oggi.getDate() === GIORNO_FONDAZIONE) {
-            const tagline = document.querySelector('.typewriter');
-            if (tagline) {
-                tagline.textContent = "Habemus Kripix.";
-                tagline.style.width = "15ch"; // 15 caratteri esatti
+            const taglineElement = document.querySelector('.typewriter');
+            if (taglineElement) {
+                const easterEggText = "Habemus Kripix";
                 
-                // Creiamo l'animazione su misura e la iniettiamo nella pagina
-                const style = document.createElement('style');
-                style.innerHTML = `
-                    @keyframes typingEaster { from { width: 0; } to { width: 15ch; } }
-                `;
-                document.head.appendChild(style);
-                
-                // Applichiamo la nuova animazione
-                tagline.style.animation = `typingEaster 1.5s steps(15, end) forwards, blink-caret 0.75s step-end infinite`;
-                
-                console.log("%c[EASTER EGG ATTIVATO] >> HABEMUS KRIPIX! Buon anniversario.", "color: #e3c66c; font-weight: bold; background: #000; padding: 5px;");
+                // 1. UCCIDIAMO DEFINITIVAMENTE L'ANIMAZIONE CSS
+                taglineElement.style.animation = 'none';
+                taglineElement.style.width = 'auto';
+                taglineElement.textContent = ''; // Svuotiamo il testo
+
+                // 2. RIACCENDIAMO SOLO IL CURSORE LAMPEGGIANTE
+                taglineElement.classList.add('cursor-blink');
+
+                // 3. LA VERA MACCHINA DA SCRIVERE (PURO JAVASCRIPT)
+                let i = 0;
+                const typingInterval = setInterval(() => {
+                    // Aggiungiamo una lettera alla volta
+                    taglineElement.textContent += easterEggText.charAt(i);
+                    i++;
+                    
+                    // Quando abbiamo finito, fermiamo l'intervallo
+                    if (i > easterEggText.length -1) {
+                        clearInterval(typingInterval);
+                        // Opzionale: puoi far smettere di lampeggiare il cursore togliendo la classe
+                        // taglineElement.classList.remove('cursor-blink');
+                    }
+                }, 100); // 100 millisecondi per lettera (puoi aumentare/diminuire per renderlo più lento/veloce)
+
+                console.log("%c[EASTER EGG ATTIVATO] >> HABEMUS KRIPIX!", "color: #e3c66c;");
             }
         }
     });

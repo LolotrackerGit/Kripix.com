@@ -944,3 +944,12 @@ footer {
     font-size: 0.8rem;
     color: #888; /* Schiarito anche questo */
 }
+/* CLASSE PER BLOCCARE LO SCROLL QUANDO IL MENU MOBILE È APERTO */
+body.no-scroll {
+    overflow: hidden;
+}
+/* CLASSE PER FORZARE IL CURSORE LAMPEGGIANTE (per l'Easter Egg JS) */
+.cursor-blink {
+    border-right: 3px solid var(--accent-gold);
+    animation: blink-caret 0.75s step-end infinite;
+}
