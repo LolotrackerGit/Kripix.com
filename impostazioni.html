@@ -54,23 +54,7 @@
 <body>
     <div class="background-grid"></div>
 
-    <nav>
-        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
-        <div class="hamburger"><span></span><span></span><span></span></div>
-        <ul class="nav-links nav-menu">
-    <li><a href="progetti.html">Progetti</a></li>
-    <li><a href="studio.html">Chi Siamo</a></li>
-    <li><a href="contatti.html">Contatti</a></li>
-    <li><a href="download.html" class="btn-launcher">Scarica App</a></li>
-    
-    <!-- SELETTORE LINGUA KRIPIX -->
-    <li class="lang-switcher">
-        <span onclick="window.cambiaLingua('it')">IT</span>
-        <span class="lang-separator">|</span>
-        <span onclick="window.cambiaLingua('en')">EN</span>
-    </li>
-</ul>
-    </nav>
+<nav id="main-nav"></nav>
 
     <div class="page-header">
         <h1>CONFIGURAZIONE</h1>
@@ -213,55 +197,7 @@
         </div>
     </div>
 </div>
-    <footer class="kripix-footer">
-    <div class="footer-grid">
-        <!-- Colonna 1: Brand -->
-        <div class="footer-col">
-            <h2 style="color:var(--text-main); font-weight:900; letter-spacing:2px; margin-bottom:10px;">KRIPIX</h2>
-            <p style="color:#666; font-size:0.85rem; font-family:'Courier Prime';">
-                A different way to see pixels.<br>
-                Sviluppato in Italia.
-            </p>
-        </div>
-        
-        <!-- Colonna 2: Navigazione Rapida -->
-        <div class="footer-col">
-            <h4>NETWORK</h4>
-            <ul>
-                <li><a href="progetti.html">Progetti & Giochi</a></li>
-                <li><a href="studio.html">Lo Studio</a></li>
-                <li><a href="download.html">Kripix Launcher</a></li>
-                <li><a href="contatti.html">Contatti</a></li>
-            </ul>
-        </div>
-        
-        <!-- Colonna 3: Documenti e Supporto -->
-        <div class="footer-col">
-            <h4>ARCHIVI</h4>
-            <ul>
-                <li><a href="eula.html">Dossier E.U.L.A.</a></li>
-                <li><a href="privacy.html">Privacy Policy</a></li>
-                <li><a href="dmr.html">Policy DRM</a></li>
-                <!-- QUI METTERAI IL LINK QUANDO CREERAI IL SOTTODOMINIO -->
-                <li><a href="#">Supporto Tecnico</a></li> 
-            </ul>
-        </div>
-        
-        <!-- Colonna 4: Social -->
-        <div class="footer-col">
-            <h4>CONNESSIONI</h4>
-            <ul>
-                <li><a href="#">Discord Server</a></li>
-                <li><a href="#">Twitter / X</a></li>
-                <li><a href="#">YouTube</a></li>
-            </ul>
-        </div>
-    </div>
-    
-    <div class="footer-bottom">
-        &copy; 2026 Kripix Entertainment. Tutti i diritti riservati.
-    </div>
-</footer>
+    <footer id="main-footer" class="kripix-footer"></footer>
     
     <script type="module" src="script.js"></script>
     <script type="module">

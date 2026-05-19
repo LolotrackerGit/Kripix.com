@@ -1,9 +1,8 @@
 // translator.js
 
-// IL TUO DIZIONARIO (Aggiungi qui le frasi esatte che vuoi tradurre)
 const dizionario_EN = {
     // ==========================================
-    // NAVBAR & COMUNI
+    // COMPONENTI GLOBALI (Navbar & Footer)
     // ==========================================
     "Progetti": "Projects",
     "Chi Siamo": "About Us",
@@ -22,13 +21,28 @@ const dizionario_EN = {
     "← TORNA AL NETWORK": "← RETURN TO NETWORK",
     "← ANNULLA": "← CANCEL",
     "← TORNA AL CATALOGO": "← RETURN TO CATALOG",
+    "← TORNA AL LOGIN": "← RETURN TO LOGIN",
+    "← ESCI DAL TERMINALE": "← EXIT TERMINAL",
     "ANNULLA": "CANCEL",
     "CHIUDI": "CLOSE",
+    "Sviluppato in Italia.": "Developed in Italy.",
+    "NETWORK": "NETWORK",
+    "Progetti & Giochi": "Projects & Games",
+    "Lo Studio": "The Studio",
+    "Kripix Launcher": "Kripix Launcher",
+    "ARCHIVI": "ARCHIVES",
+    "Dossier E.U.L.A.": "E.U.L.A. Dossier",
+    "Privacy Policy": "Privacy Policy",
+    "Policy DRM": "DRM Policy",
+    "Supporto Tecnico": "Technical Support",
+    "CONNESSIONI": "CONNECTIONS",
+    "Discord Server": "Discord Server",
+    "Twitter / X": "Twitter / X",
+    "YouTube": "YouTube",
 
     // ==========================================
     // INDEX.HTML (Home)
     // ==========================================
-    "A different way to see pixels.": "A different way to see pixels.",
     "I Nostri Giochi": "Our Games",
     "La Nostra Visione": "Our Vision",
     ">> Intercettazione segnali di rete...": ">> Intercepting network signals...",
@@ -51,11 +65,25 @@ const dizionario_EN = {
     "Preferiamo creare 10 ore indimenticabili piuttosto che 100 ore di contenuti ripetitivi.": "We prefer to create 10 unforgettable hours rather than 100 hours of repetitive content.",
 
     // ==========================================
+    // CONTATTI.HTML
+    // ==========================================
+    "PARLA CON NOI": "TALK TO US",
+    "INFO": "INFO",
+    "Siamo sempre alla ricerca di collaboratori, feedback o opportunità di publishing.": "We are always looking for collaborators, feedback, or publishing opportunities.",
+    "NOME IN CODICE / NOME": "CODENAME / NAME",
+    "Il tuo nome": "Your name",
+    "EMAIL": "EMAIL",
+    "latua@email.com": "your@email.com",
+    "MESSAGGIO / DOSSIER": "MESSAGE / DOSSIER",
+    "Scrivi qui il tuo feedback o richiesta...": "Write your feedback or request here...",
+    "TRASMETTI DATI": "TRANSMIT DATA",
+
+    // ==========================================
     // PROGETTI.HTML & HARROW.HTML
     // ==========================================
     "CATALOGO PROGETTI": "PROJECT CATALOG",
     "IL FILO DEL DUBBIO": "A THREAD OF DOUBT",
-    "IN SVILUPPO | PC | 2025": "IN DEVELOPMENT | PC | 2025",
+    "IN SVILUPPO | PC | 2026": "IN DEVELOPMENT | PC | 2026",
     "Un thriller noir psicologico dove ogni fallimento investigativo rende i tuoi nemici più forti. Harrow ti aspetta.": "A psychological noir thriller where every investigative failure makes your enemies stronger. Harrow awaits.",
     "Edizione Standard": "Standard Edition",
     "MIGLIORE OFFERTA": "BEST VALUE",
@@ -68,7 +96,7 @@ const dizionario_EN = {
     "PRE-PRODUZIONE": "PRE-PRODUCTION",
     "Un nuovo capitolo nell'universo Kripix.": "A new chapter in the Kripix universe.",
     
-    // Harrow (Pagina Gioco)
+    // Harrow (Pagina del gioco)
     "Realismo Sporco Noir": "Dirty Noir Realism",
     "1973. Harrow non è solo un'ambientazione, è un personaggio antagonista. Una città avvolta da pioggia incessante, nebbia e decadenza morale.": "1973. Harrow isn't just a setting, it's an antagonistic character. A city shrouded in relentless rain, fog, and moral decay.",
     "ACQUISICI LICENZA": "ACQUIRE LICENSE",
@@ -101,7 +129,45 @@ const dizionario_EN = {
     "(No DRM)": "(No DRM)",
 
     // ==========================================
-    // LOGIN, REGISTER, RESET
+    // DOWNLOAD.HTML
+    // ==========================================
+    "KRIPIX LAUNCHER": "KRIPIX LAUNCHER",
+    "Il tuo portale per Harrow e oltre.": "Your portal for Harrow and beyond.",
+    "Rilevato": "Detected",
+    "SCARICA .EXE": "DOWNLOAD .EXE",
+    "SCARICA .DMG": "DOWNLOAD .DMG",
+    "Grazie! Il download è iniziato.": "Thank you! The download has started.",
+    "SCARICANDO...": "DOWNLOADING...",
+    "GRAZIE!": "THANK YOU!",
+    "Aggiornamenti Rapidi": "Fast Updates",
+    "Ultima versione sempre disponibile.": "Latest version always available.",
+    "Cloud Save": "Cloud Save",
+    "Progressi al sicuro nel cloud.": "Progress safely stored in the cloud.",
+    "Bonus Esclusivi": "Exclusive Bonuses",
+    "Contenuti extra per gli utenti.": "Extra content for users.",
+    "ACCESSO SVILUPPATORI": "DEVELOPER ACCESS",
+    "FORGIARE LA REALTÀ": "FORGING REALITY",
+    "Non cerchiamo creatori di giochi. Cerchiamo architetti di mondi. Scopri Pixel Otros, il nostro motore proprietario basato su streaming SSD e rendering Nanovoxel.": "We don't look for game creators. We look for world architects. Discover Pixel Otros, our proprietary engine based on SSD streaming and Nanovoxel rendering.",
+    "ENTRA NEL PROGRAMMA DEV": "JOIN THE DEV PROGRAM",
+
+    // ==========================================
+    // ENGINE.HTML
+    // ==========================================
+    "DEVELOPER KIT[ALPHA]": "DEVELOPER KIT[ALPHA]",
+    "The Ultimate Storytelling Engine.": "The Ultimate Storytelling Engine.",
+    "ATTENZIONE: ARCHITETTURA AD ALTO COSTO": "WARNING: HIGH-COST ARCHITECTURE",
+    "Pixel Otros non è progettato per la scalabilità. Utilizza una tecnologia di Streaming SSD Diretto che bypassa la RAM di sistema per caricare texture non compresse. Questo motore è creato per un solo scopo: Iper-Realismo Narrativo.": "Pixel Otros is not designed for scalability. It uses Direct SSD Streaming technology that bypasses system RAM to load uncompressed textures. This engine is created for a single purpose: Narrative Hyper-Realism.",
+    "Le texture vengono lette direttamente dall'NVMe.": "Textures are read directly from the NVMe.",
+    "Geometria infinita. Niente più LOD.": "Infinite geometry. No more LODs.",
+    "Raytracing pathtraced completo.": "Full path-traced raytracing.",
+    "LICENZA D'USO": "END USER LICENSE AGREEMENT",
+    "Leggi attentamente i termini. Pixel Otros è software proprietario.": "Read the terms carefully. Pixel Otros is proprietary software.",
+    "Ho letto, compreso e accetto di sacrificare le mie prestazioni per il realismo.": "I have read, understood, and agree to sacrifice my performance for realism.",
+    "SCARICA SDK (45 GB)": "DOWNLOAD SDK (45 GB)",
+    "INIZIALIZZAZIONE...": "INITIALIZING...",
+
+    // ==========================================
+    // LOGIN, REGISTER, RESET, VERIFY
     // ==========================================
     "ACCESSO": "SYSTEM ACCESS",
     "E-MAIL": "E-MAIL",
@@ -121,19 +187,23 @@ const dizionario_EN = {
     "CONFERMA PASSWORD": "CONFIRM PASSWORD",
     "CREA ACCOUNT": "CREATE ACCOUNT",
     "Hai già un ID?": "Already have an ID?",
-    "TORNA AL LOGIN": "RETURN TO LOGIN",
     "RIPRISTINO CHIAVE": "KEY RESTORATION",
+    "Verifica del canale crittografato in corso...": "Verifying encrypted channel...",
+    "Inserisci la tua email operativa. Ti invieremo un link crittografato per resettare la password.": "Enter your operational email. We will send an encrypted link to reset your password.",
     "NUOVA PASSWORD (Min 8 car. + 1 Numero)": "NEW PASSWORD (Min 8 char. + 1 Number)",
     "CONFERMA NUOVA PASSWORD": "CONFIRM NEW PASSWORD",
     "AGGIORNA CREDENZIALI": "UPDATE CREDENTIALS",
     "BENVENUTO, AGENTE": "WELCOME, AGENT",
+    "Identità Google verificata. Scegli il tuo nome in codice per completare il reclutamento.": "Google identity verified. Choose your codename to complete recruitment.",
     "COMPLETA REGISTRAZIONE": "COMPLETE REGISTRATION",
     "VERIFICA IN CORSO": "VERIFICATION IN PROGRESS",
+    ">> Decrittazione del token...": ">> Decrypting token...",
+    "ACCEDI AL TERMINALE": "ACCESS TERMINAL",
 
     // ==========================================
     // PROFILO.HTML
     // ==========================================
-    "IL MIO PROFILO": "My Profile",
+    "Il mio Profilo": "My Profile",
     "LIVELLO 1": "LEVEL 1",
     "AGENTE": "AGENT",
     "ID DATABASE": "DATABASE ID",
@@ -159,6 +229,20 @@ const dizionario_EN = {
     "> [SYSTEM] Profilo sincronizzato con il server centrale.": "> [SYSTEM] Profile synchronized with central server.",
     "⚠ INTERROMPI CONNESSIONE": "⚠ SEVER CONNECTION",
     "RIMUOVI": "REMOVE",
+    "INTEGRAZIONE DISCORD": "DISCORD INTEGRATION",
+    "> Sincronizza il tuo Dossier per ottenere i ruoli sul server.": "> Sync your Dossier to get roles on the server.",
+    "COLLEGA ACCOUNT": "LINK ACCOUNT",
+    "Collegato come: ": "Connected as: ",
+    "> ATTIVO (ONLINE)": "> ACTIVE (ONLINE)",
+    "Reclutamento completato con successo.": "Recruitment completed successfully.",
+    "Stai per rimuovere l'Agente": "You are about to remove the Agent",
+    "dalla tua rete.": "from your network.",
+    "Questa azione è irreversibile.": "This action is irreversible.",
+    "ACCETTA": "ACCEPT",
+    "RIFIUTA": "DECLINE",
+    "ANNULLA INVIO": "CANCEL REQUEST",
+    ">> IN ATTESA DI RISPOSTA": ">> AWAITING RESPONSE",
+    ">> RICHIESTA CONNESSIONE": ">> CONNECTION REQUEST",
 
     // ==========================================
     // IMPOSTAZIONI.HTML
@@ -173,6 +257,10 @@ const dizionario_EN = {
     "EMAIL REGISTRATA": "REGISTERED EMAIL",
     "AGGIORNA MAIL": "UPDATE MAIL",
     "ID VISIVO (AVATAR)": "VISUAL ID (AVATAR)",
+    "LICENZE ESTERNE": "EXTERNAL LICENSES",
+    "RISCATTO CODICE GIOCO": "REDEEM GAME CODE",
+    "Attiva una licenza acquistata presso fornitori di terze parti (Steam, Retail).": "Activate a license purchased from third-party vendors (Steam, Retail).",
+    "INSERISCI CHIAVE": "ENTER KEY",
     "SICUREZZA": "SECURITY",
     "CODICE D'ACCESSO": "ACCESS CODE",
     "MODIFICA PASSWORD": "CHANGE PASSWORD",
@@ -190,8 +278,6 @@ const dizionario_EN = {
     "Ricevi aggiornamenti e inviti per le Beta via Email.": "Receive updates and Beta invites via Email.",
     "ARCHIVIO LEGALE": "LEGAL ARCHIVES",
     "Consulta le direttive operative e legali del Kripix Network.": "Consult the operational and legal directives of the Kripix Network.",
-    "Dossier E.U.L.A.": "E.U.L.A. Dossier",
-    "Policy DRM": "DRM Policy",
     "Gestione Cookie": "Cookie Management",
     "AGGIORNA ID AGENTE": "UPDATE AGENT ID",
     "AGGIORNA CANALE (EMAIL)": "UPDATE CHANNEL (EMAIL)",
@@ -201,9 +287,13 @@ const dizionario_EN = {
     "⚠ CONFERMA ELIMINAZIONE": "⚠ CONFIRM DELETION",
     "CONFERMA": "CONFIRM",
     "OPERAZIONE RIUSCITA": "OPERATION SUCCESSFUL",
+    "Dati aggiornati correttamente.": "Data updated successfully.",
+    "ATTIVAZIONE LICENZA": "LICENSE ACTIVATION",
+    "Inserisci il codice criptato a 16 o 20 cifre.": "Enter the 16 or 20 digit encrypted code.",
+    "DECRIPTA CHIAVE": "DECRYPT KEY",
 
     // ==========================================
-    // LIBRERIA & DOWNLOAD
+    // LIBRERIA.HTML
     // ==========================================
     "ARCHIVIO PERSONALE": "PERSONAL ARCHIVE",
     "Licenze attive e software assegnato.": "Active licenses and assigned software.",
@@ -212,80 +302,37 @@ const dizionario_EN = {
     "VAI ALLO STORE": "GO TO STORE",
     "SCELTA PIATTAFORMA": "PLATFORM SELECTION",
     "Seleziona il sistema operativo per avviare il download.": "Select the operating system to start the download.",
-    "SCARICA .EXE": "DOWNLOAD .EXE",
-    "SCARICA .DMG": "DOWNLOAD .DMG",
     "● LICENZA ATTIVA": "● ACTIVE LICENSE",
     "INSTALLA": "INSTALL",
     "ACQUISTO COMPLETATO": "PURCHASE COMPLETED",
     "VAI ALLA LIBRERIA": "GO TO LIBRARY",
     "Resta Qui": "Stay Here",
-    "KRIPIX LAUNCHER": "KRIPIX LAUNCHER",
-    "Il tuo portale per Harrow e oltre.": "Your portal for Harrow and beyond.",
-    "Rilevato": "Detected",
-    "Aggiornamenti Rapidi": "Fast Updates",
-    "Ultima versione sempre disponibile.": "Latest version always available.",
-    "Cloud Save": "Cloud Save",
-    "Progressi al sicuro nel cloud.": "Progress safely stored in the cloud.",
-    "Bonus Esclusivi": "Exclusive Bonuses",
-    "Contenuti extra per gli utenti.": "Extra content for users.",
-    "ACCESSO SVILUPPATORI": "DEVELOPER ACCESS",
-    "FORGIARE LA REALTÀ": "FORGING REALITY",
-    "Non cerchiamo creatori di giochi. Cerchiamo architetti di mondi. Scopri Pixel Otros, il nostro motore proprietario basato su streaming SSD e rendering Nanovoxel.": "We don't look for game creators. We look for world architects. Discover Pixel Otros, our proprietary engine based on SSD streaming and Nanovoxel rendering.",
-    "ENTRA NEL PROGRAMMA DEV": "JOIN THE DEV PROGRAM",
 
     // ==========================================
-    // ADMIN (OVERSEER TERMINAL)
+    // ADMIN.HTML (OVERSEER TERMINAL)
     // ==========================================
     "TERMINALE OVERSEER": "OVERSEER TERMINAL",
     "Accesso di Livello 5. Autorizzazione concessa.": "Level 5 Access. Authorization granted.",
-    "AGENTI TOTALI REGISTRATI": "TOTAL REGISTERED AGENTS",
-    "LICENZE \"HARROW\" VENDUTE": "SOLD \"HARROW\" LICENSES",
-    "ISCRITTI ALLA NEWSLETTER": "NEWSLETTER SUBSCRIBERS",
-    "DATABASE AGENTI": "AGENTS DATABASE",
-    "USERNAME": "USERNAME",
-    "EMAIL": "EMAIL",
-    "LICENZA GIOCO": "GAME LICENSE",
-    "LIVELLO": "LEVEL",
-    "BROADCAST DI RETE (NEWS)": "NETWORK BROADCAST (NEWS)",
+    "AGENTI REGISTRATI": "REGISTERED AGENTS",
+    "LICENZE \"HARROW\"": "\"HARROW\" LICENSES",
+    "CHIAVI VERGINI": "BLANK KEYS",
+    "BROADCAST DI RETE": "NETWORK BROADCAST",
     "Priorità: NORMALE": "Priority: NORMAL",
     "Priorità: ALTA": "Priority: HIGH",
-    "TRASMETTI": "BROADCAST",
+    "TRASMETTI NEL NETWORK": "BROADCAST TO NETWORK",
     "STORICO COMUNICAZIONI": "COMMUNICATIONS HISTORY",
-    "TITOLO": "TITLE",
-    "DATA": "DATE",
-    "PRIORITÀ": "PRIORITY",
-    "AZIONE": "ACTION",
-    "DISTRUGGI": "DESTROY",
+    ">> VERIFICA CREDENZIALI OVERSEER IN CORSO...": ">> VERIFYING OVERSEER CREDENTIALS...",
 
     // ==========================================
-    // ENGINE.HTML
+    // 404 & AUTH-ACTION
     // ==========================================
-    "DEVELOPER KIT[ALPHA]": "DEVELOPER KIT[ALPHA]",
-    "The Ultimate Storytelling Engine.": "The Ultimate Storytelling Engine.",
-    "ATTENZIONE: ARCHITETTURA AD ALTO COSTO": "WARNING: HIGH-COST ARCHITECTURE",
-    "Pixel Otros non è progettato per la scalabilità. Utilizza una tecnologia di Streaming SSD Diretto che bypassa la RAM di sistema per caricare texture non compresse. Questo motore è creato per un solo scopo: Iper-Realismo Narrativo.": "Pixel Otros is not designed for scalability. It uses Direct SSD Streaming technology that bypasses system RAM to load uncompressed textures. This engine is created for a single purpose: Narrative Hyper-Realism.",
-    "Le texture vengono lette direttamente dall'NVMe.": "Textures are read directly from the NVMe.",
-    "Geometria infinita. Niente più LOD.": "Infinite geometry. No more LODs.",
-    "Raytracing pathtraced completo.": "Full path-traced raytracing.",
-    "LICENZA D'USO": "END USER LICENSE AGREEMENT",
-    "Leggi attentamente i termini. Pixel Otros è software proprietario.": "Read the terms carefully. Pixel Otros is proprietary software.",
-    "Ho letto, compreso e accetto di sacrificare le mie prestazioni per il realismo.": "I have read, understood, and agree to sacrifice my performance for realism.",
-    "SCARICA SDK (45 GB)": "DOWNLOAD SDK (45 GB)",
-
-    // ==========================================
-    // CONTATTI & 404
-    // ==========================================
-    "PARLA CON NOI": "TALK TO US",
-    "INFO": "INFO",
-    "Siamo sempre alla ricerca di collaboratori, feedback o opportunità di publishing.": "We are always looking for collaborators, feedback, or publishing opportunities.",
-    "MESSAGGIO / DOSSIER": "MESSAGE / DOSSIER",
-    "TRASMETTI DATI": "TRANSMIT DATA",
     "DOSSIER SCONOSCIUTO": "UNKNOWN DOSSIER",
     "Il percorso che stai cercando di seguire non esiste o è stato cancellato.": "The path you are trying to follow does not exist or has been deleted.",
     "Non c'è nulla da vedere qui, Agente.": "There's nothing to see here, Agent.",
+    ">> ANALISI SEGNALE CRITTOGRAFATO IN CORSO...": ">> ANALYZING ENCRYPTED SIGNAL...",
 
     // ==========================================
-    // SEZIONE PLACEHOLDER INPUT (Form)
+    // PLACEHOLDER & FORM INPUTS (Aggiunti tutti)
     // ==========================================
     "La tua email...": "Your email...",
     "••••••••": "••••••••",
@@ -301,8 +348,15 @@ const dizionario_EN = {
     "La tua password attuale...": "Your current password...",
     "La nuova email...": "The new email...",
     "Password attuale": "Current password",
+    "Titolo Comunicazione...": "Communication Title...",
+    "Testo del messaggio...": "Message text...",
+    "URL Destinazione (Opzionale)": "Destination URL (Optional)",
+    "KRPX-XXXX-XXXX-XXXX": "KRPX-XXXX-XXXX-XXXX",
+    "Nome in Codice Unico...": "Unique Codename...",
+    "Inserisci nuova password": "Enter new password",
+
     // ==========================================
-    // MESSAGGI DINAMICI JS & CLOUD FUNCTIONS
+    // MESSAGGI DINAMICI JS E NOTIFICHE
     // ==========================================
     "VERIFICA NEL CLOUD...": "VERIFYING IN CLOUD...",
     "ACCESSO CONSENTITO": "ACCESS GRANTED",
@@ -323,7 +377,10 @@ const dizionario_EN = {
     ">> PROTOCOLLO COMPLETATO! Controlla la tua casella email (anche nello Spam).": ">> PROTOCOL COMPLETED! Check your email (including Spam).",
     "REGISTRAZIONE COMPLETATA": "REGISTRATION COMPLETED",
     ">> Le password non coincidono.": ">> Passwords do not match.",
-    ">> La password è troppo corta.": ">> Password is too short."
+    ">> La password è troppo corta.": ">> Password is too short.",
+    "ATTENZIONE: Devi completare la registrazione scegliendo un Nome in Codice.": "WARNING: You must complete registration by choosing a Codename.",
+    "LICENZA ACQUISITA.\nIl download è stato aggiunto alla coda del tuo Kripix Launcher.": "LICENSE ACQUIRED.\nThe download has been added to your Kripix Launcher queue.",
+    "ACCESSO NEGATO\n\nDevi identificarti come Developer registrato.": "ACCESS DENIED\n\nYou must identify yourself as a registered Developer."
 };
 
 export function initTranslator() {
@@ -332,63 +389,76 @@ export function initTranslator() {
     
     const dict = currentLang === 'en' ? dizionario_EN : {};
 
-    // 1. Funzione che traduce i nodi
+    // Traduzione sicura (non va in loop)
     function translateNode(node) {
-        // Se è un nodo di testo puro
         if (node.nodeType === Node.TEXT_NODE) {
             const text = node.nodeValue.trim();
-            if (text && dict[text]) {
-                node.nodeValue = node.nodeValue.replace(text, dict[text]);
+            if (text && dict[text] && text !== dict[text]) {
+                node.nodeValue = dict[text]; 
             }
         } 
-        // Se è un elemento HTML (div, span, input...)
         else if (node.nodeType === Node.ELEMENT_NODE) {
-            // Ignoriamo gli script e il CSS
-            if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
+            if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE' || node.classList.contains('no-translate')) return;
 
-            // Traduce i placeholder (es. caselle di input)
             if (node.hasAttribute('placeholder')) {
                 const text = node.getAttribute('placeholder').trim();
-                if (dict[text]) {
+                if (dict[text] && text !== dict[text]) {
                     node.setAttribute('placeholder', dict[text]);
                 }
             }
-            // Ripete l'operazione per tutti i figli dentro questo elemento
             node.childNodes.forEach(translateNode);
         }
     }
 
-    // 2. Prima passata: traduce tutto quello che è già nell'HTML base
     translateNode(document.body);
 
-    // 3. LA MAGIA: Il "Cane da guardia" che ascolta i caricamenti di Firebase
     const observer = new MutationObserver((mutations) => {
+        observer.disconnect(); // Disinnesco la bomba
         mutations.forEach((mutation) => {
-            // Se Firebase ha aggiunto un nuovo pezzo di HTML (Libreria, Profilo, Modali)
-            if (mutation.addedNodes.length > 0) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
                 mutation.addedNodes.forEach((node) => {
                     translateNode(node);
                 });
             }
-            // Se JavaScript ha cambiato solo un testo (es. "ELABORAZIONE...")
             if (mutation.type === 'characterData') {
                 const text = mutation.target.nodeValue.trim();
-                if (text && dict[text]) {
-                    mutation.target.nodeValue = mutation.target.nodeValue.replace(text, dict[text]);
+                if (text && dict[text] && text !== dict[text]) {
+                    mutation.target.nodeValue = dict[text];
                 }
             }
         });
+        startObserver(); // Riaccendo l'allarme
     });
 
-    // Accendiamo l'osservatore per monitorare l'intero sito in tempo reale
-    observer.observe(document.body, { 
-        childList: true, 
-        subtree: true, 
-        characterData: true 
-    });
+    function startObserver() {
+        observer.observe(document.body, { 
+            childList: true, 
+            subtree: true, 
+            characterData: true,
+            attributes: false 
+        });
+    }
+
+    startObserver();
 }
 
 export function switchLanguage(lang) {
     localStorage.setItem('kripix_lang', lang);
+    
+    // Redirect per le pagine lunghe
+    const currentUrl = window.location.pathname;
+    
+    // EULA
+    if (currentUrl.includes("eula.html") && lang === "en") { window.location.href = "eula-eng.html"; return; }
+    if (currentUrl.includes("eula-eng.html") && lang === "it") { window.location.href = "eula.html"; return; }
+    
+    // DRM
+    if (currentUrl.includes("dmr.html") && lang === "en") { window.location.href = "dmr-eng.html"; return; }
+    if (currentUrl.includes("dmr-eng.html") && lang === "it") { window.location.href = "dmr.html"; return; }
+    
+    // PRIVACY
+    if (currentUrl.includes("privacy.html") && lang === "en") { window.location.href = "privacy-eng.html"; return; }
+    if (currentUrl.includes("privacy-eng.html") && lang === "it") { window.location.href = "privacy.html"; return; }
+
     location.reload(); 
 }
