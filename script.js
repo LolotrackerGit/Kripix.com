@@ -15,7 +15,7 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 // INIZIALIZZAZIONE SCUDO ANTI-BOT (App Check)
 initializeAppCheck(app, {
-  provider: new ReCaptchaEnterpriseProvider('6Lc3qOssAAAAAEfpajCskCO7Rzo5oNVpT0KVnpUE'),
+  provider: new ReCaptchaEnterpriseProvider('6Lc3qOssAAAAACJLhU6erRnF8MrTObDnP5zoXJqn'),
   isTokenAutoRefreshEnabled: true // Mantiene lo scudo sempre attivo
 });
 export const auth = getAuth(app);
