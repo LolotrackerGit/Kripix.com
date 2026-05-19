@@ -889,3 +889,58 @@ footer {
     color: #333;
     user-select: none;
 }
+/* ==========================================
+   FAT FOOTER (Per tutte le pagine tranne Index)
+   ========================================== */
+.kripix-footer {
+    background: #020202;
+    border-top: 1px solid #111;
+    padding: 60px 5% 20px;
+    margin-top: 100px;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-bottom: 1px dashed #222;
+    padding-bottom: 40px;
+}
+
+.footer-col h4 {
+    color: var(--accent-gold);
+    font-family: 'Courier Prime', monospace;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+
+.footer-col ul { list-style: none; }
+.footer-col ul li { margin-bottom: 12px; }
+
+/* Sostituisci la vecchia riga .footer-col ul a con questa: */
+.footer-col p { color: #aaa !important; }
+
+.footer-col ul a {
+    color: #aaa; /* Prima era #666, ora è molto più leggibile */
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: 0.3s;
+    display: inline-block;
+}
+
+.footer-col ul a:hover {
+    color: var(--text-main); /* Diventa bianco avorio al passaggio del mouse */
+    transform: translateX(5px); 
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.8rem;
+    color: #888; /* Schiarito anche questo */
+}
