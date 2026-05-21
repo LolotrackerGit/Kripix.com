@@ -261,17 +261,19 @@
     const functions = getFunctions(app, 'europe-west1');
     const markChatAsRead = httpsCallable(functions, 'markChatAsRead');
 
+    // State & Sottoscrizioni
     let myUid = null;
     let myProfile = null;
     let currentTargetId = null;
     let currentIsSystemChat = false;
     let unsubscribeMessages = null;
+    let unsubscribeChatDoc = null; // Per ascoltare le spunte in tempo reale
     
     let friendIds = [];
     let activeChats = {}; 
     let resolvedProfiles = {}; 
 
-    // Il profilo fantasma del sistema
+    // Profilo di sistema preimpostato
     resolvedProfiles["KRIPX_OVERSEER_SYSTEM"] = {
         username: "KRIPIX ADMIN",
         color: "#ff5555",
@@ -287,6 +289,7 @@
         if (!user) { window.location.href = "login.html"; return; }
         myUid = user.uid;
 
+        // 1. Ascolta il MIO profilo
         onSnapshot(doc(db, "users", myUid), (docSnap) => {
             if (docSnap.exists()) {
                 myProfile = docSnap.data();
@@ -295,40 +298,50 @@
             }
         });
 
+        // 2. Ascolta le CHAT ATTIVE
         const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", myUid));
         onSnapshot(chatsQuery, (chatsSnap) => {
             activeChats = {};
             chatsSnap.forEach(cDoc => {
                 const cData = cDoc.data();
-                
                 if (cData.isSystemChat) {
-                    // FIX: Se sono l'Admin, IGNORO questa chat. Non deve apparire nel mio terminale!
                     if (!myProfile?.isAdmin) {
-                        // Se sono un utente normale, la aggiungo come chat di sistema
                         activeChats["KRIPX_OVERSEER_SYSTEM"] = { ...cData, targetUid: "KRIPX_OVERSEER_SYSTEM", isSystem: true };
                     }
                 } else {
-                    // Chat Normali 1 a 1
                     const otherUid = cData.participants[0] === myUid ? cData.participants[1] : cData.participants[0];
                     activeChats[otherUid] = { ...cData, targetUid: otherUid, isSystem: false };
                 }
             });
             syncProfilesAndRender();
-            refreshReceiptStatus(); 
+        });
+
+        // 3. ARCHITETTURA LIVE: Ascolta i profili degli amici in tempo reale (Online/Offline istantaneo!)
+        const friendsQuery = query(collection(db, "users"), where("friends", "array-contains", myUid));
+        onSnapshot(friendsQuery, (friendsSnap) => {
+            friendsSnap.forEach(fDoc => {
+                resolvedProfiles[fDoc.id] = fDoc.data();
+            });
+            renderSidebar();
         });
     });
 
+    // Sincronizzazione di emergenza per non-amici (es. Overseer o messaggi diretti)
     async function syncProfilesAndRender() {
-        let uidsToLoad = new Set([...friendIds, ...Object.keys(activeChats).map(k => activeChats[k].targetUid)]);
+        let uidsToLoad = new Set([...Object.keys(activeChats).map(k => activeChats[k].targetUid)]);
         if (urlForcedAgentId) uidsToLoad.add(urlForcedAgentId);
 
+        let updated = false;
         for (let uid of uidsToLoad) {
             if (uid && !resolvedProfiles[uid] && uid !== "KRIPX_OVERSEER_SYSTEM") {
                 const snap = await getDoc(doc(db, "users", uid));
-                if (snap.exists()) resolvedProfiles[uid] = snap.data();
+                if (snap.exists()) {
+                    resolvedProfiles[uid] = snap.data();
+                    updated = true;
+                }
             }
         }
-        renderSidebar();
+        if (updated) renderSidebar();
     }
 
     function renderSidebar() {
@@ -336,23 +349,19 @@
 
         let chatArray = [];
 
-        // 1. Inseriamo tutte le chat attive con il loro timestamp
         Object.keys(activeChats).forEach(chatKey => {
             const chatData = activeChats[chatKey];
             const time = chatData.updatedAt ? chatData.updatedAt.toMillis() : 0;
             chatArray.push({ id: chatKey, time: time, isActive: true });
         });
 
-        // 2. Inseriamo gli amici con cui NON abbiamo ancora chattato (stanno in fondo)
         friendIds.forEach(uid => {
             if (!activeChats[uid]) {
                 chatArray.push({ id: uid, time: 0, isActive: false });
             }
         });
 
-        // 3. Ordiniamo l'array dal più recente al più vecchio
         chatArray.sort((a, b) => b.time - a.time);
-
         chatArray.forEach(item => createSidebarRow(item.id));
 
         if (chatArray.length === 0) {
@@ -417,7 +426,6 @@
         chatAvatar.style.backgroundColor = bgCol;
         chatStatus.innerHTML = statusHTML;
 
-        // FIX: SE È IL CANALE DI SISTEMA, L'UTENTE NON PUÒ MAI SCRIVERE
         if (isSystem) {
             inputForm.style.display = 'none';
             overseerBlock.style.display = 'block';
@@ -433,33 +441,44 @@
         if (dot && !dot.classList.contains('chat-avatar')) dot.remove();
 
         loadMessages(targetUid, isSystem);
+        listenToReceiptsLive(targetUid, isSystem); // <--- Inizializza l'ascolto spunte live
     }
 
-    function refreshReceiptStatus() {
-        const receiptEl = document.getElementById('current-receipt');
-        if (!receiptEl || !currentTargetId || currentIsSystemChat) return; // Niente spunte nelle chat di sistema
+    // ========================================================
+    // NUOVA ARCHITETTURA: ASCOLTATORE DI RICEVUTE IN TEMPO REALE
+    // ========================================================
+    function listenToReceiptsLive(targetUid, isSystem) {
+        if (unsubscribeChatDoc) unsubscribeChatDoc();
+        if (isSystem) return; // Niente spunte per i canali unidirezionali
 
-        const chatData = activeChats[currentTargetId];
-        if (!chatData) return;
+        const chatId = myUid < targetUid ? `${myUid}_${targetUid}` : `${targetUid}_${myUid}`;
 
-        const isUnreadByOther = chatData[`unread_${currentTargetId}`];
+        // Ascoltiamo direttamente le modifiche al documento della chat aperta
+        unsubscribeChatDoc = onSnapshot(doc(db, "chats", chatId), (docSnap) => {
+            if (docSnap.exists()) {
+                const chatData = docSnap.data();
+                const receiptEl = document.getElementById('current-receipt');
+                if (!receiptEl) return;
 
-        if (isUnreadByOther) {
-            receiptEl.innerText = "> CONSEGNATO";
-            receiptEl.className = "msg-receipt receipt-sent";
-        } else {
-            receiptEl.innerText = "> LETTO";
-            receiptEl.className = "msg-receipt receipt-read";
-        }
+                // Controlla se il destinatario ha letto (unread_Target è diventato false)
+                const isUnreadByOther = chatData[`unread_${targetUid}`];
+
+                if (isUnreadByOther) {
+                    receiptEl.innerText = "> CONSEGNATO";
+                    receiptEl.className = "msg-receipt receipt-sent";
+                } else {
+                    receiptEl.innerText = "> LETTO";
+                    receiptEl.className = "msg-receipt receipt-read";
+                }
+            }
+        });
     }
 
     function loadMessages(targetUid, isSystem) {
         msgContainer.innerHTML = '';
         if (unsubscribeMessages) unsubscribeMessages();
 
-        // Nelle chat di sistema l'ID per l'utente è sempre "SYSTEM_ilMioUid"
         const chatId = isSystem ? `SYSTEM_${myUid}` : (myUid < targetUid ? `${myUid}_${targetUid}` : `${targetUid}_${myUid}`);
-
         const q = query(collection(db, `chats/${chatId}/messages`), orderBy("timestamp", "asc"));
 
         unsubscribeMessages = onSnapshot(q, (snapshot) => {
@@ -497,26 +516,33 @@
                     
                     msgDiv.appendChild(timeSpan);
                     msgContainer.appendChild(msgDiv);
-
-                    // Aggiunta spunta dinamica solo se è un MIO messaggio
-                    if (isMe) {
-                        const oldReceipt = document.getElementById('current-receipt');
-                        if (oldReceipt) oldReceipt.remove();
-
-                        const receiptDiv = document.createElement('div');
-                        receiptDiv.id = 'current-receipt';
-                        msgContainer.appendChild(receiptDiv);
-                        refreshReceiptStatus(); 
-                    }
                 }
             });
 
-            // Se l'altro ha risposto, elimina la spunta dal MIO ultimo messaggio
+            // RIPOSIZIONAMENTO SPUNTA: Solo sotto l'ultimo messaggio (se è mio)
             const allMessages = msgContainer.querySelectorAll('.msg-bubble');
             if (allMessages.length > 0) {
                 const lastMsg = allMessages[allMessages.length - 1];
-                if (!lastMsg.classList.contains('msg-out')) {
-                    const receiptEl = document.getElementById('current-receipt');
+                const isLastMsgMine = lastMsg.classList.contains('msg-out');
+
+                let receiptEl = document.getElementById('current-receipt');
+
+                if (isLastMsgMine) {
+                    if (!receiptEl) {
+                        receiptEl = document.createElement('div');
+                        receiptEl.id = 'current-receipt';
+                        msgContainer.appendChild(receiptEl);
+                    } else {
+                        msgContainer.appendChild(receiptEl);
+                    }
+                    // Forza un aggiornamento immediato della spunta
+                    const chatData = activeChats[targetUid];
+                    if (chatData) {
+                        const isUnreadByOther = chatData[`unread_${targetUid}`];
+                        receiptEl.innerText = isUnreadByOther ? "> CONSEGNATO" : "> LETTO";
+                        receiptEl.className = isUnreadByOther ? "msg-receipt receipt-sent" : "msg-receipt receipt-read";
+                    }
+                } else {
                     if (receiptEl) receiptEl.remove();
                 }
             }
