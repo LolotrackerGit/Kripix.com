@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         titleDiv.textContent = `>> ${title}`;
         
         const msgDiv = document.createElement('div');
-        msgDiv.textContent = message;
+        msgDiv.innerHTML = message; // <--- FIX: DA textContent a innerHTML
 
         toast.appendChild(titleDiv);
         toast.appendChild(msgDiv);
@@ -221,45 +221,76 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('beforeunload', () => { goOffline(); });
         }
 // --- F. SISTEMA DI NOTIFICHE TOAST CHAT IN TEMPO REALE ---
+    // --- F. SISTEMA DI NOTIFICHE TOAST CHAT IN TEMPO REALE ---
     if (user) {
-        // Importiamo i componenti necessari di firestore per la query
-        const { query, collection, where, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
-        
-        const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
-        
-        // Ascolta costantemente se ci sono modifiche alle tue chat
-        onSnapshot(chatsQuery, (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-                // Se c'è una nuova chat o un messaggio non letto
-                if (change.type === "modified" || change.type === "added") {
+        // Importiamo le funzioni database necessarie
+        import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({ query, collection, where, onSnapshot }) => {
+            
+            let isFirstChatLoad = true;
+            let knownChatTimes = {}; // Memoria per non ripetere le notifiche
+
+            const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+            
+            onSnapshot(chatsQuery, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
                     const cData = change.doc.data();
-                    
-                    // Se c'è un messaggio non letto destinato a ME
-                    if (cData[`unread_${user.uid}`] === true) {
-                        
-                        // Evita di mostrare il pop-up se sono GIA' dentro la pagina terminale.html
-                        if (!window.location.href.includes("terminale.html")) {
+                    const chatId = change.doc.id;
+                    const lastTime = cData.lastMessageTime ? cData.lastMessageTime.toMillis() : 0;
+
+                    // Al primo caricamento del sito, salviamo gli orari ma NON inviamo notifiche
+                    if (isFirstChatLoad) {
+                        knownChatTimes[chatId] = lastTime;
+                    } 
+                    // Se siamo online e arriva un messaggio NUOVO e NON LETTO
+                    else {
+                        if (cData[`unread_${user.uid}`] === true && (!knownChatTimes[chatId] || lastTime > knownChatTimes[chatId])) {
                             
-                            const otherGuy = cData.participants[0] === user.uid ? cData.participants[1] : cData.participants[0];
+                            knownChatTimes[chatId] = lastTime; // Aggiorniamo la memoria
                             
-                            getDoc(doc(db, "users", otherGuy)).then(uSnap => {
-                                if (uSnap.exists()) {
-                                    const senderName = uSnap.data().username;
-                                    
-                                    // Spara la notifica toast cliccabile
+                            // Non disturbiamo l'utente se è già nel terminale
+                            if (!window.location.href.includes("terminale.html")) {
+                                
+                                // Gestione Notifica KRIPIX ADMIN (Rossa)
+                                if (cData.isSystemChat) {
                                     window.kripixNotify(
-                                        "TRASMISSIONE IN ENTRATA", 
-                                        `Messaggio non letto da ${senderName}. <br><a href="terminale.html?agent=${otherGuy}" style="color:var(--accent-gold); text-decoration:underline; font-weight:bold;">APRI TERMINALE</a>`, 
-                                        "info"
+                                        "DIRETTIVA DI SISTEMA", 
+                                        `Messaggio critico dal Kripix Admin. <br><a href="terminale.html" style="color:#ff5555; text-decoration:underline; font-weight:bold; margin-top:5px; display:inline-block;">APRI TERMINALE</a>`, 
+                                        "error"
                                     );
+                                } 
+                                // Gestione Notifica Agente Normale (Oro)
+                                else {
+                                    const otherGuy = cData.participants.find(p => p !== user.uid);
+                                    if (otherGuy) {
+                                        getDoc(doc(db, "users", otherGuy)).then(uSnap => {
+                                            if (uSnap.exists()) {
+                                                const senderName = uSnap.data().username;
+                                                window.kripixNotify(
+                                                    "TRASMISSIONE IN ENTRATA", 
+                                                    `Messaggio da ${senderName}. <br><a href="terminale.html?agent=${otherGuy}" style="color:var(--accent-gold); text-decoration:underline; font-weight:bold; margin-top:5px; display:inline-block;">APRI TERMINALE</a>`, 
+                                                    "info"
+                                                );
+                                            }
+                                        });
+                                    }
                                 }
-                            });
+                            }
+                        } 
+                        // Se l'utente ha letto il messaggio, aggiorniamo l'orario così non si blocca al prossimo
+                        else if (cData[`unread_${user.uid}`] === false) {
+                            knownChatTimes[chatId] = lastTime;
                         }
                     }
+                });
+
+                // Finito il primo caricamento, togliamo la sicura
+                if (isFirstChatLoad) {
+                    isFirstChatLoad = false;
                 }
             });
         });
-    }    });
+    }
+  });
 });
 
 // ==========================================
