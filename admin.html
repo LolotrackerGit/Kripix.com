@@ -247,7 +247,6 @@
         }
 
         window.deleteNews = async function(newsId) {
-            if(!confirm("Vuoi davvero distruggere questa comunicazione?")) return;
             try {
                 await deleteDoc(doc(db, "news", newsId));
                 loadNewsData(); 
@@ -336,6 +335,7 @@
                 printToShell("COMANDI DISPONIBILI:", "sys-msg");
                 printToShell("  find -u [username]               : Trova informazioni su un agente.");
                 printToShell("  find -e [email]                  : Trova agente tramite email.");
+                printToShell("  msg [username] [messaggio]       : Invia un messaggio/direttiva a un agente."); // <-- AGGIUNTA QUESTA!
                 printToShell("  license grant [uid] [id]         : Regala una licenza a un utente.");
                 printToShell("  license revoke [uid] [id]        : Revoca una licenza.");
                 printToShell("  keys purge                       : Elimina tutte le chiavi vergini.");

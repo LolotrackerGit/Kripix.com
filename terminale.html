@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminale Comunicazioni - Kripix</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.ico">
+    
+    <style>
+        body { background-color: #05070a; overflow: hidden; height: 100vh; }
+        
+        /* Layout a schermo intero (come una vera App) */
+        .chat-app {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: calc(100vh - 80px); /* Togliamo lo spazio della navbar */
+            margin-top: 80px;
+            border-top: 1px solid #333;
+        }
+
+        /* COLONNA SINISTRA: LISTA CHAT */
+        .sidebar {
+            background: #020202;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #222;
+            color: var(--accent-gold);
+            font-family: 'Courier Prime';
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* Stile Utente nella Lista */
+        .chat-user-row {
+            display: flex; align-items: center; gap: 15px;
+            padding: 15px 20px; border-bottom: 1px solid #111;
+            cursor: pointer; transition: 0.2s;
+        }
+        .chat-user-row:hover, .chat-user-row.active {
+            background: rgba(227, 198, 108, 0.05);
+            border-left: 3px solid var(--accent-gold);
+        }
+        .chat-user-row.active.overseer { border-left-color: var(--accent-red); }
+        
+        .chat-avatar {
+            width: 45px; height: 45px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: white; background: #333; font-size: 1.2rem;
+        }
+        .chat-info h4 { color: white; font-size: 1rem; margin-bottom: 3px; line-height: 1; }
+        .chat-info p { color: #666; font-family: 'Courier Prime'; font-size: 0.75rem; }
+        .status-dot { color: #4caf50; font-size: 0.6rem; margin-right: 5px; }
+        .status-dot.offline { color: #666; }
+
+        /* COLONNA DESTRA: LA CHAT VERA E PROPRIA */
+        .chat-window {
+            background: #05070a;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        /* Header Chat (In alto) */
+        .chat-header {
+            padding: 20px 30px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #333;
+            display: flex; align-items: center; gap: 15px;
+        }
+        
+        /* Area Messaggi (Scorrevole) */
+        .messages-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        /* Stile Messaggio Singolo */
+        .msg-bubble {
+            max-width: 70%;
+            padding: 12px 18px;
+            font-family: 'Montserrat';
+            font-size: 0.95rem;
+            line-height: 1.5;
+            position: relative;
+        }
+        .msg-time {
+            font-family: 'Courier Prime'; font-size: 0.6rem; color: #666;
+            margin-top: 5px; text-align: right; display: block;
+        }
+
+        /* Messaggi Inviati (Da Me) */
+        .msg-out {
+            align-self: flex-end;
+            background: rgba(227, 198, 108, 0.1);
+            border: 1px solid var(--accent-gold);
+            color: var(--text-main);
+            border-radius: 8px 0 8px 8px;
+        }
+        /* Messaggi Ricevuti (Dall'Amico) */
+        .msg-in {
+            align-self: flex-start;
+            background: #111;
+            border: 1px solid #333;
+            color: #ddd;
+            border-radius: 0 8px 8px 8px;
+        }
+        /* Messaggi da Overseer (Rossi e speciali) */
+        .msg-overseer {
+            align-self: flex-start;
+            background: rgba(139, 35, 35, 0.1);
+            border: 1px solid var(--accent-red);
+            color: #ff5555;
+            border-radius: 0 8px 8px 8px;
+            font-family: 'Courier Prime', monospace; /* Stile terminale */
+        }
+
+        /* Footer Chat (Dove scrivi) */
+        .chat-input-area {
+            padding: 20px 30px;
+            background: #020202;
+            border-top: 1px solid #333;
+            display: flex; gap: 15px;
+        }
+        .chat-input {
+            flex: 1; padding: 15px 20px;
+            background: #0a0a0a; border: 1px solid #444; color: white;
+            font-family: 'Courier Prime'; font-size: 1rem;
+            outline: none; transition: 0.3s;
+        }
+        .chat-input:focus { border-color: var(--accent-gold); }
+        .btn-send {
+            background: var(--accent-gold); color: #000; font-weight: bold;
+            border: none; padding: 0 25px; cursor: pointer; transition: 0.3s;
+            font-family: 'Montserrat';
+        }
+        .btn-send:hover { background: #fff; }
+        
+        /* Blocco Scrittura (Quando parla l'Overseer) */
+        .overseer-block {
+            display: none; width: 100%; text-align: center;
+            padding: 20px; font-family: 'Courier Prime'; color: #ff5555;
+            background: #0a0a0a; border-top: 1px solid #333;
+        }
+
+        /* Schermata Vuota (Nessuna chat selezionata) */
+        .empty-chat {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #05070a; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 10;
+        }
+
+        /* Custom Scrollbar per le chat */
+        .messages-area::-webkit-scrollbar, .chat-list::-webkit-scrollbar { width: 6px; }
+        .messages-area::-webkit-scrollbar-thumb, .chat-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        @media(max-width: 800px) {
+            .chat-app { grid-template-columns: 1fr; }
+            .sidebar { display: none; } /* Su mobile nascondiamo la lista per ora, la sistemeremo dopo */
+        }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <nav id="main-nav" style="border-bottom: 1px solid #222; background: #05070a; position: fixed;"></nav>
+
+    <div class="chat-app">
+        
+        <!-- COLONNA SINISTRA: GLI AMICI E OVERSEER -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                > CANALI CRITTOGRAFATI_
+            </div>
+            <div class="chat-list" id="chat-list-container">
+                <!-- Qui Firebase inietterà gli amici e il canale Overseer -->
+                <div style="padding: 20px; text-align: center; color: #666; font-family: 'Courier Prime'; font-size: 0.8rem;">
+                    Sincronizzazione contatti in corso...
+                </div>
+            </div>
+        </div>
+
+        <!-- COLONNA DESTRA: LA CHAT -->
+        <div class="chat-window">
+            
+            <!-- Questo copre tutto se non clicchi su un amico -->
+            <div class="empty-chat" id="empty-state">
+                <span style="font-size: 4rem; opacity: 0.2; margin-bottom: 20px;">✉</span>
+                <h3 style="color: #666; font-family: 'Courier Prime'; font-weight: normal;">SELEZIONA UN CANALE OPERATIVO</h3>
+            </div>
+
+            <!-- Header Dinamico -->
+            <div class="chat-header">
+                <div class="chat-avatar" id="current-chat-avatar">?</div>
+                <div>
+                    <h3 style="color: white; font-size: 1.2rem; margin: 0; line-height: 1;" id="current-chat-name">Agente Sconosciuto</h3>
+                    <span id="current-chat-status" style="font-family: 'Courier Prime'; font-size: 0.8rem; color: #888;">Stato Sconosciuto</span>
+                </div>
+            </div>
+
+            <!-- Area Messaggi Dinamica -->
+            <div class="messages-area" id="messages-container">
+                <!-- Esempio di come appariranno i messaggi:
+                <div class="msg-bubble msg-in">
+                    Ehi, sei riuscito a craccare il terminale?
+                    <span class="msg-time">14:22</span>
+                </div>
+                <div class="msg-bubble msg-out">
+                    Ci sto lavorando, mi serve più tempo.
+                    <span class="msg-time">14:25</span>
+                </div>
+                -->
+            </div>
+
+            <!-- Barra di inserimento testo -->
+            <div class="chat-input-area" id="input-form">
+                <input type="text" id="msg-input" class="chat-input" placeholder="Scrivi un messaggio crittografato..." autocomplete="off">
+                <button id="btn-send-msg" class="btn-send">INVIA</button>
+            </div>
+
+            <!-- Blocco Overseer -->
+            <div class="overseer-block" id="overseer-block">
+                [ PROTOCOLLO A SENSO UNICO ] Impossibile trasmettere al livello 5.
+            </div>
+
+        </div>
+
+    </div>
+
+<script type="module" src="script.js"></script>
+<script type="module">
+    import { app, auth, db } from './script.js';
+    import { doc, getDoc, onSnapshot, collection, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+
+    const listContainer = document.getElementById('chat-list-container');
+    const emptyState = document.getElementById('empty-state');
+    const msgContainer = document.getElementById('messages-container');
+    const chatName = document.getElementById('current-chat-name');
+    const chatAvatar = document.getElementById('current-chat-avatar');
+    const chatStatus = document.getElementById('current-chat-status');
+    const inputForm = document.getElementById('input-form');
+    const overseerBlock = document.getElementById('overseer-block');
+    const msgInput = document.getElementById('msg-input');
+    const btnSend = document.getElementById('btn-send-msg');
+
+    const functions = getFunctions(app, 'europe-west1');
+    const markChatAsRead = httpsCallable(functions, 'markChatAsRead');
+
+    let myUid = null;
+    let myProfile = null;
+    let currentTargetId = null;
+    let currentIsSystemChat = false;
+    let unsubscribeMessages = null;
+    
+    let friendIds = [];
+    let activeChats = {}; 
+    let resolvedProfiles = {}; 
+
+    // Il profilo fantasma del sistema
+    resolvedProfiles["KRIPX_OVERSEER_SYSTEM"] = {
+        username: "KRIPIX ADMIN",
+        color: "#ff5555",
+        onlineStatus: "online",
+        privacy: { invisible: false }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let urlForcedAgentId = urlParams.get('agent');
+    if (urlForcedAgentId) { window.history.replaceState({}, document.title, window.location.pathname); }
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) { window.location.href = "login.html"; return; }
+        myUid = user.uid;
+
+        onSnapshot(doc(db, "users", myUid), (docSnap) => {
+            if (docSnap.exists()) {
+                myProfile = docSnap.data();
+                friendIds = myProfile.friends || [];
+                syncProfilesAndRender();
+            }
+        });
+
+        const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", myUid));
+        onSnapshot(chatsQuery, (chatsSnap) => {
+            activeChats = {};
+            chatsSnap.forEach(cDoc => {
+                const cData = cDoc.data();
+                
+                if (cData.isSystemChat) {
+                    // FIX: Se sono l'Admin, IGNORO questa chat. Non deve apparire nel mio terminale!
+                    if (!myProfile?.isAdmin) {
+                        // Se sono un utente normale, la aggiungo come chat di sistema
+                        activeChats["KRIPX_OVERSEER_SYSTEM"] = { ...cData, targetUid: "KRIPX_OVERSEER_SYSTEM", isSystem: true };
+                    }
+                } else {
+                    // Chat Normali 1 a 1
+                    const otherUid = cData.participants[0] === myUid ? cData.participants[1] : cData.participants[0];
+                    activeChats[otherUid] = { ...cData, targetUid: otherUid, isSystem: false };
+                }
+            });
+            syncProfilesAndRender();
+            refreshReceiptStatus(); 
+        });
+    });
+
+    async function syncProfilesAndRender() {
+        let uidsToLoad = new Set([...friendIds, ...Object.keys(activeChats).map(k => activeChats[k].targetUid)]);
+        if (urlForcedAgentId) uidsToLoad.add(urlForcedAgentId);
+
+        for (let uid of uidsToLoad) {
+            if (uid && !resolvedProfiles[uid] && uid !== "KRIPX_OVERSEER_SYSTEM") {
+                const snap = await getDoc(doc(db, "users", uid));
+                if (snap.exists()) resolvedProfiles[uid] = snap.data();
+            }
+        }
+        renderSidebar();
+    }
+
+    function renderSidebar() {
+        listContainer.innerHTML = ''; 
+
+        let chatArray = [];
+
+        // 1. Inseriamo tutte le chat attive con il loro timestamp
+        Object.keys(activeChats).forEach(chatKey => {
+            const chatData = activeChats[chatKey];
+            const time = chatData.updatedAt ? chatData.updatedAt.toMillis() : 0;
+            chatArray.push({ id: chatKey, time: time, isActive: true });
+        });
+
+        // 2. Inseriamo gli amici con cui NON abbiamo ancora chattato (stanno in fondo)
+        friendIds.forEach(uid => {
+            if (!activeChats[uid]) {
+                chatArray.push({ id: uid, time: 0, isActive: false });
+            }
+        });
+
+        // 3. Ordiniamo l'array dal più recente al più vecchio
+        chatArray.sort((a, b) => b.time - a.time);
+
+        chatArray.forEach(item => createSidebarRow(item.id));
+
+        if (chatArray.length === 0) {
+            listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #666; font-family:\'Courier Prime\'; font-size:0.8rem;">Nessun contatto disponibile.</div>';
+        }
+
+        if (urlForcedAgentId) {
+            const row = document.getElementById(`chat-row-${urlForcedAgentId}`);
+            if (row) { row.click(); urlForcedAgentId = null; }
+        }
+    }
+
+    function createSidebarRow(chatKey) {
+        let isSystem = false;
+        let targetUid = chatKey;
+        let profile = resolvedProfiles[chatKey];
+        let chatData = activeChats[chatKey];
+        let title = profile?.username;
+        let bgCol = profile?.color || '#e3c66c';
+
+        if (chatKey === "KRIPX_OVERSEER_SYSTEM") {
+            isSystem = true; bgCol = "#ff5555";
+        }
+
+        if (!profile && !isSystem) return;
+
+        const hasUnread = chatData ? chatData[`unread_${myUid}`] === true : false;
+        let isOnline = (profile?.onlineStatus === "online" && (!profile?.privacy || profile.privacy.invisible !== true));
+        let statusHTML = isOnline ? `<span class="status-dot">●</span> Online` : `<span class="status-dot offline">●</span> Offline`;
+        if (isSystem) statusHTML = `<span class="status-dot" style="color:#ff5555;">●</span> Canale Diretto`;
+
+        const div = document.createElement('div');
+        div.className = `chat-user-row ${isSystem ? 'overseer' : ''} ${currentTargetId === targetUid ? 'active' : ''}`;
+        div.id = `chat-row-${chatKey}`;
+        
+        let unreadDot = hasUnread && currentTargetId !== targetUid ? `<div style="width:10px; height:10px; background:#ff5555; border-radius:50%; margin-left:auto; box-shadow: 0 0 10px #ff5555;"></div>` : '';
+
+        div.innerHTML = `
+            <div class="chat-avatar" style="background-color: ${bgCol};">${title.charAt(0).toUpperCase()}</div>
+            <div class="chat-info" style="flex:1;">
+                <h4 style="color:${isSystem ? '#ff5555' : 'white'};">${title}</h4>
+                <p>${statusHTML}</p>
+            </div>
+            ${unreadDot}
+        `;
+
+        div.onclick = () => openChat(targetUid, title, bgCol, statusHTML, isSystem, hasUnread);
+        listContainer.appendChild(div);
+    }
+
+    function openChat(targetUid, title, bgCol, statusHTML, isSystem, hasUnread) {
+        document.querySelectorAll('.chat-user-row').forEach(d => d.classList.remove('active'));
+        document.getElementById(`chat-row-${targetUid}`).classList.add('active');
+        
+        emptyState.style.display = 'none';
+        currentTargetId = targetUid;
+        currentIsSystemChat = isSystem;
+        
+        chatName.innerText = title;
+        chatName.style.color = isSystem ? '#ff5555' : 'white';
+        chatAvatar.innerText = title.charAt(0).toUpperCase();
+        chatAvatar.style.backgroundColor = bgCol;
+        chatStatus.innerHTML = statusHTML;
+
+        // FIX: SE È IL CANALE DI SISTEMA, L'UTENTE NON PUÒ MAI SCRIVERE
+        if (isSystem) {
+            inputForm.style.display = 'none';
+            overseerBlock.style.display = 'block';
+            overseerBlock.innerText = "[ PROTOCOLLO A SENSO UNICO ] Direttiva di sistema. Impossibile rispondere.";
+        } else {
+            inputForm.style.display = 'flex';
+            overseerBlock.style.display = 'none';
+        }
+
+        if (hasUnread) markChatAsRead({ targetUid: targetUid, isSystemChat: isSystem });
+        
+        const dot = document.querySelector(`#chat-row-${targetUid} div[style*="background:#ff5555"]`);
+        if (dot && !dot.classList.contains('chat-avatar')) dot.remove();
+
+        loadMessages(targetUid, isSystem);
+    }
+
+    function refreshReceiptStatus() {
+        const receiptEl = document.getElementById('current-receipt');
+        if (!receiptEl || !currentTargetId || currentIsSystemChat) return; // Niente spunte nelle chat di sistema
+
+        const chatData = activeChats[currentTargetId];
+        if (!chatData) return;
+
+        const isUnreadByOther = chatData[`unread_${currentTargetId}`];
+
+        if (isUnreadByOther) {
+            receiptEl.innerText = "> CONSEGNATO";
+            receiptEl.className = "msg-receipt receipt-sent";
+        } else {
+            receiptEl.innerText = "> LETTO";
+            receiptEl.className = "msg-receipt receipt-read";
+        }
+    }
+
+    function loadMessages(targetUid, isSystem) {
+        msgContainer.innerHTML = '';
+        if (unsubscribeMessages) unsubscribeMessages();
+
+        // Nelle chat di sistema l'ID per l'utente è sempre "SYSTEM_ilMioUid"
+        const chatId = isSystem ? `SYSTEM_${myUid}` : (myUid < targetUid ? `${myUid}_${targetUid}` : `${targetUid}_${myUid}`);
+
+        const q = query(collection(db, `chats/${chatId}/messages`), orderBy("timestamp", "asc"));
+
+        unsubscribeMessages = onSnapshot(q, (snapshot) => {
+            if (snapshot.docChanges().length === 0) return;
+
+            if (snapshot.empty) {
+                msgContainer.innerHTML = `<p style="text-align:center; color:#666; font-family:'Courier Prime'; font-size:0.8rem; margin-top:20px;">[ INIZIO TRASMISSIONE SECURA ]</p>`;
+                return;
+            }
+
+            if (msgContainer.querySelector('p')) msgContainer.innerHTML = '';
+
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const msg = change.doc.data();
+                    const isMe = msg.sender === myUid;
+                    
+                    let bubbleClass = "msg-in";
+                    if (isMe) bubbleClass = "msg-out"; 
+                    else if (msg.isSystemDirective) bubbleClass = "msg-overseer"; 
+
+                    let timeString = "Adesso";
+                    if (msg.timestamp) {
+                        const date = msg.timestamp.toDate();
+                        timeString = date.getHours().toString().padStart(2, '0') + ":" + date.getMinutes().toString().padStart(2, '0');
+                    }
+
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `msg-bubble ${bubbleClass}`;
+                    msgDiv.textContent = msg.text; 
+                    
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'msg-time';
+                    timeSpan.textContent = timeString;
+                    
+                    msgDiv.appendChild(timeSpan);
+                    msgContainer.appendChild(msgDiv);
+
+                    // Aggiunta spunta dinamica solo se è un MIO messaggio
+                    if (isMe) {
+                        const oldReceipt = document.getElementById('current-receipt');
+                        if (oldReceipt) oldReceipt.remove();
+
+                        const receiptDiv = document.createElement('div');
+                        receiptDiv.id = 'current-receipt';
+                        msgContainer.appendChild(receiptDiv);
+                        refreshReceiptStatus(); 
+                    }
+                }
+            });
+
+            // Se l'altro ha risposto, elimina la spunta dal MIO ultimo messaggio
+            const allMessages = msgContainer.querySelectorAll('.msg-bubble');
+            if (allMessages.length > 0) {
+                const lastMsg = allMessages[allMessages.length - 1];
+                if (!lastMsg.classList.contains('msg-out')) {
+                    const receiptEl = document.getElementById('current-receipt');
+                    if (receiptEl) receiptEl.remove();
+                }
+            }
+
+            msgContainer.scrollTo({ top: msgContainer.scrollHeight, behavior: 'smooth' });
+        });
+    }
+
+    btnSend.addEventListener('click', async () => {
+        const text = msgInput.value.trim();
+        if (!text || !currentTargetId) return;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.className = `msg-bubble msg-out`;
+        tempDiv.style.opacity = '0.5'; 
+        tempDiv.textContent = text;
+        msgContainer.appendChild(tempDiv);
+        msgContainer.scrollTo({ top: msgContainer.scrollHeight, behavior: 'smooth' });
+
+        msgInput.value = '';
+        msgInput.focus();
+
+        try {
+            const sendMessage = httpsCallable(functions, 'sendMessage');
+            await sendMessage({ targetUid: currentTargetId, message: text });
+            tempDiv.remove(); 
+        } catch (e) {
+            tempDiv.style.border = '1px solid #ff5555';
+            tempDiv.style.color = '#ff5555';
+            window.kripixNotify("ERRORE", "Messaggio non recapitato.", "error");
+        }
+    });
+
+    msgInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') btnSend.click();
+    });
+</script>
+</body>
+</html>

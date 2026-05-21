@@ -953,3 +953,40 @@ body.no-scroll {
     border-right: 3px solid var(--accent-gold);
     animation: blink-caret 0.75s step-end infinite;
 }
+/* 1. AGGIUNGI overflow: hidden ALLA CHAT WINDOW */
+        .chat-window {
+            background: #05070a;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden; /* FIX: Impedisce ai messaggi di spingere la barra fuori */
+        }
+        
+        /* 2. AGGIUNGI flex-shrink: 0 ALLA BARRA INPUT E OVERSEER */
+        .chat-input-area {
+            padding: 20px 30px;
+            background: #020202;
+            border-top: 1px solid #333;
+            display: flex; gap: 15px;
+            flex-shrink: 0; /* FIX: La barra non si schiaccerà mai */
+        }
+        .overseer-block {
+            display: none; width: 100%; text-align: center;
+            padding: 20px; font-family: 'Courier Prime'; color: #ff5555;
+            background: #0a0a0a; border-top: 1px solid #333;
+            flex-shrink: 0; /* FIX: Nemmeno questa si schiaccia */
+        }
+
+        /* STILE PER LO STATO DEL MESSAGGIO (Consegnato/Letto) */
+        .msg-receipt {
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.65rem;
+            align-self: flex-end;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            margin-right: 5px;
+            transition: color 0.3s ease;
+            letter-spacing: 1px;
+        }
+        .receipt-sent { color: #666; } /* Grigio scuro, non dà nell'occhio */
+        .receipt-read { color: var(--accent-gold); } /* Oro Kripix quando viene letto */

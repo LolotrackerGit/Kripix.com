@@ -5,13 +5,9 @@ const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https")
 const admin = require("firebase-admin");
 const crypto = require("crypto"); 
 
-// CHIAVE SEGRETA STRIPE (Hardcoded, niente più .env!)
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
 admin.initializeApp();
 const db = admin.firestore();
 
-// Impostiamo la regione europea per tutte le funzioni
 const europeWest1 = { 
     region: "europe-west1", 
     cors: ["https://kripix.netlify.app", "http://127.0.0.1:5500", "http://localhost:5500"] 
@@ -106,9 +102,16 @@ exports.sendFriendRequest = onCall(europeWest1, async (request) => {
         const targetUserDoc = await targetUserRef.get();
         const targetData = targetUserDoc.data();
 
-        if (targetData.privacy && targetData.privacy.visibility === false) throw new HttpsError('permission-denied', 'L\'Agente ha disattivato la rintracciabilità.');
-        if (targetData.friends && targetData.friends.includes(senderUid)) throw new HttpsError('already-exists', 'Siete già connessi.');
-        if (targetData.requests && targetData.requests.includes(senderUid)) throw new HttpsError('already-exists', 'Richiesta già inviata in precedenza.');
+        if (targetData.privacy && targetData.privacy.visibility === false) {
+            throw new HttpsError('permission-denied', 'L\'Agente ha disattivato la rintracciabilità.');
+        }
+
+        // FIX: Evita i crash se gli array non esistono ancora nel DB
+        const friendsList = targetData.friends || [];
+        const requestsList = targetData.requests || [];
+
+        if (friendsList.includes(senderUid)) throw new HttpsError('already-exists', 'Siete già connessi.');
+        if (requestsList.includes(senderUid)) throw new HttpsError('already-exists', 'Richiesta già inviata in precedenza.');
 
         await targetUserRef.update({ requests: admin.firestore.FieldValue.arrayUnion(senderUid) });
         return { status: 'success' };
@@ -228,6 +231,49 @@ exports.overseerCommand = onCall(europeWest1, async (request) => {
             return { status: 'success', output: output };
         }
 
+        // ==========================================
+        // COMANDO: msg (Invia Direttiva da Overseer)
+        // ==========================================
+        if (action === 'msg') {
+            const targetUsername = args[1];
+            const messageText = args.slice(2).join(' ');
+
+            if (!targetUsername || !messageText) return { status: 'error', output: 'Sintassi errata. Uso: msg [username] [testo]' };
+
+            const unDoc = await db.collection('usernames').doc(targetUsername.toLowerCase()).get();
+            if (!unDoc.exists) return { status: 'error', output: `Agente non trovato: ${targetUsername}` };
+            
+            const targetUid = unDoc.data().uid;
+            
+            // ID di sistema fittizio per far capire al frontend che è Kripix Admin
+            const systemId = "KRIPX_OVERSEER_SYSTEM";
+            const chatId = `SYSTEM_${targetUid}`; 
+
+            const batch = db.batch();
+
+            const msgRef = db.collection('chats').doc(chatId).collection('messages').doc();
+            batch.set(msgRef, {
+                sender: systemId,
+                text: messageText,
+                isSystemDirective: true,
+                timestamp: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            const chatRef = db.collection('chats').doc(chatId);
+            batch.set(chatRef, {
+                isSystemChat: true, // Questo flag aiuta il frontend
+                lastMessage: messageText,
+                lastMessageTime: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                participants: [systemId, targetUid, uid], // Mettiamo te (uid admin) per farti leggere le risposte!
+                [`unread_${targetUid}`]: true,
+                [`unread_${uid}`]: false
+            }, { merge: true });
+
+            await batch.commit();
+            return { status: 'success', output: `[DIRETTIVA TRASMESSA] a ${targetUsername.toUpperCase()}.` };
+        }
+        
         if (action === 'license') {
             const subAction = args[1]; const targetUid = args[2]; const gameId = args[3];
             if (!subAction || !targetUid || !gameId) return { status: 'error', output: 'Sintassi errata. Uso: license grant/revoke [uid] [game_id]' };
@@ -284,6 +330,7 @@ const GUILD_ID = "1503069828439740618";
 const ROLE_VERIFIED = "1503076001729744987";
 const ROLE_DETECTIVE = "1504131716443541615";
 const ROLE_OVERSEER = "1503075406402687159";
+const ROLE_UNVERIFIED = "1503075622698614915";
 
 exports.getDiscordAuthUrl = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
@@ -294,7 +341,58 @@ exports.getDiscordAuthUrl = onCall(europeWest1, async (request) => {
     return { status: 'success', url: url };
 });
 
+exports.unlinkDiscord = onCall(europeWest1, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    const uid = request.auth.uid;
+
+    const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+
+    const userRef = db.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists || !userDoc.data().discordId) {
+        throw new HttpsError('not-found', 'Nessun account Discord collegato.');
+    }
+
+    const discordId = userDoc.data().discordId;
+
+    try {
+        // 1. CHIAMATA A DISCORD PER RIMUOVERE TUTTI I RUOLI KRIPIX
+        // Usiamo il metodo PATCH per SOVRASCRIVERE completamente la lista dei ruoli dell'utente
+        // Gli assegniamo solo il ruolo "ROLE_UNVERIFIED" (se non lo hai, passa un array vuoto: roles: [] )
+        
+        await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                roles: [ROLE_UNVERIFIED] // Rimuove Overseer, Detective, Verificato ecc...
+            })
+        });
+
+        // 2. PULIZIA DATABASE FIREBASE
+        await userRef.update({
+            discordId: admin.firestore.FieldValue.delete(),
+            discordUsername: admin.firestore.FieldValue.delete()
+        });
+
+        return { status: 'success' };
+
+    } catch (error) {
+        console.error("[CRASH UNLINK DISCORD]:", error);
+        throw new HttpsError('internal', 'Errore durante la revoca dei permessi su Discord.');
+    }
+});
+
 exports.discordCallback = onRequest(europeWest1, async (req, res) => {
+   
+   const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+    const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+    const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+    const DISCORD_REDIRECT_URI = "https://europe-west1-kripix-ent.cloudfunctions.net/discordCallback";
+
     const code = req.query.code; const state = req.query.state;
     if (!code || !state) return res.status(400).send("Parametri mancanti.");
 
@@ -341,6 +439,7 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
         console.error("[CRASH OAUTH]:", error);
         res.status(500).send("Errore critico durante l'interfacciamento.");
     }
+    
 });
 
 // ==========================================
@@ -349,6 +448,9 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
 
 exports.createPaymentIntent = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
     const uid = request.auth.uid;
     const gameId = request.data.gameId;
 
@@ -427,4 +529,135 @@ exports.stripeWebhook = onRequest(europeWest1, async (req, res) => {
     }
 
     res.json({received: true});
+});
+// ==========================================
+// 8. TELEMETRIA E TRACCIAMENTO
+// ==========================================
+exports.logTelemetry = onCall(europeWest1, async (request) => {
+    // 1. Cattura l'IP reale dell'utente dalla richiesta HTTP
+    const ipAddress = request.rawRequest.headers['x-forwarded-for'] || request.rawRequest.socket.remoteAddress || "UNKNOWN";
+    
+    // 2. Prendi i dati che il frontend ci ha inviato
+    const { consentLevel, deviceData, page } = request.data;
+    const uid = request.auth ? request.auth.uid : "ANONYMOUS";
+    
+    // 3. Prepariamo il Dossier
+    const logEntry = {
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        ip: ipAddress,
+        uid: uid,
+        page: page || "Unknown",
+        consent: consentLevel // "accepted" o "rejected"
+    };
+
+    // 4. Se ha accettato tutto, aggiungiamo i dati avanzati del dispositivo
+    if (consentLevel === "accepted" && deviceData) {
+        logEntry.browser = deviceData.browser || "Unknown";
+        logEntry.os = deviceData.os || "Unknown";
+        logEntry.screen = deviceData.screen || "Unknown";
+        logEntry.language = deviceData.language || "Unknown";
+        logEntry.userAgent = deviceData.userAgent || "Unknown";
+    }
+
+    try {
+        // Salviamo nella collezione 'telemetry'. 
+        // Usiamo un ID autogenerato per mantenere uno storico di ogni sessione.
+        await db.collection('telemetry').add(logEntry);
+        
+        // Se è loggato, aggiorniamo anche il suo profilo con l'ultimo IP noto (utile per la sicurezza)
+        if (uid !== "ANONYMOUS") {
+            await db.collection('users').doc(uid).update({
+                lastKnownIp: ipAddress,
+                lastLoginAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        
+        return { status: "success" };
+    } catch (error) {
+        console.error("Errore salvataggio telemetria:", error);
+        throw new HttpsError('internal', 'Errore database telemetria.');
+    }
+});
+// ==========================================
+// 9. TERMINALE MESSAGGI (Chat In-Site)
+// ==========================================
+exports.sendMessage = onCall(europeWest1, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    const senderUid = request.auth.uid;
+    const { targetUid, message } = request.data;
+
+    if (!targetUid || !message || message.trim() === "") throw new HttpsError('invalid-argument', 'Dati incompleti.');
+
+    const senderDoc = await db.collection('users').doc(senderUid).get();
+    const isSenderOverseer = senderDoc.data().isAdmin === true;
+
+    // Se stiamo scrivendo all'Admin di sistema, saltiamo il controllo amicizia
+    if (!isSenderOverseer && targetUid !== "KRIPX_OVERSEER_SYSTEM") {
+        const senderFriends = senderDoc.data().friends || [];
+        if (!senderFriends.includes(targetUid)) {
+            throw new HttpsError('permission-denied', 'Non sei autorizzato a contattare questo Agente.');
+        }
+    }
+
+    // Creiamo un ID chat speciale se parliamo con il sistema
+    let chatId;
+    if (targetUid === "KRIPX_OVERSEER_SYSTEM") {
+        chatId = `SYSTEM_${senderUid}`;
+    } else {
+        chatId = senderUid < targetUid ? `${senderUid}_${targetUid}` : `${targetUid}_${senderUid}`;
+    }
+
+    const messageData = {
+        sender: senderUid,
+        text: message.trim(),
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        const batch = db.batch();
+        const newMsgRef = db.collection('chats').doc(chatId).collection('messages').doc();
+        batch.set(newMsgRef, messageData);
+
+        const chatRef = db.collection('chats').doc(chatId);
+        const updateData = {
+            lastMessage: message.trim(),
+            lastMessageTime: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            [`unread_${targetUid}`]: true,
+            [`unread_${senderUid}`]: false 
+        };
+        
+        // Aggiorniamo i partecipanti solo se è una chat normale (per non sovrascrivere l'admin nel sistema)
+        if (targetUid !== "KRIPX_OVERSEER_SYSTEM") {
+            updateData.participants = [senderUid, targetUid];
+        }
+
+        batch.set(chatRef, updateData, { merge: true });
+
+        await batch.commit();
+        return { status: 'success' };
+    } catch (error) {
+        throw new HttpsError('internal', 'Impossibile inviare il messaggio.');
+    }
+});
+
+
+// Aggiungiamo una funzione rapida per segnare i messaggi come letti quando apri la chat
+exports.markChatAsRead = onCall(europeWest1, async (request) => {
+    if (!request.auth) return { status: 'error' };
+    const myUid = request.auth.uid;
+    const { targetUid, isSystemChat } = request.data;
+    
+    let chatId;
+    if (isSystemChat) {
+        if (targetUid === "KRIPX_OVERSEER_SYSTEM") chatId = `SYSTEM_${myUid}`;
+        else chatId = `SYSTEM_${targetUid}`;
+    } else {
+        chatId = myUid < targetUid ? `${myUid}_${targetUid}` : `${targetUid}_${myUid}`;
+    }
+
+    try {
+        await db.collection('chats').doc(chatId).update({ [`unread_${myUid}`]: false });
+        return { status: 'success' };
+    } catch(e) { return { status: 'error' }; }
 });

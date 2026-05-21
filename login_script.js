@@ -4,9 +4,6 @@ import { signInWithEmailAndPassword, sendEmailVerification, signOut } from "http
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // NOTA: Con Firebase Auth non si accede con l'username, ma con la MAIL.
-    // Dovrai cambiare "Inserire ID..." nel placeholder HTML in "Inserire Email..." 
-    // In futuro, per accedere con username, serve una Cloud Function.
     const email = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
     const btn = this.querySelector('button');

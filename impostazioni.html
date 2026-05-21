@@ -121,6 +121,16 @@
 
             <!-- PANNELLO PRIVACY -->
             <div id="panel-privacy" class="settings-panel" style="display:none;">
+                <h3 class="panel-title">COLLEGAMENTI ESTERNI</h3>
+                <div class="setting-row danger-zone" style="background: rgba(88, 101, 242, 0.05); border-color: #5865F2;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="setting-label" style="color:#5865F2;">DISCORD NETWORK</span>
+                            <p id="discord-sync-status" class="danger-text" style="color: #ccc;">Stato: Non collegato</p>
+                        </div>
+                        <button id="btn-desync-discord" class="btn-danger" style="border-color: #5865F2; color: #5865F2; display: none;">SCOLLEGA ACCOUNT</button>
+                    </div>
+                </div>
                 <h3 class="panel-title">CONTROLLO DATI & TELEMETRIA</h3>
                 
                 <label class="switch-label">
@@ -177,6 +187,22 @@
     </section>
 
     <!-- Modali (Username, Email, Pass, Elimina, Successo) -->
+
+    <!-- Modale Custom per Azioni Pericolose (Es. Discord) -->
+    <div id="danger-confirm-modal" class="modal-overlay" style="display:none; background:rgba(20,0,0,0.9);">
+        <div class="modal-box" style="border-top-color:#ff5555; max-width:400px;">
+            <h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem;">⚠ INTERROMPI CONNESSIONE</h3>
+            <p id="danger-confirm-text" style="color:#ccc; font-size:0.9rem; margin-bottom: 25px;">
+                Stai per scollegare il tuo account Discord. <br>
+                <strong style="color:var(--accent-red);">Perderai istantaneamente tutti i tuoi ruoli sul server Kripix.</strong>
+            </p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn-outline" onclick="closeModal('danger-confirm-modal')">ANNULLA</button>
+                <button id="btn-danger-confirm-action" class="btn-danger">SCOLLEGA ORA</button>
+            </div>
+        </div>
+    </div>
+
     <div id="name-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3 style="color:var(--accent-gold); margin-bottom:10px;">AGGIORNA ID AGENTE</h3><input type="text" id="new-name-input" class="modal-input" placeholder="Nuovo Username..." autocomplete="off"><p id="name-msg" class="error-msg">ERRORE</p><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button class="btn-outline" onclick="closeModal('name-modal')">ANNULLA</button><button id="btn-confirm-name" class="btn-gold" onclick="confirmNameChange()">AGGIORNA ID</button></div></div></div>
     <div id="email-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3 style="color:var(--accent-gold); margin-bottom:15px;">AGGIORNA CANALE (EMAIL)</h3><input type="password" id="auth-pass-input" class="modal-input" placeholder="La tua password attuale..."><input type="email" id="new-email-input" class="modal-input" placeholder="La nuova email..."><p id="email-msg" class="error-msg">ERRORE</p><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button class="btn-outline" onclick="closeModal('email-modal')">ANNULLA</button><button id="btn-confirm-email" class="btn-gold" onclick="confirmEmailChange()">INVIA VERIFICA</button></div></div></div>
     <div id="pass-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3 style="color:var(--accent-gold); margin-bottom:20px;">AGGIORNA PASSWORD</h3><input type="password" id="old-pass" class="modal-input" placeholder="Vecchia Password"><input type="password" id="new-pass" class="modal-input" placeholder="Nuova Password (Min 8 + Num)"><input type="password" id="conf-pass" class="modal-input" placeholder="Conferma Nuova Password"><p id="pass-msg" class="error-msg">ERRORE</p><div style="display:flex; gap:10px; justify-content:center; margin-top:20px;"><button class="btn-outline" onclick="closeModal('pass-modal')">ANNULLA</button><button class="btn-gold" onclick="confirmPassChange()">AGGIORNA</button></div></div></div>
@@ -207,16 +233,22 @@
         import { reauthenticateWithCredential, EmailAuthProvider, updatePassword, verifyBeforeUpdateEmail, deleteUser, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { doc, getDoc, updateDoc, deleteDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // Variabili globali per questa pagina (DICHIARATE BENE)
         let userDocRef = null;
         let userDataCache = null;
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { window.location.href = 'login.html'; return; }
+            
+            // Definiamo il riferimento al documento per tutto il resto dello script
             userDocRef = doc(db, "users", user.uid);
+            
             try {
                 const userSnap = await getDoc(userDocRef);
                 if (userSnap.exists()) {
                     userDataCache = userSnap.data();
+                    
+                    // 1. CARICAMENTO DATI BASE
                     document.getElementById('disp-user').textContent = userDataCache.username;
                     document.getElementById('disp-email').textContent = user.email;
                     
@@ -226,10 +258,57 @@
                         document.getElementById('priv-news').checked = userDataCache.privacy.newsletter === true;
                         document.getElementById('priv-inv').checked = userDataCache.privacy.invisible === true;
                     }
+
+                    // 2. CHECK DISCORD
+                    const dStatus = document.getElementById('discord-sync-status');
+                    const dBtn = document.getElementById('btn-desync-discord');
+                    
+                    if (userDataCache.discordId) {
+                        dStatus.innerText = `Stato: Sincronizzato come ${userDataCache.discordUsername}`;
+                        dStatus.style.color = '#4caf50';
+                        dBtn.style.display = 'inline-block';
+
+                        // LOGICA CLICK DESYNC
+                        // LOGICA CLICK DESYNC CON MODALE CUSTOM
+                        dBtn.onclick = function(e) {
+                            e.preventDefault();
+                            
+                            // Apriamo il modale custom al posto del brutto confirm()
+                            document.getElementById('danger-confirm-modal').style.display = 'flex';
+                            
+                            // Diamo l'azione al bottone rosso DENTRO il modale
+                            document.getElementById('btn-danger-confirm-action').onclick = async function() {
+                                
+                                // Chiudiamo il modale per pulizia visiva
+                                closeModal('danger-confirm-modal');
+                                
+                                dBtn.innerText = "SCOLLEGAMENTO...";
+                                dBtn.style.pointerEvents = "none";
+                                
+                                try {
+                                    const functions = getFunctions(app, 'europe-west1');
+                                    const unlinkDiscord = httpsCallable(functions, 'unlinkDiscord');
+                                    await unlinkDiscord();
+                                    
+                                    window.kripixNotify("SISTEMA", "Account Discord scollegato con successo.", "info");
+                                    setTimeout(() => location.reload(), 1500);
+                                } catch (e) {
+                                    window.kripixNotify("ERRORE", "Impossibile contattare i server Discord.", "error");
+                                    dBtn.innerText = "SCOLLEGA ACCOUNT";
+                                    dBtn.style.pointerEvents = "auto";
+                                }
+                            };
+                        };
+                    } else {
+                        dStatus.innerText = `Stato: Non collegato`;
+                        dStatus.style.color = '#ccc';
+                        dBtn.style.display = 'none';
+                    }
                 }
             } catch (error) { console.error("Errore recupero dati:", error); }
         });
 
+        // Generazione Griglia Avatar
         document.addEventListener('DOMContentLoaded', async () => {
             const avatarImages =["https://api.dicebear.com/7.x/bottts/svg?seed=Kripix1&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Harrow&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Cyber&backgroundColor=111111","https://api.dicebear.com/7.x/bottts/svg?seed=Neon&backgroundColor=111111","https://api.dicebear.com/7.x/shapes/svg?seed=Geometric1&backgroundColor=111111"];
             const avatarGrid = document.getElementById('avatar-choices');
@@ -244,6 +323,7 @@
             });
         });
 
+        // Gestione Tab
         window.switchTab = function(tabName) {
             document.querySelectorAll('.settings-nav button').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.settings-panel').forEach(p => p.style.display = 'none');
@@ -251,6 +331,7 @@
             document.getElementById('panel-' + tabName).style.display = 'block';
         }
 
+        // Funzioni Modali Comuni
         window.closeModal = function(modalId) {
             document.getElementById(modalId).style.display = 'none';
             document.getElementById(modalId).querySelectorAll('input').forEach(i => { i.value = ''; i.classList.remove('error-border'); });
@@ -260,6 +341,7 @@
         function showError(input, msgEl, text) { input.classList.add('error-border'); msgEl.textContent = '>> ' + text; msgEl.style.display = 'block'; setTimeout(() => input.classList.remove('error-border'), 500); }
         function showSuccess(msg) { document.getElementById('success-text').textContent = msg; document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); document.getElementById('success-modal').style.display = 'flex'; }
 
+        // Salvataggio Privacy
         window.savePrivacy = async function() {
             try { 
                 await updateDoc(userDocRef, { 
@@ -278,11 +360,12 @@
             } catch (e) { console.error(e); }
         }
 
+        // Cambio Colori / Avatar
         window.changeColor = async function(newColor) { try { await updateDoc(userDocRef, { color: newColor, avatar_img: null }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "Segnale cromatico impostato.", "success"); } catch (e) { console.error(e); } };
         window.selectAvatarImage = async function(imgUrl) { try { await updateDoc(userDocRef, { avatar_img: imgUrl }); if(window.updateNavbarAvatarDisplay) window.updateNavbarAvatarDisplay(auth.currentUser); if(window.kripixNotify) window.kripixNotify("SISTEMA", "ID Visivo aggiornato.", "success"); } catch (e) { console.error(e); } };
 
         // ==========================================
-        // LE FUNZIONI DEI MODALI (COMPLETE)
+        // LE FUNZIONI DEI MODALI
         // ==========================================
         
         // 1. CAMBIO NOME IN CODICE
@@ -290,27 +373,13 @@
         window.confirmNameChange = async function() {
             const input = document.getElementById('new-name-input');
             const msg = document.getElementById('name-msg');
-            
-            // 1. Togliamo gli spazi all'inizio e alla fine
             const newName = input.value.trim();
-            
-            // 2. Controllo: È vuoto?
-            if (!newName) { 
-                showError(input, msg, "Inserisci un nome."); 
-                return; 
-            }
-
-            // 3. Controllo: Contiene spazi IN MEZZO alla parola?
-            if (newName.indexOf(' ') >= 0) {
-                showError(input, msg, "Il nome non può contenere spazi.");
-                return; // <-- Questo blocca immediatamente tutto
-            }
+            if (!newName) { showError(input, msg, "Inserisci un nome."); return; }
+            if (newName.indexOf(' ') >= 0) { showError(input, msg, "Il nome non può contenere spazi."); return; }
             
             try {
                 const newNameLower = newName.toLowerCase();
                 const oldNameLower = userDataCache.username.toLowerCase();
-                
-                // Resto del codice identico a prima...
                 if(newNameLower === oldNameLower) { showError(input, msg, "È già il tuo nome."); return; }
 
                 const nameCheck = await getDoc(doc(db, "usernames", newNameLower));
@@ -375,20 +444,16 @@
                 const credential = EmailAuthProvider.credential(auth.currentUser.email, passInput.value);
                 await reauthenticateWithCredential(auth.currentUser, credential);
                 
-                // Distrugge prima il documento per non lasciare rimasugli nel DB
                 await deleteDoc(userDocRef);
                 await deleteDoc(doc(db, "usernames", userDataCache.username.toLowerCase()));
-                await deleteUser(auth.currentUser); // Elimina l'Auth
+                await deleteUser(auth.currentUser); 
                 
-                window.location.href = "index.html"; // Ritorno alla base
+                window.location.href = "index.html"; 
             } catch(e) { showError(passInput, msg, "Autorizzazione negata. Password errata."); }
         };
 
-        // ==========================================
-        // LOGICA RISCATTO CHIAVE AGGIUNTA QUI!
-        // ==========================================
+        // 5. RISCATTO CHIAVE
         window.openRedeemModal = () => document.getElementById('redeem-modal').style.display = 'flex';
-
         document.getElementById('btn-confirm-redeem').addEventListener('click', async () => {
             const keyInput = document.getElementById('redeem-key-input');
             const btn = document.getElementById('btn-confirm-redeem');
@@ -405,13 +470,10 @@
             msgEl.style.display = 'none';
 
             try {
-                // Assicurati che "europe-west1" sia la region dove hai hostato le tue functions!
                 const functions = getFunctions(app, 'europe-west1'); 
                 const redeemKripixKey = httpsCallable(functions, 'redeemKripixKey');
-                
                 await redeemKripixKey({ gameKey: rawKey });
 
-                // SUCCESSO!
                 closeModal('redeem-modal');
                 showSuccess("Licenza attivata con successo. Il software è stato aggiunto alla tua Libreria.");
                 

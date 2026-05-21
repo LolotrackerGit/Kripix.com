@@ -220,19 +220,111 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.addEventListener('beforeunload', () => { goOffline(); });
         }
-    });
-
-    // ==========================================
-    // SISTEMA BANNER COOKIE (TERMINALE)
-    // ==========================================
-    // Controlliamo se l'utente ha già fatto la sua scelta
-    if (!localStorage.getItem('kripix_cookie_consent')) {
+// --- F. SISTEMA DI NOTIFICHE TOAST CHAT IN TEMPO REALE ---
+    if (user) {
+        // Importiamo i componenti necessari di firestore per la query
+        const { query, collection, where, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
         
-        // Creiamo il div del banner
+        const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+        
+        // Ascolta costantemente se ci sono modifiche alle tue chat
+        onSnapshot(chatsQuery, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                // Se c'è una nuova chat o un messaggio non letto
+                if (change.type === "modified" || change.type === "added") {
+                    const cData = change.doc.data();
+                    
+                    // Se c'è un messaggio non letto destinato a ME
+                    if (cData[`unread_${user.uid}`] === true) {
+                        
+                        // Evita di mostrare il pop-up se sono GIA' dentro la pagina terminale.html
+                        if (!window.location.href.includes("terminale.html")) {
+                            
+                            const otherGuy = cData.participants[0] === user.uid ? cData.participants[1] : cData.participants[0];
+                            
+                            getDoc(doc(db, "users", otherGuy)).then(uSnap => {
+                                if (uSnap.exists()) {
+                                    const senderName = uSnap.data().username;
+                                    
+                                    // Spara la notifica toast cliccabile
+                                    window.kripixNotify(
+                                        "TRASMISSIONE IN ENTRATA", 
+                                        `Messaggio non letto da ${senderName}. <br><a href="terminale.html?agent=${otherGuy}" style="color:var(--accent-gold); text-decoration:underline; font-weight:bold;">APRI TERMINALE</a>`, 
+                                        "info"
+                                    );
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+        });
+    }    });
+});
+
+// ==========================================
+// 4. TELEMETRIA E COOKIE CONSENT
+// ==========================================
+
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+
+// Funzione interna per estrarre i dati del dispositivo
+function getDeviceData() {
+    let browserName = "Unknown";
+    let osName = "Unknown";
+    const ua = navigator.userAgent;
+
+    // Rilevamento basico Browser
+    if (ua.match(/chrome|chromium|crios/i)) browserName = "Chrome";
+    else if (ua.match(/firefox|fxios/i)) browserName = "Firefox";
+    else if (ua.match(/safari/i)) browserName = "Safari";
+    else if (ua.match(/opr\//i)) browserName = "Opera";
+    else if (ua.match(/edg/i)) browserName = "Edge";
+
+    // Rilevamento basico OS
+    if (ua.indexOf("Win") !== -1) osName = "Windows";
+    else if (ua.indexOf("Mac") !== -1) osName = "MacOS";
+    else if (ua.indexOf("Linux") !== -1) osName = "Linux";
+    else if (ua.indexOf("Android") !== -1) osName = "Android";
+    else if (ua.indexOf("like Mac") !== -1) osName = "iOS";
+
+    return {
+        browser: browserName,
+        os: osName,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        language: navigator.language || navigator.userLanguage,
+        userAgent: ua
+    };
+}
+
+// Funzione che spara i dati al server
+async function dispatchTelemetry(consent) {
+    const functions = getFunctions(app, 'europe-west1');
+    const logTelemetry = httpsCallable(functions, 'logTelemetry');
+    
+    // Prepariamo il pacco dati. Se rejected, deviceData è null.
+    const payload = {
+        consentLevel: consent,
+        page: window.location.pathname.split('/').pop() || 'index.html',
+        deviceData: consent === "accepted" ? getDeviceData() : null
+    };
+
+    try {
+        await logTelemetry(payload);
+    } catch (e) {
+        console.error("Errore di trasmissione telemetria:", e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const existingConsent = localStorage.getItem('kripix_cookie_consent');
+
+    if (!existingConsent) {
+        // --- IL BANNER NON ESISTE, L'UTENTE DEVE SCEGLIERE ---
+        
         const cookieBanner = document.createElement('div');
         cookieBanner.id = 'kripix-cookie-banner';
-        
-        // Inseriamo l'HTML formattato con le classi del tuo CSS
         cookieBanner.innerHTML = `
             <div class="cookie-title">> INIZIALIZZAZIONE COOKIE</div>
             <div class="cookie-text">
@@ -244,21 +336,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button id="btn-cookie-reject" class="btn-cookie btn-cookie-reject">SOLO ESSENZIALI</button>
             </div>
         `;
-
-        // Lo aggiungiamo al body
         document.body.appendChild(cookieBanner);
+        setTimeout(() => cookieBanner.classList.add('show'), 500);
 
-        // Facciamo partire l'animazione di entrata (delay per fluidità)
-        setTimeout(() => {
-            cookieBanner.classList.add('show');
-        }, 500);
-
-        // Logica dei bottoni
         document.getElementById('btn-cookie-accept').addEventListener('click', () => {
             localStorage.setItem('kripix_cookie_consent', 'accepted');
             cookieBanner.classList.remove('show');
             setTimeout(() => cookieBanner.remove(), 600);
             if(window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento completo autorizzato.", "success");
+            
+            // Spara subito i dati completi
+            dispatchTelemetry("accepted");
         });
 
         document.getElementById('btn-cookie-reject').addEventListener('click', () => {
@@ -266,6 +354,18 @@ document.addEventListener('DOMContentLoaded', () => {
             cookieBanner.classList.remove('show');
             setTimeout(() => cookieBanner.remove(), 600);
             if(window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento limitato ai pacchetti essenziali.", "info");
+            
+            // Spara solo IP (tramite server) e basta
+            dispatchTelemetry("rejected");
         });
+
+    } else {
+        // --- L'UTENTE HA GIA' FATTO LA SCELTA IN PASSATO ---
+        // Spara la telemetria silente ogni volta che cambia pagina
+        
+        // Piccolo ritardo per assicurarsi che Firebase Auth sia caricato se l'utente è loggato
+        setTimeout(() => {
+            dispatchTelemetry(existingConsent);
+        }, 1500);
     }
 });

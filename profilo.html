@@ -143,9 +143,12 @@
 
                 <div class="network-section">
                     <div class="network-header">
-                        <span style="font-size: 1.5rem;">🌐</span>
-                        <h3>RETE OPERATIVA</h3>
-                    </div>
+    <span style="font-size: 1.5rem;">🌐</span>
+    <a href="terminale.html" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 10px; transition: 0.3s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='white'">
+        <h3>RETE OPERATIVA</h3>
+        <span style="font-family: 'Courier Prime'; font-size: 0.8rem; background: var(--accent-gold); color: #000; padding: 2px 8px; font-weight: bold; border-radius: 2px;">ACCEDI</span>
+    </a>
+</div>
                     
                     <div class="add-friend-box">
                         <input type="text" id="friend-id-input" placeholder="Ricerca: Inserire Nome Agente..." autocomplete="off">
@@ -440,12 +443,25 @@
                         let statusHtml = isOnline ? `<div class="friend-status" style="color:#4caf50;">● ONLINE</div>` : `<div class="friend-status" style="color:#666;">○ OFFLINE</div>`;
 
                         el.innerHTML = `
-                            <div class="friend-info">
-                                ${fAvatar}
-                                <div><div class="friend-name safe-name"></div>${statusHtml}</div>
-                            </div>
-                            <button class="btn-mini btn-reject rem-btn">RIMUOVI</button>
-                        `;
+    <div class="friend-info">
+        ${fAvatar}
+        <div><div class="friend-name safe-name"></div>${statusHtml}</div>
+    </div>
+    <div style="display: flex; gap: 5px;">
+        <button class="btn-mini msg-btn" style="border-color: #4caf50; color: #4caf50;" onmouseover="this.style.background='#4caf50'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#4caf50';">MESSAGGIO</button>
+        <button class="btn-mini btn-reject rem-btn">RIMUOVI</button>
+    </div>
+`;
+
+el.querySelector('.safe-name').textContent = fData.username;
+
+// Assegniamo le funzioni ai due bottoni
+el.querySelector('.rem-btn').onclick = () => window.openRemoveModal(friendId, fData.username);
+
+// Il nuovo bottone manda al terminale aprendo direttamente la chat con quell'utente
+el.querySelector('.msg-btn').onclick = () => {
+    window.location.href = `terminale.html?agent=${friendId}`;
+};
                         
                         el.querySelector('.safe-name').textContent = fData.username;
                         el.querySelector('.rem-btn').onclick = () => window.openRemoveModal(friendId, fData.username);
