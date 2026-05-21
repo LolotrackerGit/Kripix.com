@@ -109,7 +109,7 @@
     <!-- ... fine della sezione launcher-features ... -->
 
     <!-- SEZIONE DEVELOPER (Il Gancio) -->
-    <section class="dev-teaser" style="margin-top: 100px; border-top: 1px solid #222; padding: 80px 0; background: linear-gradient(to bottom, var(--bg-main), #080808);">
+    <section id="dev-teaser-section" class="dev-teaser" style="display: none; margin-top: 100px; border-top: 1px solid #222; padding: 80px 0; background: linear-gradient(to bottom, var(--bg-main), #080808);">
         <div class="container" style="text-align: center;">
             <p style="font-family: 'Courier Prime'; color: var(--accent-red); margin-bottom: 10px; letter-spacing: 2px;">ACCESSO SVILUPPATORI</p>
             <h2 style="font-size: 3rem; color: #fff; margin-bottom: 20px;">FORGIARE LA REALTÀ</h2>
@@ -179,6 +179,20 @@
             });
         });
     </script>
-<script type="module" src="script.js"></script>
+<script type="module">
+        import { auth, db } from './script.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                if (userSnap.exists() && userSnap.data().isAdmin === true) {
+                    // È un admin! Mostriamo il banner dell'engine
+                    document.getElementById('dev-teaser-section').style.display = 'block';
+                }
+            }
+        });
+    </script>
 </body>
 </html>

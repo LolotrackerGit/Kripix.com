@@ -213,11 +213,15 @@
             const msgEl = document.getElementById('google-reg-msg');
             msgEl.style.display = 'none';
 
-            if (username.length < 3) {
-                msgEl.innerText = ">> Nome in codice troppo corto.";
-                msgEl.style.display = 'block';
-                return;
-            }
+            if (!email || !username || !password) return;
+
+            // CONTROLLO SPAZI FORZATO
+            if (username.indexOf(' ') >= 0) {
+            serverMsg.innerText = ">> ERRORE: Il Nome in Codice non può contenere spazi.";
+            serverMsg.style.color = '#ff5555';
+            serverMsg.style.display = 'block';
+            return;
+        }
 
             // Controlla se l'username è già stato preso
             const usernameDocRef = doc(db, "usernames", usernameLower);

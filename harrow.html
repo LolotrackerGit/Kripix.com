@@ -191,18 +191,22 @@
                     }
                 } catch (error) { console.error(error); }
 
-                buyBtn.onclick = async function(e) {
-                    e.preventDefault();
-                    this.innerText = 'ELABORAZIONE...'; this.style.pointerEvents = 'none';
-                    try {
-                        if ((await securePurchaseGame({ gameId: 'harrow' })).data.status === 'success') {
-                            document.getElementById('custom-modal').style.display = 'flex';
-                        }
-                    } catch (error) {
-                        this.innerText = 'ERRORE TRANSAZIONE'; this.style.borderColor = '#ff5555';
-                        if(window.kripixNotify) window.kripixNotify("ERRORE", error.message, "error"); else alert("ERRORE: " + error.message);
-                    }
-                };
+                // Dentro l'onAuthStateChanged di harrow.html
+try {
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
+        buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
+        buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000';
+        buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
+        return; 
+    }
+} catch (error) { console.error(error); }
+
+// Se non lo possiede, mandalo al terminale di pagamento
+buyBtn.onclick = function(e) {
+    e.preventDefault();
+    window.location.href = 'checkout.html';
+};
             });
         });
     </script>

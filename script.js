@@ -221,4 +221,51 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('beforeunload', () => { goOffline(); });
         }
     });
+
+    // ==========================================
+    // SISTEMA BANNER COOKIE (TERMINALE)
+    // ==========================================
+    // Controlliamo se l'utente ha già fatto la sua scelta
+    if (!localStorage.getItem('kripix_cookie_consent')) {
+        
+        // Creiamo il div del banner
+        const cookieBanner = document.createElement('div');
+        cookieBanner.id = 'kripix-cookie-banner';
+        
+        // Inseriamo l'HTML formattato con le classi del tuo CSS
+        cookieBanner.innerHTML = `
+            <div class="cookie-title">> INIZIALIZZAZIONE COOKIE</div>
+            <div class="cookie-text">
+                Il Network Operativo Kripix utilizza pacchetti di tracciamento (Cookie) essenziali per mantenere la connessione stabile e salvare le tue preferenze. Non vendiamo i tuoi dati ai corporati. 
+                <br><br>Puoi leggere il <a href="privacy.html">Dossier Privacy</a> per i dettagli completi.
+            </div>
+            <div class="cookie-buttons">
+                <button id="btn-cookie-accept" class="btn-cookie btn-cookie-accept">ACCETTA TUTTI</button>
+                <button id="btn-cookie-reject" class="btn-cookie btn-cookie-reject">SOLO ESSENZIALI</button>
+            </div>
+        `;
+
+        // Lo aggiungiamo al body
+        document.body.appendChild(cookieBanner);
+
+        // Facciamo partire l'animazione di entrata (delay per fluidità)
+        setTimeout(() => {
+            cookieBanner.classList.add('show');
+        }, 500);
+
+        // Logica dei bottoni
+        document.getElementById('btn-cookie-accept').addEventListener('click', () => {
+            localStorage.setItem('kripix_cookie_consent', 'accepted');
+            cookieBanner.classList.remove('show');
+            setTimeout(() => cookieBanner.remove(), 600);
+            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento completo autorizzato.", "success");
+        });
+
+        document.getElementById('btn-cookie-reject').addEventListener('click', () => {
+            localStorage.setItem('kripix_cookie_consent', 'rejected');
+            cookieBanner.classList.remove('show');
+            setTimeout(() => cookieBanner.remove(), 600);
+            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento limitato ai pacchetti essenziali.", "info");
+        });
+    }
 });

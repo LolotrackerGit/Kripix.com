@@ -158,14 +158,14 @@
                     <div class="friend-list" id="friends-list-container"></div>
                 </div>
 
-                <!-- Modulo Programma DEV -->
-<div class="section-box dev-access-card">
-    <div class="dev-text">
-        <h4>PROGRAMMA PIXEL OTROS</h4>
-        <p>> Accesso al motore grafico sperimentale.</p>
+<!-- Modulo Programma DEV -->
+    <div id="pixel-otros-card" class="section-box dev-access-card" style="display: none;">
+        <div class="dev-text">
+            <h4>PROGRAMMA PIXEL OTROS</h4>
+            <p>> Accesso al motore grafico sperimentale.</p>
+        </div>
+        <a href="engine.html" class="btn-dev-action">SCARICA DEV-KIT</a>
     </div>
-    <a href="engine.html" class="btn-dev-action">SCARICA DEV-KIT</a>
-</div>
 
 <!-- Modulo Discord OAuth -->
 <!-- Modulo Discord OAuth -->
@@ -181,7 +181,7 @@
                 <div class="section-box">
                     <h3 class="box-header">LOG ATTIVITÀ RECENTI</h3>
                     <div style="font-family: 'Courier Prime'; font-size: 0.85rem; color: #888;">
-                        <p style="margin-bottom: 10px;">>[OGGI] Accesso al terminale effettuato.</p>
+                        <p style="margin-bottom: 10px;">>  [OGGI] Accesso al terminale effettuato.</p>
                         <p style="margin-bottom: 10px; display:none;" id="log-purchase">> [SISTEMA] Acquisizione licenza "Harrow".</p>
                         <p>> [SYSTEM] Profilo sincronizzato con il server centrale.</p>
                     </div>
@@ -377,6 +377,10 @@
                 dBtn.style.background = "rgba(76, 175, 80, 0.1)"; // Leggero sfondino verde
                 dBtn.style.borderColor = "#4caf50";
                 dBtn.style.color = "#4caf50";
+                // Mostra il modulo DevKit solo se è Overseer
+                if (userData.isAdmin) {
+                    document.getElementById('pixel-otros-card').style.display = 'flex';
+                }
             }
         }
 

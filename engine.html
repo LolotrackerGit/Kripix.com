@@ -79,9 +79,10 @@
 
     <footer id="main-footer" class="kripix-footer"></footer>
 
-    <!-- LOGICA ENGINE SICURA -->
+    <!-- LOGICA ENGINE SICURA (SOLO OVERSEER) -->
     <script type="module">
-        import { auth } from './script.js';
+        import { auth, db } from './script.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -90,55 +91,58 @@
             const checkbox = document.getElementById('accept-eula');
             const label = document.querySelector('.checkbox-container');
 
-            let isLogged = false;
-            
-            // Verifica di Firebase (Niente più localStorage)
-            onAuthStateChanged(auth, (user) => {
-                isLogged = !!user; // Se l'utente esiste, è true
-            });
-
-            if (isMobile) {
-                checkbox.disabled = true;
-                checkbox.checked = false;
-                label.style.opacity = "0.5";
-                label.innerHTML = "🚫 <em>Installazione non supportata su architettura mobile.</em>";
+            // CANCELLO DI SICUREZZA OVERSEER
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.href = "404.html"; // Non loggato = via
+                    return;
+                }
                 
-                btn.innerText = "❌ WORKSTATION REQUIRED";
-                btn.style.borderColor = "#ff4444"; 
-                btn.style.color = "#ff4444";
-                btn.style.background = "rgba(255, 68, 68, 0.05)";
-                btn.style.opacity = "1"; 
-                btn.style.pointerEvents = "none";
-            } else {
-                checkbox.addEventListener('change', function() {
-                    if(this.checked) {
-                        btn.style.opacity = '1';
-                        btn.style.pointerEvents = 'auto';
-                        btn.style.borderColor = 'var(--accent-gold)';
-                        btn.style.color = '#000';
-                        btn.style.background = 'var(--accent-gold)';
-                    } else {
-                        btn.style.opacity = '0.5';
-                        btn.style.pointerEvents = 'none';
-                        btn.style.background = 'transparent';
-                        btn.style.color = 'var(--accent-gold)';
-                    }
-                });
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                if (!userSnap.exists() || userSnap.data().isAdmin !== true) {
+                    window.location.href = "404.html"; // Non Admin = via
+                    return;
+                }
 
-                btn.addEventListener('click', function() {
-                    if(isLogged) {
+                // Se il codice arriva qui, l'utente è l'Admin. Attiviamo la logica.
+                if (isMobile) {
+                    checkbox.disabled = true;
+                    checkbox.checked = false;
+                    label.style.opacity = "0.5";
+                    label.innerHTML = "🚫 <em>Installazione non supportata su architettura mobile.</em>";
+                    
+                    btn.innerText = "❌ WORKSTATION REQUIRED";
+                    btn.style.borderColor = "#ff4444"; 
+                    btn.style.color = "#ff4444";
+                    btn.style.background = "rgba(255, 68, 68, 0.05)";
+                    btn.style.opacity = "1"; 
+                    btn.style.pointerEvents = "none";
+                } else {
+                    checkbox.addEventListener('change', function() {
+                        if(this.checked) {
+                            btn.style.opacity = '1';
+                            btn.style.pointerEvents = 'auto';
+                            btn.style.borderColor = 'var(--accent-gold)';
+                            btn.style.color = '#000';
+                            btn.style.background = 'var(--accent-gold)';
+                        } else {
+                            btn.style.opacity = '0.5';
+                            btn.style.pointerEvents = 'none';
+                            btn.style.background = 'transparent';
+                            btn.style.color = 'var(--accent-gold)';
+                        }
+                    });
+
+                    btn.addEventListener('click', function() {
                         this.innerHTML = "INIZIALIZZAZIONE...";
                         this.style.opacity = "0.7";
                         setTimeout(() => {
-                            alert("LICENZA ACQUISITA.\nIl download è stato aggiunto alla coda del tuo Kripix Launcher.");
+                            alert("LICENZA DEV ACQUISITA.\nIl download è stato aggiunto alla coda del tuo Kripix Launcher.");
                             window.location.href = "index.html"; 
                         }, 1500);
-                    } else {
-                        alert("ACCESSO NEGATO\n\nDevi identificarti come Developer registrato.");
-                        window.location.href = "login.html";
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
     </script>
 </body>

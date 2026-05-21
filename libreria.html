@@ -56,6 +56,11 @@
     <title>Libreria - Kripix</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+
+    <!-- Libreria per generare PDF -->
+<!-- Libreria jsPDF (PDF Nativo) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 <body>
     <div class="background-grid"></div>
@@ -72,6 +77,8 @@
             <div id="library-grid" class="download-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
                 <!-- QUI VERRANNO INSERITI I GIOCHI VIA JAVASCRIPT -->
             </div>
+
+            
 
             <!-- Messaggio Libreria Vuota -->
             <div id="empty-msg" style="display:none; text-align:center; padding: 50px; border: 1px dashed #333;">
@@ -113,77 +120,218 @@
         </div>
     </div>
 
+    <!-- RICEVUTA KRIPIX (Fixata e Stampabile) -->
+    <div id="receipt-modal" class="modal-overlay">
+        <div class="modal-box" style="padding: 0; overflow: hidden; max-width: 550px;">
+            
+            <!-- AREA CHE VERRA' TRASFORMATA IN PDF -->
+            <div id="printable-receipt" style="background: #05070a; padding: 40px; text-align: left; color: #fff;">
+                
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="background: var(--accent-gold); color: #000; padding: 5px 15px; font-weight: 900; font-size: 0.7rem; letter-spacing: 2px;">TRANSAZIONE AUTORIZZATA</span>
+                </div>
+                
+                <h2 style="font-size: 2.5rem; letter-spacing: 5px; color: var(--text-main); margin-bottom: 5px; text-align: center;">KRIPIX</h2>
+                <p style="font-family: 'Courier Prime'; color: #666; text-align: center; margin-bottom: 30px; border-bottom: 1px dashed #333; padding-bottom: 20px;">RICEVUTA ACQUISTO LICENZA DIGITALE</p>
+                
+                <div style="font-family: 'Courier Prime'; font-size: 0.85rem; color: #aaa; margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding: 10px 0;">
+                        <span style="color: var(--accent-gold);">ID AGENTE:</span> <span id="rec-username" style="color:#fff;">...</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding: 10px 0;">
+                        <span style="color: var(--accent-gold);">EMAIL:</span> <span id="rec-email">...</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding: 10px 0;">
+                        <span style="color: var(--accent-gold);">SOFTWARE:</span> <span style="color: #fff; font-weight: bold;">IL FILO DEL DUBBIO</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding: 10px 0;">
+                        <span style="color: var(--accent-gold);">METODO:</span> <span id="rec-method">CARTE/STRIPE</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding: 10px 0;">
+                        <span style="color: var(--accent-gold);">IMPORTO:</span> <span>€ 29.99</span>
+                    </div>
+                </div>
+
+                <div style="background: rgba(227, 198, 108, 0.05); border: 1px dashed var(--accent-gold); padding: 20px; text-align: center;">
+                    <p style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">CHIAVE CRITTOGRAFICA DI ATTIVAZIONE</p>
+                    <div id="rec-key" style="font-size: 1.3rem; font-weight: bold; letter-spacing: 3px; color: var(--accent-gold);">KRPX-XXXX-XXXX-XXXX</div>
+                </div>
+            </div>
+            <!-- FINE AREA STAMPABILE -->
+
+            <!-- BOTTONI FUORI DAL PDF -->
+            <div style="display: flex; gap: 10px; padding: 20px; background: #0a0a0a; border-top: 1px solid #222;">
+                <button class="btn-outline full-width" onclick="downloadPDF()">📄 SCARICA PDF</button>
+                <button class="btn-gold full-width" onclick="document.getElementById('receipt-modal').style.display='none'">CHIUDI</button>
+            </div>
+        </div>
+    </div>
+
     <footer id="main-footer" class="kripix-footer"></footer>
+
 
     <script type="module" src="script.js"></script>
 
-    <!-- LOGICA LIBRERIA CLOUD -->
+<!-- AREA NASCOSTA (Usata ESCLUSIVAMENTE per il PDF ad alta risoluzione) -->
+    <div id="pdf-export-zone" style="display: none; width: 800px; padding: 60px; background: #05070a; color: #fff; font-family: 'Courier Prime', monospace; box-sizing: border-box; border: 2px solid #e3c66c;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="font-family: 'Montserrat', sans-serif; font-size: 4rem; font-weight: 900; letter-spacing: 10px; color: #e3c66c; margin-bottom: 10px;">KRIPIX</div>
+            <div style="font-size: 1.2rem; letter-spacing: 3px; color: #888; border-bottom: 1px dashed #333; padding-bottom: 20px;">RICEVUTA ACQUISTO LICENZA DIGITALE</div>
+        </div>
+        
+        <table style="width: 100%; font-size: 1.1rem; color: #aaa; border-collapse: collapse; margin-bottom: 60px;">
+            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">ID AGENTE:</td><td id="pdf-user" style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; color: #fff;">...</td></tr>
+            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">EMAIL:</td><td id="pdf-email" style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; color: #fff;">...</td></tr>
+            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">SOFTWARE:</td><td style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; font-weight: bold; color: #fff;">IL FILO DEL DUBBIO</td></tr>
+            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">EDIZIONE:</td><td style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; color: #fff;">DELUXE EDITION</td></tr>
+            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">METODO DI PAGAMENTO:</td><td id="pdf-method" style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; color: #fff;">...</td></tr>
+            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">IMPORTO:</td><td style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; font-weight: bold; color: #fff;">€ 29.99</td></tr>
+        </table>
+
+        <div style="background: rgba(227, 198, 108, 0.1); border: 2px dashed #e3c66c; padding: 40px; text-align: center;">
+            <p style="font-size: 1rem; color: #888; margin-bottom: 15px; letter-spacing: 2px;">CHIAVE CRITTOGRAFICA DI ATTIVAZIONE</p>
+            <div id="pdf-key" style="font-family: 'Montserrat', sans-serif; font-size: 2.5rem; font-weight: 900; letter-spacing: 5px; color: #e3c66c;">KRPX-XXXX-XXXX-XXXX</div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 60px; font-size: 0.8rem; color: #444;">
+            Documento generato dal Terminale Kripix. Conservare con cura.
+        </div>
+    </div>
+
+
     <script type="module">
         import { auth, db } from './script.js';
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) { window.location.href = 'login.html'; return; }
+        // Variabili Globali
+        let currentGlobalKey = "ERRORE-LETTURA-CHIAVE";
+        let currentUserEmail = "...";
+        let currentUsername = "AGENTE";
+        let currentMethod = "STRIPE SECURE";
+        let currentLast4 = "****";
 
+        // ==========================================
+        // FUNZIONE PER DISEGNARE LA CARD
+        // ==========================================
+        function injectGameCard() {
             const grid = document.getElementById('library-grid');
             const emptyMsg = document.getElementById('empty-msg');
             
-            const userRef = doc(db, "users", user.uid);
-            // IL COLLEGAMENTO AL DOSSIER SEGRETO
-            const privateRef = doc(db, "users", user.uid, "private", "dossier");
+            emptyMsg.style.display = 'none';
+            
+            // Usiamo direttamente le variabili globali appena aggiornate!
+            grid.innerHTML = `
+                <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
+                    <div style="height:150px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #333;">
+                         <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff;">IL FILO DEL DUBBIO</span>
+                    </div>
+                    <div style="padding:25px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                            <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
+                            <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.2</span>
+                        </div>
+                        <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
+                        <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
+                            Include gioco completo, Artbook Digitale e Soundtrack Originale.
+                        </p>
+                        
+                        <div style="display:flex; gap:10px;" class="btn-container-relative">
+                            <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
+                            <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
+                            <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
+        // ==========================================
+        // FLUSSO PRINCIPALE
+        // ==========================================
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUserEmail = user.email;
+
+            // Leggiamo l'username una volta per tutte
             try {
-                const userSnap = await getDoc(userRef);
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    
-                    if (userData.games && userData.games.includes('harrow')) {
-                        
-                        // RECUPERA LA CHIAVE VERA DAL DOSSIER PRIVATO
-                        const privateSnap = await getDoc(privateRef);
-                        let gameKey = "ERRORE-LETTURA-CHIAVE";
-                        
-                        if (privateSnap.exists()) {
-                            const pData = privateSnap.data();
-                            // Controlla sia se è in una cartella, sia se è una stringa letterale!
-                            gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'] || gameKey;
-                        }
+                const userSnap = await getDoc(doc(db, "users", user.uid));
+                if (userSnap.exists()) currentUsername = userSnap.data().username;
+            } catch(e) {}
 
-                        const gameCard = `
-                            <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
-                                <div style="height:150px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #333; position:relative;">
-                                     <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff;">IL FILO DEL DUBBIO</span>
-                                </div>
-                                <div style="padding:25px;">
-                                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                                        <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
-                                        <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.2</span>
-                                    </div>
-                                    <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
-                                    <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
-                                        Include gioco completo, Artbook Digitale e Soundtrack Originale.
-                                    </p>
-                                    
-                                    <div style="display:flex; gap:10px;" class="btn-container-relative">
-                                        <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
-                                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" 
-                                                title="Copia Chiave Steam" 
-                                                onclick="copyKey(this, '${gameKey}')">🔑</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        grid.innerHTML = gameCard;
-                    } else { 
-                        emptyMsg.style.display = 'block'; 
+            const urlParams = new URLSearchParams(window.location.search);
+            const isRedirectFromStripe = urlParams.get('redirect_status') === 'succeeded';
+
+            if (isRedirectFromStripe) {
+                // L'UTENTE HA APPENA PAGATO: Mettiamoci in attesa del Webhook
+                window.history.replaceState({}, document.title, window.location.pathname);
+                if(window.kripixNotify) window.kripixNotify("TRANSAZIONE", "Sincronizzazione Gateway in corso...", "info");
+
+                const privateRef = doc(db, "users", user.uid, "private", "dossier");
+                
+                // Mettiamoci in ascolto LIVE sul database
+                const unsubscribe = onSnapshot(privateRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const pData = docSnap.data();
+                        const gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
+                        
+                        // APPENA LA CHIAVE VIENE INSERITA DAL WEBHOOK:
+                        if (gameKey && gameKey !== "ERRORE-LETTURA-CHIAVE") {
+                            unsubscribe(); // Stacchiamo l'ascolto
+                            currentGlobalKey = gameKey;
+                            
+                            if (pData.lastPurchase) {
+                                currentMethod = pData.lastPurchase.method || "STRIPE SECURE";
+                                currentLast4 = pData.lastPurchase.last4 || "****";
+                            }
+                            
+                            // 1. Disegna la Card nella pagina
+                            injectGameCard();
+                            // 2. Apri la ricevuta a schermo
+                            window.showReceipt(); 
+                            // 3. Notifica di successo
+                            if(window.kripixNotify) window.kripixNotify("SUCCESSO", "Licenza aggiunta all'archivio.", "success");
+                        }
+                    }
+                });
+
+                // Salvagente: Se Stripe o il Webhook esplodono e non scrivono nulla in 15 secondi
+                setTimeout(() => {
+                    unsubscribe();
+                    if (document.getElementById('receipt-modal').style.display !== 'flex') {
+                        if(window.kripixNotify) window.kripixNotify("RITARDO DI RETE", "Ricarica la pagina tra qualche minuto.", "error");
+                    }
+                }, 15000);
+
+            } else {
+                // L'UTENTE E' ENTRATO NORMALMENTE NELLA LIBRERIA
+                const privateRef = doc(db, "users", user.uid, "private", "dossier");
+                const privateSnap = await getDoc(privateRef);
+                
+                if (privateSnap.exists()) {
+                    const pData = privateSnap.data();
+                    const gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
+                    
+                    if (gameKey) {
+                        currentGlobalKey = gameKey;
+                        if (pData.lastPurchase) {
+                            currentMethod = pData.lastPurchase.method || "STRIPE SECURE";
+                            currentLast4 = pData.lastPurchase.last4 || "****";
+                        }
+                        injectGameCard(); // C'è il gioco, disegniamolo!
+                    } else {
+                        document.getElementById('empty-msg').style.display = 'block'; // Libreria vuota
                     }
                 }
-            } catch (error) { console.error(error); }
+            }
         });
 
+        // ==========================================
+        // FUNZIONI GLOBALI (Modali e Copia)
+        // ==========================================
         window.openDlModal = () => document.getElementById('dl-modal').style.display = 'flex';
         window.closeDlModal = () => document.getElementById('dl-modal').style.display = 'none';
+        
         window.copyKey = function(btn, key) {
             navigator.clipboard.writeText(key).then(() => {
                 const container = btn.parentElement; 
@@ -191,10 +339,115 @@
                 if(oldTooltip) oldTooltip.remove();
                 const tooltip = document.createElement('div');
                 tooltip.className = 'copy-tooltip show';
-                tooltip.innerText = 'CHIAVE: ' + key; 
+                tooltip.innerText = 'CHIAVE COPIATA'; 
                 container.appendChild(tooltip);
                 setTimeout(() => { tooltip.classList.remove('show'); setTimeout(() => tooltip.remove(), 300); }, 3000);
             });
+        }
+
+        window.showReceipt = function() {
+            document.getElementById('rec-username').innerText = currentUsername;
+            document.getElementById('rec-email').innerText = currentUserEmail;
+            
+            // Format Metodo
+            const methodString = currentLast4 !== "****" ? `${currentMethod} (Termina con ${currentLast4})` : currentMethod;
+            document.getElementById('rec-method').innerText = methodString;
+            document.getElementById('rec-key').innerText = currentGlobalKey;
+
+            document.getElementById('receipt-modal').style.display = 'flex';
+        }
+
+        // ==========================================
+        // CREAZIONE PDF NATIVO (jsPDF) - Vettoriale e Perfetto
+        // ==========================================
+        window.downloadPDF = function() {
+            const { jsPDF } = window.jspdf;
+            
+            // Creiamo un foglio A4 verticale (in millimetri)
+            const docPdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+            
+            // Coloriamo lo sfondo di nero Kripix (#05070a)
+            docPdf.setFillColor(5, 7, 10);
+            docPdf.rect(0, 0, 210, 297, "F");
+
+            // Configurazione Testi
+            const gold = [227, 198, 108]; // #e3c66c
+            const white = [255, 255, 255];
+            const gray = [136, 136, 136]; // #888
+
+            // Titolone KRIPIX
+            docPdf.setTextColor(gold[0], gold[1], gold[2]);
+            docPdf.setFontSize(40);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.text("KRIPIX", 105, 40, { align: "center" });
+
+            // Sottotitolo
+            docPdf.setTextColor(gray[0], gray[1], gray[2]);
+            docPdf.setFontSize(12);
+            docPdf.setFont("courier", "normal");
+            docPdf.text("RICEVUTA ACQUISTO LICENZA DIGITALE", 105, 52, { align: "center" });
+            
+            // Linea tratteggiata
+            docPdf.setDrawColor(50, 50, 50);
+            docPdf.setLineDashPattern([2, 2], 0);
+            docPdf.line(20, 60, 190, 60);
+
+            // DATI UTENTE
+            let startY = 80;
+            const lineSpace = 12;
+
+            // Formattiamo il metodo
+            const methodString = currentLast4 !== "****" ? `${currentMethod} (*${currentLast4})` : currentMethod;
+
+            // Helper per le righe (Etichetta a sinistra, Valore a destra)
+            const addRow = (label, value, isBold = false) => {
+                docPdf.setFontSize(10);
+                docPdf.setTextColor(gold[0], gold[1], gold[2]);
+                docPdf.text(label, 20, startY);
+                
+                docPdf.setTextColor(white[0], white[1], white[2]);
+                if(isBold) docPdf.setFont("courier", "bold"); else docPdf.setFont("courier", "normal");
+                docPdf.text(value, 190, startY, { align: "right" });
+                
+                // Linea separatrice
+                docPdf.setDrawColor(30, 30, 30);
+                docPdf.setLineDashPattern([], 0); // Linea solida
+                docPdf.line(20, startY + 4, 190, startY + 4);
+                
+                startY += lineSpace;
+            };
+
+            addRow("ID AGENTE:", currentUsername);
+            addRow("EMAIL:", currentUserEmail);
+            addRow("SOFTWARE:", "IL FILO DEL DUBBIO", true);
+            addRow("EDIZIONE:", "DELUXE EDITION");
+            addRow("METODO:", methodString);
+            addRow("IMPORTO PAGATO:", "EUR 29.99", true);
+
+            // BOX CHIAVE CRITTOGRAFICA
+            startY += 20;
+            docPdf.setDrawColor(gold[0], gold[1], gold[2]);
+            docPdf.setLineDashPattern([2, 2], 0);
+            docPdf.setFillColor(15, 15, 15);
+            docPdf.rect(20, startY, 170, 40, "FD"); // Rettangolo tratteggiato con sfondo
+
+            docPdf.setTextColor(gray[0], gray[1], gray[2]);
+            docPdf.setFontSize(9);
+            docPdf.text("CHIAVE CRITTOGRAFICA DI ATTIVAZIONE", 105, startY + 12, { align: "center" });
+
+            docPdf.setTextColor(gold[0], gold[1], gold[2]);
+            docPdf.setFontSize(18);
+            docPdf.setFont("helvetica", "bold");
+            docPdf.text(currentGlobalKey, 105, startY + 28, { align: "center" });
+
+            // Piè di pagina
+            docPdf.setTextColor(80, 80, 80);
+            docPdf.setFontSize(8);
+            docPdf.setFont("courier", "normal");
+            docPdf.text("Documento generato dal Terminale Kripix OS. Conservare con cura.", 105, 280, { align: "center" });
+
+            // Scarica file!
+            docPdf.save(`Ricevuta_Kripix_${currentUsername}.pdf`);
         }
     </script>
 </body>

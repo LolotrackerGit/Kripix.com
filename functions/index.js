@@ -1,9 +1,21 @@
-// NUOVA SINTASSI V2 - PIÙ STABILE
+// ==========================================
+// 0. IMPORTAZIONI E CONFIGURAZIONI GLOBALI
+// ==========================================
 const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const crypto = require("crypto"); 
+
+// CHIAVE SEGRETA STRIPE (Hardcoded, niente più .env!)
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 admin.initializeApp();
 const db = admin.firestore();
+
+// Impostiamo la regione europea per tutte le funzioni
+const europeWest1 = { 
+    region: "europe-west1", 
+    cors: ["https://kripix.netlify.app", "http://127.0.0.1:5500", "http://localhost:5500"] 
+};
 
 // Funzione KripixKey (Generatore di chiavi di gioco)
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -21,46 +33,31 @@ function generateKripixKey(uid, gameCode, editionCode) {
     return `${block1}-${block2}-${block3}-${block4}`;
 }
 
-// Impostiamo la regione una volta per tutte
-const europeWest1 = { region: "europe-west1", cors: true };
-
 // ==========================================
 // 1. FUNZIONI DI BASE & ACCOUNT
 // ==========================================
 
 exports.checkAuth = onCall(europeWest1, (request) => {
-    if (!request.auth) {
-        throw new HttpsError('unauthenticated', 'Test fallito.');
-    }
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Test fallito.');
     return { status: 'success', message: `Autenticazione OK per UID: ${request.auth.uid}` };
 });
 
 exports.createUserAccount = onCall(europeWest1, async (request) => {
     try {
-        console.log(">> REGISTRAZIONE: Inizio procedura.");
         const { email, password, username } = request.data;
-        
-        if (!email || !password || !username) {
-            throw new HttpsError('invalid-argument', 'Email, password e username sono richiesti.');
-        }
+        if (!email || !password || !username) throw new HttpsError('invalid-argument', 'Email, password e username sono richiesti.');
 
         const usernameLower = username.toLowerCase();
         const usernameRef = db.collection('usernames').doc(usernameLower);
 
-        console.log(">> REGISTRAZIONE: Controllo se l'username esiste.");
         const usernameDoc = await usernameRef.get();
-        if (usernameDoc.exists) {
-            throw new HttpsError('already-exists', 'Questo username è già stato scelto.');
-        }
+        if (usernameDoc.exists) throw new HttpsError('already-exists', 'Questo username è già stato scelto.');
 
-        console.log(">> REGISTRAZIONE: Creo l'utente su Firebase Auth...");
         const userRecord = await admin.auth().createUser({ email, password, displayName: username });
         const { uid } = userRecord;
-        console.log(`>> REGISTRAZIONE: Utente creato con UID: ${uid}. Preparo il batch per Firestore.`);
 
         const batch = db.batch();
 
-        // 1. Creo il profilo PUBBLICO (SENZA EMAIL)
         batch.set(db.collection('users').doc(uid), {
             uid: uid,
             username: username,
@@ -72,83 +69,29 @@ exports.createUserAccount = onCall(europeWest1, async (request) => {
             privacy: { visibility: true, telemetry: false, newsletter: false, invisible: false }
         });
 
-        // 2. Creo il dossier PRIVATO (CON L'EMAIL)
         batch.set(db.collection('users').doc(uid).collection('private').doc('dossier'), {
             email: email,
             keys: {}
         });
 
-        // 3. Creo il documento per la ricerca dell'username
         batch.set(usernameRef, { uid: uid });
 
-        console.log(">> REGISTRAZIONE: Eseguo il commit del batch.");
         await batch.commit();
-        
-        console.log(">> REGISTRAZIONE: Procedura completata con successo.");
         return { status: 'success', uid: uid };
 
     } catch (error) {
-        console.error(">> CRASH REGISTRAZIONE:", error);
-        
-        if (error.code === 'auth/email-already-exists') {
-            throw new HttpsError('already-exists', 'Questa email è già registrata.');
-        }
-        if (error.code === 'auth/invalid-password') {
-            throw new HttpsError('invalid-argument', 'La password deve avere almeno 6 caratteri.');
-        }
-        
+        if (error.code === 'auth/email-already-exists') throw new HttpsError('already-exists', 'Questa email è già registrata.');
+        if (error.code === 'auth/invalid-password') throw new HttpsError('invalid-argument', 'La password deve avere almeno 8 caratteri.');
         throw new HttpsError('internal', `Errore server: ${error.message}`);
     }
 });
 
 // ==========================================
-// 2. FUNZIONI DELLO STORE (ACQUISTI)
+// 2. FUNZIONI DELLA RETE OPERATIVA (AMICI)
 // ==========================================
 
-exports.securePurchaseGame = onCall(europeWest1, async (request) => {
-    try {
-        if (!request.auth) throw new Error("Utente non autenticato (Manca il Token).");
-        
-        const uid = request.auth.uid;
-        const gameId = request.data.gameId;
-        
-        if (gameId !== "harrow") throw new Error("ID gioco non valido: " + gameId);
-        
-        const userRef = db.collection('users').doc(uid);
-        const privateRef = userRef.collection('private').doc('dossier');
-        
-        const userDoc = await userRef.get();
-        const userData = userDoc.exists ? userDoc.data() : {};
-        const userGames = userData.games ||[];
-        
-        if (userGames.includes(gameId)) {
-            throw new Error("Possiedi già questa licenza.");
-        }
-        
-        const newKey = generateKripixKey(uid, "HW", "D");
-        const batch = db.batch();
-        
-        batch.set(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) }, { merge: true });
-        batch.set(privateRef, {[`keys.${gameId}`]: newKey }, { merge: true });
-        
-        await batch.commit();
-        
-        return { status: "success" };
-        
-    } catch (error) {
-        console.error("ERRORE TRANSAZIONE:", error);
-        throw new HttpsError('aborted', "Causa del crash: " + error.message);
-    }
-});
-
-// ==========================================
-// 3. FUNZIONI DELLA RETE OPERATIVA (AMICI)
-// ==========================================
-
-// INVIA RICHIESTA DI AMICIZIA
 exports.sendFriendRequest = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
-    
     const senderUid = request.auth.uid;
     const targetUsername = request.data.targetUsername.toLowerCase();
 
@@ -163,31 +106,19 @@ exports.sendFriendRequest = onCall(europeWest1, async (request) => {
         const targetUserDoc = await targetUserRef.get();
         const targetData = targetUserDoc.data();
 
-        if (targetData.privacy && targetData.privacy.visibility === false) {
-            throw new HttpsError('permission-denied', 'L\'Agente ha disattivato la rintracciabilità.');
-        }
-        if (targetData.friends && targetData.friends.includes(senderUid)) {
-            throw new HttpsError('already-exists', 'Siete già connessi.');
-        }
-        if (targetData.requests && targetData.requests.includes(senderUid)) {
-            throw new HttpsError('already-exists', 'Richiesta già inviata in precedenza.');
-        }
+        if (targetData.privacy && targetData.privacy.visibility === false) throw new HttpsError('permission-denied', 'L\'Agente ha disattivato la rintracciabilità.');
+        if (targetData.friends && targetData.friends.includes(senderUid)) throw new HttpsError('already-exists', 'Siete già connessi.');
+        if (targetData.requests && targetData.requests.includes(senderUid)) throw new HttpsError('already-exists', 'Richiesta già inviata in precedenza.');
 
-        // Aggiunge l'UID del mittente alle richieste del target
-        await targetUserRef.update({
-            requests: admin.firestore.FieldValue.arrayUnion(senderUid)
-        });
-
+        await targetUserRef.update({ requests: admin.firestore.FieldValue.arrayUnion(senderUid) });
         return { status: 'success' };
     } catch (error) {
         throw new HttpsError(error.code || 'internal', error.message);
     }
 });
 
-// ACCETTA RICHIESTA DI AMICIZIA
 exports.acceptFriendRequest = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
-    
     const myUid = request.auth.uid;
     const senderUid = request.data.senderUid;
 
@@ -195,25 +126,15 @@ exports.acceptFriendRequest = onCall(europeWest1, async (request) => {
     const myRef = db.collection('users').doc(myUid);
     const senderRef = db.collection('users').doc(senderUid);
 
-    // Rimuove la richiesta in sospeso e aggiunge agli amici per l'utente corrente
-    batch.update(myRef, {
-        requests: admin.firestore.FieldValue.arrayRemove(senderUid),
-        friends: admin.firestore.FieldValue.arrayUnion(senderUid)
-    });
-
-    // Aggiunge l'utente corrente agli amici del mittente
-    batch.update(senderRef, {
-        friends: admin.firestore.FieldValue.arrayUnion(myUid)
-    });
+    batch.update(myRef, { requests: admin.firestore.FieldValue.arrayRemove(senderUid), friends: admin.firestore.FieldValue.arrayUnion(senderUid) });
+    batch.update(senderRef, { friends: admin.firestore.FieldValue.arrayUnion(myUid) });
 
     await batch.commit();
     return { status: 'success' };
 });
 
-// RIMUOVI AMICO O ANNULLA RICHIESTA
 exports.removeConnection = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
-    
     const myUid = request.auth.uid;
     const targetUid = request.data.targetUid;
 
@@ -221,306 +142,144 @@ exports.removeConnection = onCall(europeWest1, async (request) => {
     const myRef = db.collection('users').doc(myUid);
     const targetRef = db.collection('users').doc(targetUid);
 
-    // Rimuove da entrambe le parti, pulendo sia la lista amici che eventuali richieste pendenti
-    batch.update(myRef, {
-        friends: admin.firestore.FieldValue.arrayRemove(targetUid),
-        requests: admin.firestore.FieldValue.arrayRemove(targetUid)
-    });
-    batch.update(targetRef, {
-        friends: admin.firestore.FieldValue.arrayRemove(myUid),
-        requests: admin.firestore.FieldValue.arrayRemove(myUid)
-    });
+    batch.update(myRef, { friends: admin.firestore.FieldValue.arrayRemove(targetUid), requests: admin.firestore.FieldValue.arrayRemove(targetUid) });
+    batch.update(targetRef, { friends: admin.firestore.FieldValue.arrayRemove(myUid), requests: admin.firestore.FieldValue.arrayRemove(myUid) });
 
     await batch.commit();
     return { status: 'success' };
 });
-// Aggiungi questo in alto nel tuo file index.js (se non c'è già)
-const crypto = require("crypto"); 
 
 // ==========================================
-// 4. SISTEMA DI RISCATTO CHIAVI (ANTI-KEYGEN)
+// 3. SISTEMA DI RISCATTO CHIAVI (ANTI-KEYGEN)
 // ==========================================
 
 exports.redeemKripixKey = onCall(europeWest1, async (request) => {
-    // 1. Controllo Autenticazione
-    if (!request.auth) {
-        throw new HttpsError('unauthenticated', 'Accesso negato. Agente non identificato.');
-    }
-
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
     const uid = request.auth.uid;
-    const rawKey = request.data.gameKey; // Es: KRPX-A1B2-C3D4-E5F6
+    const rawKey = request.data.gameKey; 
     
-    if (!rawKey || rawKey.length < 10) {
-        throw new HttpsError('invalid-argument', 'Formato chiave non valido.');
-    }
-
-    // Normalizza la chiave (rimuove spazi, tutto maiuscolo)
+    if (!rawKey || rawKey.length < 10) throw new HttpsError('invalid-argument', 'Formato chiave non valido.');
     const formattedKey = rawKey.toUpperCase().trim();
     
-    // Riferimenti al Database
     const keyRef = db.collection('game_keys').doc(formattedKey);
     const userRef = db.collection('users').doc(uid);
     const privateDossierRef = userRef.collection('private').doc('dossier');
 
     try {
-        // Avviamo una TRANSAZIONE: blocca il documento finché non abbiamo finito
-        // Questo impedisce i "Race Conditions" (es. attivazioni doppie simultanee)
         await db.runTransaction(async (transaction) => {
             const keyDoc = await transaction.get(keyRef);
-
-            // 2. Controllo: La chiave esiste nel nostro database?
-            if (!keyDoc.exists) {
-                throw new Error("CODICE_INESISTENTE");
-            }
-
+            if (!keyDoc.exists) throw new Error("CODICE_INESISTENTE");
+            
             const keyData = keyDoc.data();
+            if (keyData.isUsed === true) throw new Error("CODICE_BRUCIATO");
 
-            // 3. Controllo: La chiave è già stata usata?
-            if (keyData.isUsed === true) {
-                throw new Error("CODICE_BRUCIATO");
-            }
-
-            // 4. Recupero i dati dell'utente per evitare che attivi un gioco che ha già
             const userDoc = await transaction.get(userRef);
             const userGames = userDoc.exists ? (userDoc.data().games || []) :[];
+            if (userGames.includes(keyData.gameId)) throw new Error("GIOCO_GIA_POSSEDUTO");
 
-            if (userGames.includes(keyData.gameId)) {
-                throw new Error("GIOCO_GIA_POSSEDUTO");
-            }
-
-            // 5. TUTTO OK! PROCEDIAMO ALL'ATTIVAZIONE (SOVRASCRITTURA DATI)
-            
-            // A) Bruciamo la chiave
-            transaction.update(keyRef, { 
-                isUsed: true, 
-                usedBy: uid, 
-                redeemedAt: admin.firestore.FieldValue.serverTimestamp() 
-            });
-
-            // B) Aggiungiamo il gioco al profilo pubblico dell'utente
-            transaction.update(userRef, { 
-                games: admin.firestore.FieldValue.arrayUnion(keyData.gameId) 
-            });
-
-            // C) Salviamo la chiave nel suo dossier privato per la Libreria
-            transaction.set(privateDossierRef, { 
-                [`keys.${keyData.gameId}`]: formattedKey 
-            }, { merge: true });
+            transaction.update(keyRef, { isUsed: true, usedBy: uid, redeemedAt: admin.firestore.FieldValue.serverTimestamp() });
+            transaction.update(userRef, { games: admin.firestore.FieldValue.arrayUnion(keyData.gameId) });
+            transaction.set(privateDossierRef, { [`keys.${keyData.gameId}`]: formattedKey }, { merge: true });
         });
-
-        return { status: "success", message: "Licenza acquisita e registrata." };
-
+        return { status: "success", message: "Licenza acquisita." };
     } catch (error) {
-        console.error(`[SECURITY ALERT] Tentativo riscatto fallito UID ${uid}:`, error.message);
-        
-        // Traduciamo gli errori del server in messaggi utente
-        if (error.message === "CODICE_INESISTENTE") {
-            throw new HttpsError('not-found', 'Chiave crittografica non riconosciuta dal Network.');
-        }
-        if (error.message === "CODICE_BRUCIATO") {
-            throw new HttpsError('already-exists', 'Questa licenza è già stata rivendicata da un altro Agente.');
-        }
-        if (error.message === "GIOCO_GIA_POSSEDUTO") {
-            throw new HttpsError('failed-precondition', 'Il tuo account possiede già questa licenza.');
-        }
-        
+        if (error.message === "CODICE_INESISTENTE") throw new HttpsError('not-found', 'Chiave non riconosciuta.');
+        if (error.message === "CODICE_BRUCIATO") throw new HttpsError('already-exists', 'Licenza già rivendicata.');
+        if (error.message === "GIOCO_GIA_POSSEDUTO") throw new HttpsError('failed-precondition', 'Possiedi già questa licenza.');
         throw new HttpsError('internal', 'Errore di sincronizzazione col server.');
     }
 });
+
 // ==========================================
-// 5. KRIPIX OS - CONSOLE DEI COMANDI OVERSEER
+// 4. KRIPIX OS - CONSOLE DEI COMANDI OVERSEER
 // ==========================================
 
 exports.overseerCommand = onCall(europeWest1, async (request) => {
-    // 1. SCUDO DI SICUREZZA ASSOLUTO
-    if (!request.auth) {
-        return { status: 'error', output: 'ACCESSO NEGATO: Nessuna identificazione rilevata.' };
-    }
-
+    if (!request.auth) return { status: 'error', output: 'ACCESSO NEGATO.' };
     const uid = request.auth.uid;
     const adminDoc = await db.collection('users').doc(uid).get();
 
-    // Verifichiamo direttamente dal server che l'utente sia admin
-    if (!adminDoc.exists || adminDoc.data().isAdmin !== true) {
-        console.error(`[SECURITY BREACH] L'Agente UID: ${uid} ha tentato di inviare un comando Admin.`);
-        return { status: 'error', output: 'ACCESSO NEGATO: Privilegi insufficienti. L\'incidente è stato registrato.' };
-    }
+    if (!adminDoc.exists || adminDoc.data().isAdmin !== true) return { status: 'error', output: 'ACCESSO NEGATO: Privilegi insufficienti.' };
 
-    // 2. PARSING DEL COMANDO
     const cmdString = request.data.command || "";
-    // Divide la stringa in un array, ignorando gli spazi multipli
     const args = cmdString.trim().split(/\s+/); 
     const action = args[0].toLowerCase();
 
     try {
-        // ==========================================
-        // COMANDO: find (Ricerca Agenti)
-        // Uso: find -u [username] oppure find -e [email]
-        // ==========================================
         if (action === 'find') {
-            const flag = args[1];
-            const target = args[2];
-            let targetUid = null;
-
+            const flag = args[1]; const target = args[2]; let targetUid = null;
             if (!flag || !target) return { status: 'error', output: 'Sintassi errata. Uso: find -u [username] o find -e [email]' };
-
-            // Ricerca tramite Username
             if (flag === '-u') {
                 const unDoc = await db.collection('usernames').doc(target.toLowerCase()).get();
-                if (!unDoc.exists) return { status: 'error', output: `Nessun Agente trovato con il nome in codice: ${target}` };
+                if (!unDoc.exists) return { status: 'error', output: `Nessun Agente trovato: ${target}` };
                 targetUid = unDoc.data().uid;
-            } 
-            // Ricerca tramite Email (usa l'Auth di Firebase)
-            else if (flag === '-e') {
+            } else if (flag === '-e') {
                 try {
                     const userRecord = await admin.auth().getUserByEmail(target);
                     targetUid = userRecord.uid;
-                } catch(e) {
-                    return { status: 'error', output: `Nessun account associato all'email: ${target}` };
-                }
-            } else {
-                return { status: 'error', output: 'Flag sconosciuto. Usa "-u" (username) o "-e" (email).' };
-            }
+                } catch(e) { return { status: 'error', output: `Nessun account associato all'email: ${target}` }; }
+            } else return { status: 'error', output: 'Flag sconosciuto.' };
 
-            // Otteniamo il Dossier Pubblico e Privato
             const uDoc = await db.collection('users').doc(targetUid).get();
             const pDoc = await db.collection('users').doc(targetUid).collection('private').doc('dossier').get();
+            const uData = uDoc.exists ? uDoc.data() : {}; const pData = pDoc.exists ? pDoc.data() : {};
             
-            const uData = uDoc.exists ? uDoc.data() : {};
-            const pData = pDoc.exists ? pDoc.data() : {};
-            
-            // Creiamo l'output stile terminale
-            let output = `--- DOSSIER AGENTE DECRIPTATO ---\n`;
-            output += `UID      : ${targetUid}\n`;
-            output += `USERNAME : ${uData.username}\n`;
-            output += `EMAIL    : ${pData.email || '[NON DISPONIBILE]'}\n`;
-            output += `STATUS   : ${uData.onlineStatus ? uData.onlineStatus.toUpperCase() : 'OFFLINE'}\n`;
-            output += `VISIBILE : ${uData.privacy && uData.privacy.invisible ? 'FALSO (FANTASMA)' : 'VERO'}\n`;
-            output += `LICENZE  : ${uData.games && uData.games.length > 0 ? uData.games.join(', ').toUpperCase() : 'NESSUNA'}`;
-            
+            let output = `--- DOSSIER AGENTE DECRIPTATO ---\nUID      : ${targetUid}\nUSERNAME : ${uData.username}\nEMAIL    : ${pData.email || '[NON DISPONIBILE]'}\nSTATUS   : ${uData.onlineStatus ? uData.onlineStatus.toUpperCase() : 'OFFLINE'}\nVISIBILE : ${uData.privacy && uData.privacy.invisible ? 'FALSO (FANTASMA)' : 'VERO'}\nLICENZE  : ${uData.games && uData.games.length > 0 ? uData.games.join(', ').toUpperCase() : 'NESSUNA'}`;
             return { status: 'success', output: output };
         }
 
-        // ==========================================
-        // COMANDO: license (Gestione Software)
-        // Uso: license grant [uid] [id] oppure license revoke [uid] [id]
-        // ==========================================
         if (action === 'license') {
-            const subAction = args[1]; // 'grant' o 'revoke'
-            const targetUid = args[2];
-            const gameId = args[3]; // Es: 'harrow'
-
+            const subAction = args[1]; const targetUid = args[2]; const gameId = args[3];
             if (!subAction || !targetUid || !gameId) return { status: 'error', output: 'Sintassi errata. Uso: license grant/revoke [uid] [game_id]' };
-
             const userRef = db.collection('users').doc(targetUid);
             const dossierRef = userRef.collection('private').doc('dossier');
 
             if (subAction === 'grant') {
                 await userRef.update({ games: admin.firestore.FieldValue.arrayUnion(gameId) });
-                // Inseriamo una chiave "fittizia" nel dossier privato per far capire che è un regalo admin
                 await dossierRef.set({ [`keys.${gameId}`]: "OVERSEER_DIRECT_GRANT" }, { merge: true });
-                return { status: 'success', output: `[SUCCESSO] Licenza '${gameId.toUpperCase()}' concessa manualmente all'UID: ${targetUid}` };
-            } 
-            else if (subAction === 'revoke') {
+                return { status: 'success', output: `[SUCCESSO] Licenza concessa.` };
+            } else if (subAction === 'revoke') {
                 await userRef.update({ games: admin.firestore.FieldValue.arrayRemove(gameId) });
-                // Elimina la chiave dal dossier
                 await dossierRef.update({ [`keys.${gameId}`]: admin.firestore.FieldValue.delete() });
-                return { status: 'success', output: `[SUCCESSO] Licenza '${gameId.toUpperCase()}' revocata e rimossa dal profilo UID: ${targetUid}` };
-            } 
-            else {
-                return { status: 'error', output: "Azione sconosciuta. Usa 'grant' o 'revoke'." };
+                return { status: 'success', output: `[SUCCESSO] Licenza revocata.` };
             }
         }
 
-        // ==========================================
-        // COMANDO: network (Ban & Sospensione)
-        // Uso: network [ban|suspend|unban|unsuspend] [uid] (motivo opzionale)
-        // ==========================================
         if (action === 'network') {
-            const subAction = args[1];
-            const targetUid = args[2];
-            
-            // Uniamo il resto degli argomenti per formare il "motivo"
-            const reason = args.slice(3).join(' ') || "Nessun motivo specificato.";
-
+            const subAction = args[1]; const targetUid = args[2]; const reason = args.slice(3).join(' ') || "Nessun motivo specificato.";
             if (!subAction || !targetUid) return { status: 'error', output: 'Sintassi errata. Uso: network [azione] [uid] (motivo)' };
-            
             const userRef = db.collection('users').doc(targetUid);
-
             switch (subAction) {
-                case 'ban':
-                    // Disabilita l'account a livello di autenticazione Firebase
-                    await admin.auth().updateUser(targetUid, { disabled: true });
-                    // Potremmo anche salvare il motivo nel database per nostro storico
-                    await userRef.set({ accountStatus: { isBanned: true, reason: reason } }, { merge: true });
-                    
-                    // TODO: Qui possiamo inserire la logica per inviare la mail di notifica!
-
-                    return { status: 'success', output: `[PROTOCOLLO BAN ESEGUITO] L'accesso dell'Agente ${targetUid} è stato revocato permanentemente.` };
-
-                case 'unban':
-                    await admin.auth().updateUser(targetUid, { disabled: false });
-                    await userRef.update({ 'accountStatus.isBanned': false });
-                    return { status: 'success', output: `[PROTOCOLLO ANNULLATO] L'Agente ${targetUid} è stato riabilitato.` };
-                
-                case 'suspend':
-                    // Scrive solo nel database Firestore, non blocca il login
-                    await userRef.set({ accountStatus: { isSuspended: true, reason: reason } }, { merge: true });
-                    return { status: 'success', output: `[PROTOCOLLO SOSPENSIONE ATTIVO] L'Agente ${targetUid} è stato sospeso. Vedrà un avviso sul suo profilo.` };
-
-                case 'unsuspend':
-                    // Rimuove il campo 'accountStatus' per pulire il profilo
-                    await userRef.update({ accountStatus: admin.firestore.FieldValue.delete() });
-                    return { status: 'success', output: `[PROTOCOLLO ANNULLATO] La sospensione per l'Agente ${targetUid} è stata revocata.` };
-                
-                default:
-                    return { status: 'error', output: "Azione sconosciuta. Usa 'ban', 'unban', 'suspend' o 'unsuspend'." };
+                case 'ban': await admin.auth().updateUser(targetUid, { disabled: true }); await userRef.set({ accountStatus: { isBanned: true, reason: reason } }, { merge: true }); return { status: 'success', output: `Agente bannato.` };
+                case 'unban': await admin.auth().updateUser(targetUid, { disabled: false }); await userRef.update({ 'accountStatus.isBanned': false }); return { status: 'success', output: `Agente riabilitato.` };
+                case 'suspend': await userRef.set({ accountStatus: { isSuspended: true, reason: reason } }, { merge: true }); return { status: 'success', output: `Agente sospeso.` };
+                case 'unsuspend': await userRef.update({ accountStatus: admin.firestore.FieldValue.delete() }); return { status: 'success', output: `Sospensione revocata.` };
             }
         }
 
-        // ==========================================
-        // COMANDO: keys purge (Pulizia Database)
-        // Uso: keys purge
-        // ==========================================
         if (action === 'keys' && args[1] === 'purge') {
-            // Cerchiamo tutte le chiavi nel database in cui isUsed è false
             const snapshot = await db.collection('game_keys').where('isUsed', '==', false).get();
-            
-            if (snapshot.empty) {
-                return { status: 'success', output: "Nessuna chiave vergine trovata. Il database è già pulito." };
-            }
-
-            // Usiamo il batch per cancellarle tutte in un colpo solo
-            const batch = db.batch();
-            let count = 0;
-            
-            snapshot.docs.forEach((doc) => {
-                batch.delete(doc.ref);
-                count++;
-            });
-            
+            if (snapshot.empty) return { status: 'success', output: "Nessuna chiave vergine trovata." };
+            const batch = db.batch(); let count = 0;
+            snapshot.docs.forEach((doc) => { batch.delete(doc.ref); count++; });
             await batch.commit(); 
-            return { status: 'success', output: `[PROTOCOLLO PURGE COMPLETATO] Distrutte ${count} chiavi crittografiche non utilizzate.` };
+            return { status: 'success', output: `Distrutte ${count} chiavi.` };
         }
 
-        // Se il comando non è riconosciuto
-        return { status: 'error', output: `Comando non riconosciuto: ${action}. Digita 'help' per la sintassi corretta.` };
-
-    } catch (error) {
-        console.error(`[OVERSEER ERROR] Fallimento comando '${cmdString}':`, error);
-        return { status: 'error', output: `Errore critico di sistema: ${error.message}` };
-    }
+        return { status: 'error', output: `Comando non riconosciuto.` };
+    } catch (error) { return { status: 'error', output: `Errore: ${error.message}` }; }
 });
+
 // ==========================================
-// 6. PROTOCOLLO SINCRONIZZAZIONE DISCORD
+// 5. PROTOCOLLO SINCRONIZZAZIONE DISCORD
 // ==========================================
 
+// Variabili Discord (Hardcoded, niente .env)
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const DISCORD_REDIRECT_URI = "https://europe-west1-kripix-ent.cloudfunctions.net/discordCallback";
 
-// Gli ID numerici del server non sono segreti, possono restare nel codice
 const GUILD_ID = "1503069828439740618";
 const ROLE_VERIFIED = "1503076001729744987";
 const ROLE_DETECTIVE = "1504131716443541615";
@@ -529,30 +288,22 @@ const ROLE_OVERSEER = "1503075406402687159";
 exports.getDiscordAuthUrl = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
     const uid = request.auth.uid;
-    
-    // Generiamo l'esagono di sicurezza
     const state = crypto.randomBytes(16).toString("hex");
     await db.collection("discord_states").doc(state).set({ uid: uid, createdAt: admin.firestore.FieldValue.serverTimestamp() });
-
-    // Link autorizzazione Discord
     const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=identify&state=${state}`;
     return { status: 'success', url: url };
 });
 
 exports.discordCallback = onRequest(europeWest1, async (req, res) => {
-    const code = req.query.code;
-    const state = req.query.state;
-
-    if (!code || !state) return res.status(400).send("Protocollo Fallito: Parametri mancanti.");
+    const code = req.query.code; const state = req.query.state;
+    if (!code || !state) return res.status(400).send("Parametri mancanti.");
 
     try {
-        // 1. Verifica Sicurezza
         const stateDocRef = db.collection("discord_states").doc(state);
         const stateDoc = await stateDocRef.get();
-        if (!stateDoc.exists) return res.status(403).send("Sessione scaduta o non valida.");
+        if (!stateDoc.exists) return res.status(403).send("Sessione scaduta.");
         const uid = stateDoc.data().uid;
 
-        // 2. Acquisizione Token Utente
         const tokenParams = new URLSearchParams();
         tokenParams.append('client_id', DISCORD_CLIENT_ID);
         tokenParams.append('client_secret', DISCORD_CLIENT_SECRET);
@@ -562,59 +313,118 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
 
         const tokenRes = await fetch('https://discord.com/api/oauth2/token', { method: 'POST', body: tokenParams, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
         const tokenData = await tokenRes.json();
-        if (!tokenData.access_token) {
-    console.error("ERRORE DISCORD SEGRETO:", tokenData);
-    return res.status(400).send(`
-        <body style="background:#05070a; color:white; font-family:monospace; padding:50px; text-align:center;">
-            <h2 style="color:#ff5555;">ACCESSO NEGATO DA DISCORD</h2>
-            <p>Discord ha rifiutato la stretta di mano. Ecco il vero motivo:</p>
-            <pre style="background:#111; border:1px solid #e3c66c; color:#4caf50; padding:20px; text-align:left; display:inline-block;">${JSON.stringify(tokenData, null, 2)}</pre>
-            <p style="margin-top:30px;">Mandami uno screenshot di questa scatola verde!</p>
-        </body>
-    `);
-}
+        
+        if (!tokenData.access_token) return res.status(400).send("Accesso rifiutato da Discord.");
 
-        // 3. ID Discord
         const userRes = await fetch('https://discord.com/api/users/@me', { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } });
         const discordUser = await userRes.json();
 
-        // 4. Leggiamo i dati dal Dossier Kripix (per sapere quali ruoli dargli)
         const kripixUserDoc = await db.collection("users").doc(uid).get();
         const kripixData = kripixUserDoc.exists ? kripixUserDoc.data() : {};
 
-        // Prepariamo la lista dei ruoli da assegnare
-        const rolesToAdd = [ROLE_VERIFIED]; // Ruolo base per tutti
-        if (kripixData.games && kripixData.games.includes("harrow")) {
-            rolesToAdd.push(ROLE_DETECTIVE);
-        }
-        if (kripixData.isAdmin === true) {
-            rolesToAdd.push(ROLE_OVERSEER);
-        }
+        const rolesToAdd = [ROLE_VERIFIED]; 
+        if (kripixData.games && kripixData.games.includes("harrow")) rolesToAdd.push(ROLE_DETECTIVE);
+        if (kripixData.isAdmin === true) rolesToAdd.push(ROLE_OVERSEER);
 
-        // 5. Assegniamo i ruoli fisicamente su Discord!
         for (const roleId of rolesToAdd) {
             await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${discordUser.id}/roles/${roleId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
-                    'Content-Length': '0' // API richiede un body vuoto per il PUT
-                }
+                method: 'PUT', headers: { 'Authorization': `Bot ${DISCORD_BOT_TOKEN}`, 'Content-Length': '0' }
             });
         }
 
-        // 6. Salviamo l'ID Discord su Firebase
-        await kripixUserDoc.ref.update({
-            discordId: discordUser.id,
-            discordUsername: discordUser.username
-        });
-
+        await kripixUserDoc.ref.update({ discordId: discordUser.id, discordUsername: discordUser.username });
         await stateDocRef.delete();
 
-        // 7. Ritorno alla base (Cambia il link con quello del tuo sito!)
-        res.redirect('https://lolotrackergit.github.io/Kripix.com/profilo.html?sync=success');
+        res.redirect('https://kripix.netlify.app/profilo.html?sync=success');
 
     } catch (error) {
         console.error("[CRASH OAUTH]:", error);
-        res.status(500).send("Errore critico durante l'interfacciamento col Kripix Network.");
+        res.status(500).send("Errore critico durante l'interfacciamento.");
     }
+});
+
+// ==========================================
+// 6. CREAZIONE SESSIONE STRIPE CHECKOUT
+// ==========================================
+
+exports.createPaymentIntent = onCall(europeWest1, async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
+    const uid = request.auth.uid;
+    const gameId = request.data.gameId;
+
+    if (gameId !== "harrow") throw new HttpsError('invalid-argument', 'Gioco non valido.');
+
+    try {
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: 2999, // 29.99 Euro
+            currency: 'eur',
+            automatic_payment_methods: { enabled: true }, 
+            metadata: { firebaseUID: uid, gameId: gameId }
+        });
+        return { status: 'success', clientSecret: paymentIntent.client_secret };
+    } catch (error) {
+        console.error("Errore Stripe Intent:", error);
+        throw new HttpsError('internal', 'Errore durante l\'inizializzazione del terminale bancario.');
+    }
+});
+
+// ==========================================
+// 7. WEBHOOK STRIPE (Ricezione Pagamento)
+// ==========================================
+const endpointSecret = "whsec_IIv1lLa5ZhcA7JqCjWKRiWIVV8NMybrH"; // <-- Il tuo segreto!
+
+exports.stripeWebhook = onRequest(europeWest1, async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.rawBody, sig, endpointSecret);
+    } catch (err) {
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        const uid = paymentIntent.metadata.firebaseUID;
+        const gameId = paymentIntent.metadata.gameId;
+
+        if (uid && gameId) {
+            const userRef = db.collection('users').doc(uid);
+            const privateRef = userRef.collection('private').doc('dossier');
+            const newKey = generateKripixKey(uid, "HW", "D");
+            
+            // Estrazione Dati Pagamento Migliorata!
+            let pMethod = "STRIPE";
+            let pLast4 = "****";
+
+            try {
+                // Recuperiamo i dettagli reali usando le API di Stripe
+                if (paymentIntent.payment_method) {
+                    const paymentMethodDetails = await stripe.paymentMethods.retrieve(paymentIntent.payment_method);
+                    if (paymentMethodDetails.type === 'card') {
+                        pMethod = paymentMethodDetails.card.brand.toUpperCase(); // VISA, MASTERCARD, ecc.
+                        pLast4 = paymentMethodDetails.card.last4;
+                    } else if (paymentMethodDetails.type === 'paypal') {
+                        pMethod = "PAYPAL";
+                    } else if (paymentMethodDetails.type === 'klarna') {
+                        pMethod = "KLARNA";
+                    }
+                }
+            } catch (e) {
+                console.error("Non sono riuscito a estrarre il metodo di pagamento:", e);
+            }
+            
+            const batch = db.batch();
+            batch.set(userRef, { games: admin.firestore.FieldValue.arrayUnion(gameId) }, { merge: true });
+            
+            batch.set(privateRef, {
+                [`keys.${gameId}`]: newKey,
+                lastPurchase: { method: pMethod, last4: pLast4 }
+            }, { merge: true });
+            
+            await batch.commit();
+        }
+    }
+
+    res.json({received: true});
 });

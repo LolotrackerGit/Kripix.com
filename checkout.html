@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminale di Pagamento - Kripix</title>
+    
+    <!-- CSS e Font Kripix -->
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.ico">
+    
+    <!-- LIBRERIA UFFICIALE STRIPE (FONDAMENTALE) -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <style>
+        body { background-color: #020202; overflow-x: hidden; }
+        
+        /* Contenitore animato */
+        .checkout-wrapper {
+            max-width: 1000px;
+            margin: 120px auto 80px;
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 50px;
+            padding: 0 5%;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: bootSequence 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes bootSequence {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Moduli Kripix */
+        .module-box {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #333;
+            padding: 30px;
+            margin-bottom: 25px;
+            border-top: 2px solid var(--text-muted);
+            transition: 0.3s;
+        }
+        .module-box:hover { border-top-color: var(--accent-gold); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+
+        .module-title {
+            color: var(--text-main);
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed #333;
+            padding-bottom: 10px;
+        }
+
+        /* Riepilogo Destra */
+        .summary-box { background: #05070a; border: 1px solid var(--accent-gold); padding: 30px; height: fit-content; position: sticky; top: 100px;}
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; color: #aaa; font-size: 0.9rem; }
+        .summary-total { display: flex; justify-content: space-between; margin-top: 25px; padding-top: 20px; border-top: 1px solid #333; color: white; font-size: 1.5rem; font-weight: 900; }
+        .game-thumb { width: 60px; height: 80px; background: #111; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime'; color: #555; }
+
+        /* Messaggi e Terminale */
+        .error-msg { color: #ff5555; font-family: 'Courier Prime'; font-size: 0.8rem; margin-top: 15px; display: none; text-align: center; font-weight: bold; animation: shake 0.3s;}
+        .terminal-loader { display: none; font-family: 'Courier Prime'; font-size: 0.9rem; text-align: center; margin-top: 20px; color: var(--accent-gold); }
+
+        @media(max-width: 900px) { 
+            .checkout-wrapper { grid-template-columns: 1fr; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <nav style="border-bottom: 1px solid #111; background: #05070a; z-index: 100; position: fixed;">
+        <div class="logo-text"><a href="index.html">KRIPIX</a></div>
+        <a href="harrow.html" class="back-link">← ANNULLA TRANSAZIONE</a>
+    </nav>
+
+    <div class="checkout-wrapper">
+        
+        <!-- COLONNA SINISTRA: DATI PAGAMENTO -->
+        <div>
+            <!-- Box Identità -->
+            <div class="module-box" style="padding: 20px 30px;">
+                <p style="color:#666; font-size:0.85rem; font-family: 'Courier Prime';">
+                    CONCESSIONE LICENZA PER: <br>
+                    <span id="checkout-email" style="color:var(--text-main); font-size: 1rem; display: block; margin-top: 5px;">Attendere sincronizzazione...</span>
+                </p>
+            </div>
+
+            <!-- Box Pagamento Stripe -->
+            <div class="module-box">
+                <h2 class="module-title">TERMINALE BANCARIO CRITTOGRAFATO</h2>
+                
+                <!-- Qui Stripe inietterà il form con Carte, Apple Pay, PayPal ecc. -->
+                <div id="payment-element" style="margin-bottom: 20px; min-height: 150px;">
+                    <div style="text-align: center; margin-top: 40px;">
+                        <span style="color:var(--accent-gold); font-family:'Courier Prime'; animation: pulse 1.5s infinite;">
+                            >> Inizializzazione Gateway di Pagamento...
+                        </span>
+                    </div>
+                </div>
+
+                <button id="btn-pay" class="btn-gold full-width" style="padding: 20px; font-size: 1.1rem; margin-top: 10px; display: none;">AUTORIZZA TRANSAZIONE</button>
+                <div id="error-alert" class="error-msg"></div>
+                
+                <div id="terminal-loader" class="terminal-loader">
+                    <span id="loader-text">> ELABORAZIONE IN CORSO. NON SPEGNERE IL TERMINALE...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLONNA DESTRA: RIEPILOGO -->
+        <div>
+            <div class="summary-box">
+                
+                <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 30px;">
+                    <div class="game-thumb">HW</div>
+                    <div>
+                        <h4 style="color: white; font-size: 1.1rem; margin-bottom: 2px;">Il Filo del Dubbio</h4>
+                        <p style="color: var(--accent-gold); font-family: 'Courier Prime'; font-size: 0.7rem;">DELUXE EDITION (PC)</p>
+                    </div>
+                </div>
+
+                <div class="summary-row"><span>Subtotale</span><span>€ 24.58</span></div>
+                <div class="summary-row"><span>Tasse (IVA 22%)</span><span>€ 5.41</span></div>
+                
+                <div class="summary-total">
+                    <span>TOTALE</span>
+                    <span style="color: var(--accent-gold);">€ 29.99</span>
+                </div>
+                
+                <p style="color: #666; font-size: 0.75rem; margin-top: 30px; line-height: 1.5;">
+                    La transazione è protetta dai server Stripe. Apple Pay, Google Pay e PayPal sono supportati. La licenza digitale verrà assegnata istantaneamente.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT LOGICA PAGAMENTO -->
+    <!-- SCRIPT LOGICA PAGAMENTO STRIPE FIXATA -->
+    <script type="module">
+        import { app, auth, db } from './script.js';
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // ========================================================
+        // INSERISCI QUI LA TUA CHIAVE PUBBLICA STRIPE (pk_test_...)
+        // ========================================================
+        const stripe = Stripe('pk_test_51TZEPzFoVflwEL16uBMZzBMrFeNpT0Wtbl08uaZM7HHWeoLsUVJRFHVWGKcVohinsnYYoDQ6c4euU5Jck8J6hdWQ00c19UsZos');
+        let elements;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = "login.html"; return; }
+            document.getElementById('checkout-email').innerText = user.email;
+
+            const functions = getFunctions(app, 'europe-west1');
+            const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
+
+            try {
+                const result = await createPaymentIntent({ gameId: 'harrow' });
+                const clientSecret = result.data.clientSecret;
+
+                // STILE KRIPIX FIXATO (Icone visibili, niente neri su neri)
+                const appearance = {
+                    theme: 'night',
+                    variables: {
+                        fontFamily: 'Montserrat, sans-serif',
+                        colorBackground: '#0a0a0a',
+                        colorPrimary: '#e3c66c',    // Oro Kripix
+                        colorText: '#ffffff',
+                        colorDanger: '#ff5555',
+                        spacingUnit: '4px',
+                        borderRadius: '2px',
+                        colorIcon: '#e3c66c',       // FIX: Forza le icone delle carte a essere oro
+                        colorIconTab: '#ffffff'     // FIX: Icone tab bianche
+                    },
+                    rules: {
+                        '.Input': { border: '1px solid #333', outline: 'none', backgroundColor: '#000000', color: '#ffffff' },
+                        '.Input:focus': { borderColor: '#e3c66c', boxShadow: '0 0 10px rgba(227, 198, 108, 0.1)' },
+                        '.Tab': { border: '1px solid #222', backgroundColor: '#05070a', display: 'flex' },
+                        '.Tab:hover': { borderColor: '#555' },
+                        '.Tab--selected': { borderColor: '#e3c66c', backgroundColor: 'rgba(227, 198, 108, 0.05)' },
+                        '.TabIcon': { fill: '#e3c66c' } // FIX EXTRA: Forza il colore SVG
+                    }
+                };
+
+                elements = stripe.elements({ clientSecret, appearance });
+                
+                // LAYOUT ACCORDION: Niente tendine, molto più bello e Noir
+                const paymentElement = elements.create('payment', { 
+                    layout: {
+                        type: 'accordion',
+                        defaultCollapsed: false,
+                        radios: true,
+                        spacedAccordionItems: true
+                    },
+                    defaultValues: { billingDetails: { email: user.email } }
+                });
+                
+                await paymentElement.mount('#payment-element');
+                document.getElementById('btn-pay').style.display = 'block';
+
+            } catch (error) {
+                console.error("Errore Stripe:", error);
+                document.getElementById('payment-element').innerHTML = "";
+                document.getElementById('error-alert').innerText = ">> ERRORE DI CONNESSIONE AL GATEWAY.";
+                document.getElementById('error-alert').style.display = 'block';
+            }
+        });
+
+        // CLICK SUL BOTTONE PAGA
+        document.getElementById('btn-pay').addEventListener('click', async function(e) {
+            e.preventDefault();
+            const btn = this;
+            const errorMsg = document.getElementById('error-alert');
+            const loader = document.getElementById('terminal-loader');
+
+            btn.style.display = 'none';
+            errorMsg.style.display = 'none';
+            loader.style.display = 'block';
+
+            const { error } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    // Rimandiamo alla libreria aggiungendo un parametro per far scattare la Ricevuta
+                    return_url: window.location.origin + '/libreria.html?purchase=success',
+                }
+            });
+
+            if (error) {
+                loader.style.display = 'none';
+                btn.style.display = 'block';
+                errorMsg.innerText = ">> ERRORE: " + error.message;
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

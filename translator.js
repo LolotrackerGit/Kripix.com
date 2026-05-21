@@ -224,7 +224,7 @@ const dizionario_EN = {
     "> Accesso al motore grafico sperimentale.": "> Access to the experimental graphics engine.",
     "SCARICA DEV-KIT": "DOWNLOAD DEV-KIT",
     "LOG ATTIVITÀ RECENTI": "RECENT ACTIVITY LOG",
-    ">[OGGI] Accesso al terminale effettuato.": ">[TODAY] Terminal access granted.",
+    ">  [OGGI] Accesso al terminale effettuato.": ">   [TODAY] Terminal access granted.",
     "> [SISTEMA] Acquisizione licenza \"Harrow\".": "> [SYSTEM] \"Harrow\" license acquired.",
     "> [SYSTEM] Profilo sincronizzato con il server centrale.": "> [SYSTEM] Profile synchronized with central server.",
     "⚠ INTERROMPI CONNESSIONE": "⚠ SEVER CONNECTION",

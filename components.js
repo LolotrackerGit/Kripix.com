@@ -70,7 +70,7 @@ export function injectFooter() {
             <div class="footer-col">
                 <h4>CONNESSIONI</h4>
                 <ul>
-                    <li><a href="#">Discord Server</a></li>
+                    <li><a href="https://discord.gg/FwwuYJ4Dn3">Discord Server</a></li>
                     <li><a href="#">Twitter / X</a></li>
                     <li><a href="#">YouTube</a></li>
                 </ul>

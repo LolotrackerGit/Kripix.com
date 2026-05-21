@@ -86,7 +86,15 @@
         const btnSubmit = document.getElementById('btn-submit');
 
         if (!email || !username || !password) return;
-        
+
+        // CONTROLLO SPAZI FORZATO
+        if (username.indexOf(' ') >= 0) {
+            serverMsg.innerText = ">> ERRORE: Il Nome in Codice non può contenere spazi.";
+            serverMsg.style.color = '#ff5555';
+            serverMsg.style.display = 'block';
+            return;
+        }
+
         if (password !== pass2) {
             serverMsg.innerText = ">> Le password non coincidono.";
             serverMsg.style.color = '#ff5555';
