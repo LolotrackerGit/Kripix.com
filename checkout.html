@@ -163,19 +163,19 @@
                 const result = await createPaymentIntent({ gameId: 'harrow' });
                 const clientSecret = result.data.clientSecret;
 
-                // STILE KRIPIX FIXATO (Icone visibili, niente neri su neri)
+                // (Qui c'è il codice "appearance" di Stripe che avevi prima... lascialo inalterato)
                 const appearance = {
                     theme: 'night',
                     variables: {
                         fontFamily: 'Montserrat, sans-serif',
                         colorBackground: '#0a0a0a',
-                        colorPrimary: '#e3c66c',    // Oro Kripix
+                        colorPrimary: '#e3c66c',
                         colorText: '#ffffff',
                         colorDanger: '#ff5555',
                         spacingUnit: '4px',
                         borderRadius: '2px',
-                        colorIcon: '#e3c66c',       // FIX: Forza le icone delle carte a essere oro
-                        colorIconTab: '#ffffff'     // FIX: Icone tab bianche
+                        colorIcon: '#e3c66c',
+                        colorIconTab: '#ffffff'
                     },
                     rules: {
                         '.Input': { border: '1px solid #333', outline: 'none', backgroundColor: '#000000', color: '#ffffff' },
@@ -183,20 +183,14 @@
                         '.Tab': { border: '1px solid #222', backgroundColor: '#05070a', display: 'flex' },
                         '.Tab:hover': { borderColor: '#555' },
                         '.Tab--selected': { borderColor: '#e3c66c', backgroundColor: 'rgba(227, 198, 108, 0.05)' },
-                        '.TabIcon': { fill: '#e3c66c' } // FIX EXTRA: Forza il colore SVG
+                        '.TabIcon': { fill: '#e3c66c' }
                     }
                 };
 
                 elements = stripe.elements({ clientSecret, appearance });
                 
-                // LAYOUT ACCORDION: Niente tendine, molto più bello e Noir
                 const paymentElement = elements.create('payment', { 
-                    layout: {
-                        type: 'accordion',
-                        defaultCollapsed: false,
-                        radios: true,
-                        spacedAccordionItems: true
-                    },
+                    layout: { type: 'accordion', defaultCollapsed: false, radios: true, spacedAccordionItems: true },
                     defaultValues: { billingDetails: { email: user.email } }
                 });
                 
@@ -204,10 +198,22 @@
                 document.getElementById('btn-pay').style.display = 'block';
 
             } catch (error) {
-                console.error("Errore Stripe:", error);
+                console.error("Errore Checkout:", error);
                 document.getElementById('payment-element').innerHTML = "";
-                document.getElementById('error-alert').innerText = ">> ERRORE DI CONNESSIONE AL GATEWAY.";
-                document.getElementById('error-alert').style.display = 'block';
+                
+                // Se la Cloud Function risponde che lo possiede già
+                if (error.message === 'GIOCO_GIA_POSSEDUTO') {
+                    document.getElementById('error-alert').innerText = ">> ERRORE: Questa licenza è già assegnata al tuo ID Agente.";
+                    document.getElementById('error-alert').style.color = "#4caf50";
+                    document.getElementById('error-alert').style.borderColor = "#4caf50";
+                    document.getElementById('error-alert').style.display = 'block';
+                    
+                    // Aggiungiamo un bottone per rimandarlo alla libreria
+                    setTimeout(() => { window.location.href = "libreria.html"; }, 3000);
+                } else {
+                    document.getElementById('error-alert').innerText = ">> ERRORE DI CONNESSIONE AL GATEWAY BANCARIO.";
+                    document.getElementById('error-alert').style.display = 'block';
+                }
             }
         });
 

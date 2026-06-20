@@ -190,74 +190,53 @@
 
     <script type="module" src="script.js"></script>
 
-    <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
-    <!-- LOGICA DELLA PAGINA (FIREBASE CLOUD) -->
-    <script type="module">
-        import { app, auth, db } from './script.js';
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    <!-- LOGICA ACQUISTO SICURA (PULITA E FIXATA) -->
+<script type="module">
+    import { app, auth, db } from './script.js';
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const buyBtn = document.getElementById('btn-buy-kripix');
-            if (!buyBtn) return;
+    document.addEventListener('DOMContentLoaded', () => {
+        // Cerca il bottone usando l'ID di Harrow o quello di Progetti
+        const buyBtn = document.getElementById('btn-buy-harrow-page') || document.getElementById('btn-buy-kripix');
+        if(!buyBtn) return;
 
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'login.html'; };
-                    return;
-                }
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'login.html'; };
+                return;
+            }
 
-                const functions = getFunctions(app, 'europe-west1');
-                
-                try { // <-- FIX FONDAMENTALE: FORZA IL REFRESH DEL TOKEN DI SICUREZZA
-                    await user.getIdToken(true);
-                } catch (tokenError) {
-                    alert("Errore di sincronizzazione account. Prova a fare il logout e il login. Dettagli: " + tokenError.message);
-                    return;
-                }
-
-                const securePurchaseGame = httpsCallable(functions, 'securePurchaseGame');
+            try {
+                // Leggiamo sia il profilo pubblico che il dossier privato per sicurezza totale
                 const userRef = doc(db, "users", user.uid);
+                const dossierRef = doc(db, "users", user.uid, "private", "dossier");
                 
-                try {
-                    const userSnap = await getDoc(userRef);
-                    if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
-                        buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
-                        buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000';
-                        buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
-                        return;
-                    }
-                } catch (error) { console.error(error); }
+                const [userSnap, dossierSnap] = await Promise.all([getDoc(userRef), getDoc(dossierRef)]);
+                
+                const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('harrow');
+                const hasGameInDossier = dossierSnap.exists() && dossierSnap.data().keys?.harrow;
 
-                // Dentro l'onAuthStateChanged di harrow.html
-// --- SOSTITUISCI IL TRY/CATCH DOPPIO IN HARROW.HTML E PROGETTI.HTML CON QUESTO ---
-try {
-    const userRef = doc(db, "users", user.uid);
-    const privateRef = doc(db, "users", user.uid, "private", "dossier");
-    
-    const [userSnap, privateSnap] = await Promise.all([getDoc(userRef), getDoc(privateRef)]);
-    
-    const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('harrow');
-    const hasGameInDossier = privateSnap.exists() && privateSnap.data().keys?.harrow;
+                // Se trova il gioco in UNO dei due documenti, disabilita l'acquisto
+                if (hasGameInProfile || hasGameInDossier) {
+                    buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
+                    buyBtn.style.background = '#4caf50'; 
+                    buyBtn.style.color = '#000';
+                    buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
+                    return; 
+                }
+            } catch (error) {
+                console.error("Errore verifica libreria utente:", error);
+            }
 
-    if (hasGameInProfile || hasGameInDossier) {
-        buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
-        buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000';
-        buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
-        return; 
-    }
-} catch (error) { 
-    console.error("Errore verifica licenza:", error); 
-}
-
-// Se non lo possiede, mandalo al terminale di pagamento
-buyBtn.onclick = function(e) {
-    e.preventDefault();
-    window.location.href = 'checkout.html';
-};
-            });
+            // Se il codice arriva qui, significa che l'utente NON ha il gioco
+            buyBtn.onclick = function(e) {
+                e.preventDefault();
+                window.location.href = 'checkout.html';
+            };
         });
-    </script>
+    });
+</script>
 </body>
 </html>

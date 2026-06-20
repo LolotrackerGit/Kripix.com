@@ -445,7 +445,6 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
 // ==========================================
 // 6. CREAZIONE SESSIONE STRIPE CHECKOUT
 // ==========================================
-
 exports.createPaymentIntent = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
     
@@ -457,6 +456,20 @@ exports.createPaymentIntent = onCall(europeWest1, async (request) => {
     if (gameId !== "harrow") throw new HttpsError('invalid-argument', 'Gioco non valido.');
 
     try {
+        // --- INIZIO FIX DI SICUREZZA ---
+        // Controlliamo se l'utente ha già il gioco nel profilo pubblico O nel dossier privato
+        const userDoc = await db.collection('users').doc(uid).get();
+        const dossierDoc = await db.collection('users').doc(uid).collection('private').doc('dossier').get();
+        
+        const hasGameInProfile = userDoc.exists && userDoc.data().games && userDoc.data().games.includes(gameId);
+        const hasGameInDossier = dossierDoc.exists && dossierDoc.data().keys && dossierDoc.data().keys[gameId];
+
+        if (hasGameInProfile || hasGameInDossier) {
+            // Se lo possiede già, lanciamo un errore specifico e blocchiamo Stripe
+            throw new HttpsError('already-exists', 'GIOCO_GIA_POSSEDUTO');
+        }
+        // --- FINE FIX DI SICUREZZA ---
+
         const paymentIntent = await stripe.paymentIntents.create({
             amount: 2999, // 29.99 Euro
             currency: 'eur',
@@ -466,6 +479,8 @@ exports.createPaymentIntent = onCall(europeWest1, async (request) => {
         return { status: 'success', clientSecret: paymentIntent.client_secret };
     } catch (error) {
         console.error("Errore Stripe Intent:", error);
+        // Passiamo l'errore personalizzato al frontend per farglielo leggere
+        if (error.code === 'already-exists') throw error;
         throw new HttpsError('internal', 'Errore durante l\'inizializzazione del terminale bancario.');
     }
 });
