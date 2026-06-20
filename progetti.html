@@ -231,15 +231,25 @@
                 } catch (error) { console.error(error); }
 
                 // Dentro l'onAuthStateChanged di harrow.html
+// --- SOSTITUISCI IL TRY/CATCH DOPPIO IN HARROW.HTML E PROGETTI.HTML CON QUESTO ---
 try {
-    const userSnap = await getDoc(userRef);
-    if (userSnap.exists() && userSnap.data().games?.includes('harrow')) {
+    const userRef = doc(db, "users", user.uid);
+    const privateRef = doc(db, "users", user.uid, "private", "dossier");
+    
+    const [userSnap, privateSnap] = await Promise.all([getDoc(userRef), getDoc(privateRef)]);
+    
+    const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('harrow');
+    const hasGameInDossier = privateSnap.exists() && privateSnap.data().keys?.harrow;
+
+    if (hasGameInProfile || hasGameInDossier) {
         buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
         buyBtn.style.background = '#4caf50'; buyBtn.style.color = '#000';
         buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
         return; 
     }
-} catch (error) { console.error(error); }
+} catch (error) { 
+    console.error("Errore verifica licenza:", error); 
+}
 
 // Se non lo possiede, mandalo al terminale di pagamento
 buyBtn.onclick = function(e) {
