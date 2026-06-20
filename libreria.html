@@ -200,255 +200,225 @@
 
 
     <script type="module">
-        import { auth, db } from './script.js';
-        import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { auth, db } from './script.js';
+    import { doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // Variabili Globali
-        let currentGlobalKey = "ERRORE-LETTURA-CHIAVE";
-        let currentUserEmail = "...";
-        let currentUsername = "AGENTE";
-        let currentMethod = "STRIPE SECURE";
-        let currentLast4 = "****";
+    // Variabili Globali
+    let currentGlobalKey = "CHIAVE-IN-ELABORAZIONE";
+    let currentUserEmail = "...";
+    let currentUsername = "AGENTE";
+    let currentMethod = "STRIPE SECURE";
+    let currentLast4 = "****";
 
-        // ==========================================
-        // FUNZIONE PER DISEGNARE LA CARD
-        // ==========================================
-        function injectGameCard() {
-            const grid = document.getElementById('library-grid');
-            const emptyMsg = document.getElementById('empty-msg');
-            
-            emptyMsg.style.display = 'none';
-            
-            // Usiamo direttamente le variabili globali appena aggiornate!
-            grid.innerHTML = `
-                <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
-                    <div style="height:150px; background:#1a1a1a; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #333;">
-                         <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff;">IL FILO DEL DUBBIO</span>
+    // ==========================================
+    // RENDER DELLA CARD DI GIOCO
+    // ==========================================
+    function injectGameCard() {
+        const grid = document.getElementById('library-grid');
+        const emptyMsg = document.getElementById('empty-msg');
+        
+        emptyMsg.style.display = 'none';
+        
+        grid.innerHTML = `
+            <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
+                <div style="height:150px; background:url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80') center/cover; display:flex; align-items:flex-end; padding:20px; border-bottom:1px solid var(--accent-gold);">
+                     <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff; text-shadow: 0 5px 10px black;">IL FILO DEL DUBBIO</span>
+                </div>
+                <div style="padding:25px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
+                        <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.2</span>
                     </div>
-                    <div style="padding:25px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                            <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
-                            <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.2</span>
-                        </div>
-                        <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
-                        <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
-                            Include gioco completo, Artbook Digitale e Soundtrack Originale.
-                        </p>
-                        
-                        <div style="display:flex; gap:10px;" class="btn-container-relative">
-                            <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
-                            <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
-                            <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
-                        </div>
+                    <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
+                    <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
+                        Include gioco completo, Artbook Digitale e Soundtrack Originale.
+                    </p>
+                    
+                    <div style="display:flex; gap:10px;" class="btn-container-relative">
+                        <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
+                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
+                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
                     </div>
                 </div>
-            `;
-        }
+            </div>
+        `;
+    }
 
-        // ==========================================
-        // FLUSSO PRINCIPALE
-        // ==========================================
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) { window.location.href = 'login.html'; return; }
-            currentUserEmail = user.email;
+    // ==========================================
+    // FLUSSO PRINCIPALE DI VERIFICA (BLINDATO)
+    // ==========================================
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) { window.location.href = 'login.html'; return; }
+        currentUserEmail = user.email;
 
-            // Leggiamo l'username una volta per tutte
+        const userRef = doc(db, "users", user.uid);
+        const privateRef = doc(db, "users", user.uid, "private", "dossier");
+
+        // Otteniamo il nome utente
+        try {
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) currentUsername = userSnap.data().username;
+        } catch(e) {}
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isRedirectFromStripe = urlParams.get('redirect_status') === 'succeeded';
+
+        // FUNZIONE DI CONTROLLO INCROCIATO
+        const checkAndRenderGames = async () => {
+            let ownsGame = false;
+            let foundKey = "CHIAVE-IN-ELABORAZIONE";
+
             try {
-                const userSnap = await getDoc(doc(db, "users", user.uid));
-                if (userSnap.exists()) currentUsername = userSnap.data().username;
-            } catch(e) {}
+                // 1. Controlla il profilo pubblico (dove guarda anche il Launcher)
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists() && userSnap.data().games && userSnap.data().games.includes('harrow')) {
+                    ownsGame = true;
+                }
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const isRedirectFromStripe = urlParams.get('redirect_status') === 'succeeded';
-
-            if (isRedirectFromStripe) {
-                // L'UTENTE HA APPENA PAGATO: Mettiamoci in attesa del Webhook
-                window.history.replaceState({}, document.title, window.location.pathname);
-                if(window.kripixNotify) window.kripixNotify("TRANSAZIONE", "Sincronizzazione Gateway in corso...", "info");
-
-                const privateRef = doc(db, "users", user.uid, "private", "dossier");
-                
-                // Mettiamoci in ascolto LIVE sul database
-                const unsubscribe = onSnapshot(privateRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const pData = docSnap.data();
-                        const gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
-                        
-                        // APPENA LA CHIAVE VIENE INSERITA DAL WEBHOOK:
-                        if (gameKey && gameKey !== "ERRORE-LETTURA-CHIAVE") {
-                            unsubscribe(); // Stacchiamo l'ascolto
-                            currentGlobalKey = gameKey;
-                            
-                            if (pData.lastPurchase) {
-                                currentMethod = pData.lastPurchase.method || "STRIPE SECURE";
-                                currentLast4 = pData.lastPurchase.last4 || "****";
-                            }
-                            
-                            // 1. Disegna la Card nella pagina
-                            injectGameCard();
-                            // 2. Apri la ricevuta a schermo
-                            window.showReceipt(); 
-                            // 3. Notifica di successo
-                            if(window.kripixNotify) window.kripixNotify("SUCCESSO", "Licenza aggiunta all'archivio.", "success");
-                        }
-                    }
-                });
-
-                // Salvagente: Se Stripe o il Webhook esplodono e non scrivono nulla in 15 secondi
-                setTimeout(() => {
-                    unsubscribe();
-                    if (document.getElementById('receipt-modal').style.display !== 'flex') {
-                        if(window.kripixNotify) window.kripixNotify("RITARDO DI RETE", "Ricarica la pagina tra qualche minuto.", "error");
-                    }
-                }, 15000);
-
-            } else {
-                // L'UTENTE E' ENTRATO NORMALMENTE NELLA LIBRERIA
-                const privateRef = doc(db, "users", user.uid, "private", "dossier");
+                // 2. Controlla il dossier privato (Le chiavi)
                 const privateSnap = await getDoc(privateRef);
-                
                 if (privateSnap.exists()) {
                     const pData = privateSnap.data();
                     const gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
                     
-                    if (gameKey) {
-                        currentGlobalKey = gameKey;
-                        if (pData.lastPurchase) {
-                            currentMethod = pData.lastPurchase.method || "STRIPE SECURE";
-                            currentLast4 = pData.lastPurchase.last4 || "****";
-                        }
-                        injectGameCard(); // C'è il gioco, disegniamolo!
-                    } else {
-                        document.getElementById('empty-msg').style.display = 'block'; // Libreria vuota
+                    if (gameKey && gameKey !== "ERRORE-LETTURA-CHIAVE") {
+                        ownsGame = true;
+                        foundKey = gameKey;
+                    }
+                    if (pData.lastPurchase) {
+                        currentMethod = pData.lastPurchase.method || "STRIPE SECURE";
+                        currentLast4 = pData.lastPurchase.last4 || "****";
                     }
                 }
+
+                // 3. Verdetto finale
+                if (ownsGame) {
+                    currentGlobalKey = foundKey;
+                    injectGameCard();
+                } else {
+                    document.getElementById('empty-msg').style.display = 'block'; 
+                }
+            } catch (error) {
+                console.error("Errore di rete durante la lettura del dossier:", error);
+                document.getElementById('empty-msg').style.display = 'block'; 
             }
-        });
+        };
 
-        // ==========================================
-        // FUNZIONI GLOBALI (Modali e Copia)
-        // ==========================================
-        window.openDlModal = () => document.getElementById('dl-modal').style.display = 'flex';
-        window.closeDlModal = () => document.getElementById('dl-modal').style.display = 'none';
-        
-        window.copyKey = function(btn, key) {
-            navigator.clipboard.writeText(key).then(() => {
-                const container = btn.parentElement; 
-                const oldTooltip = container.querySelector('.copy-tooltip');
-                if(oldTooltip) oldTooltip.remove();
-                const tooltip = document.createElement('div');
-                tooltip.className = 'copy-tooltip show';
-                tooltip.innerText = 'CHIAVE COPIATA'; 
-                container.appendChild(tooltip);
-                setTimeout(() => { tooltip.classList.remove('show'); setTimeout(() => tooltip.remove(), 300); }, 3000);
+        if (isRedirectFromStripe) {
+            // Pulisce l'URL in modo pulito
+            window.history.replaceState({}, document.title, window.location.pathname);
+            if(window.kripixNotify) window.kripixNotify("TRANSAZIONE", "Sincronizzazione Gateway in corso...", "info");
+
+            // Mettiamoci in ascolto LIVE in caso il webhook ci metta qualche secondo
+            const unsubscribe = onSnapshot(privateRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const pData = docSnap.data();
+                    const gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
+                    
+                    if (gameKey && gameKey !== "ERRORE-LETTURA-CHIAVE") {
+                        unsubscribe(); // Ricevuto! Stacchiamo il radar
+                        checkAndRenderGames(); 
+                        if(window.kripixNotify) window.kripixNotify("SUCCESSO", "Licenza aggiunta all'archivio.", "success");
+                    }
+                }
             });
+
+            // Salvagente di sicurezza: Se Stripe è bloccato e non arriva nulla in 10 secondi, forziamo la lettura!
+            setTimeout(() => {
+                unsubscribe();
+                checkAndRenderGames();
+            }, 10000);
+
+        } else {
+            // L'utente ha aggiornato la pagina o è entrato normalmente
+            checkAndRenderGames();
         }
+    });
 
-        window.showReceipt = function() {
-            document.getElementById('rec-username').innerText = currentUsername;
-            document.getElementById('rec-email').innerText = currentUserEmail;
-            
-            // Format Metodo
-            const methodString = currentLast4 !== "****" ? `${currentMethod} (Termina con ${currentLast4})` : currentMethod;
-            document.getElementById('rec-method').innerText = methodString;
-            document.getElementById('rec-key').innerText = currentGlobalKey;
+    // ==========================================
+    // FUNZIONI MODALI E PDF
+    // ==========================================
+    window.openDlModal = () => document.getElementById('dl-modal').style.display = 'flex';
+    window.closeDlModal = () => document.getElementById('dl-modal').style.display = 'none';
+    
+    window.copyKey = function(btn, key) {
+        navigator.clipboard.writeText(key).then(() => {
+            const container = btn.parentElement; 
+            const oldTooltip = container.querySelector('.copy-tooltip');
+            if(oldTooltip) oldTooltip.remove();
+            const tooltip = document.createElement('div');
+            tooltip.className = 'copy-tooltip show';
+            tooltip.innerText = 'CHIAVE COPIATA'; 
+            container.appendChild(tooltip);
+            setTimeout(() => { tooltip.classList.remove('show'); setTimeout(() => tooltip.remove(), 300); }, 3000);
+        });
+    }
 
-            document.getElementById('receipt-modal').style.display = 'flex';
-        }
+    window.showReceipt = function() {
+        document.getElementById('rec-username').innerText = currentUsername;
+        document.getElementById('rec-email').innerText = currentUserEmail;
+        const methodString = currentLast4 !== "****" ? `${currentMethod} (*${currentLast4})` : currentMethod;
+        document.getElementById('rec-method').innerText = methodString;
+        document.getElementById('rec-key').innerText = currentGlobalKey;
+        document.getElementById('receipt-modal').style.display = 'flex';
+    }
 
-        // ==========================================
-        // CREAZIONE PDF NATIVO (jsPDF) - Vettoriale e Perfetto
-        // ==========================================
-        window.downloadPDF = function() {
-            const { jsPDF } = window.jspdf;
-            
-            // Creiamo un foglio A4 verticale (in millimetri)
-            const docPdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-            
-            // Coloriamo lo sfondo di nero Kripix (#05070a)
-            docPdf.setFillColor(5, 7, 10);
-            docPdf.rect(0, 0, 210, 297, "F");
+    window.downloadPDF = function() {
+        const { jsPDF } = window.jspdf;
+        const docPdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        docPdf.setFillColor(5, 7, 10);
+        docPdf.rect(0, 0, 210, 297, "F");
 
-            // Configurazione Testi
-            const gold = [227, 198, 108]; // #e3c66c
-            const white = [255, 255, 255];
-            const gray = [136, 136, 136]; // #888
+        const gold = [227, 198, 108]; const white = [255, 255, 255]; const gray = [136, 136, 136]; 
 
-            // Titolone KRIPIX
-            docPdf.setTextColor(gold[0], gold[1], gold[2]);
-            docPdf.setFontSize(40);
-            docPdf.setFont("helvetica", "bold");
-            docPdf.text("KRIPIX", 105, 40, { align: "center" });
+        docPdf.setTextColor(gold[0], gold[1], gold[2]);
+        docPdf.setFontSize(40); docPdf.setFont("helvetica", "bold");
+        docPdf.text("KRIPIX", 105, 40, { align: "center" });
 
-            // Sottotitolo
-            docPdf.setTextColor(gray[0], gray[1], gray[2]);
-            docPdf.setFontSize(12);
-            docPdf.setFont("courier", "normal");
-            docPdf.text("RICEVUTA ACQUISTO LICENZA DIGITALE", 105, 52, { align: "center" });
-            
-            // Linea tratteggiata
-            docPdf.setDrawColor(50, 50, 50);
-            docPdf.setLineDashPattern([2, 2], 0);
-            docPdf.line(20, 60, 190, 60);
+        docPdf.setTextColor(gray[0], gray[1], gray[2]);
+        docPdf.setFontSize(12); docPdf.setFont("courier", "normal");
+        docPdf.text("RICEVUTA ACQUISTO LICENZA DIGITALE", 105, 52, { align: "center" });
+        
+        docPdf.setDrawColor(50, 50, 50); docPdf.setLineDashPattern([2, 2], 0);
+        docPdf.line(20, 60, 190, 60);
 
-            // DATI UTENTE
-            let startY = 80;
-            const lineSpace = 12;
+        let startY = 80; const lineSpace = 12;
+        const methodString = currentLast4 !== "****" ? `${currentMethod} (*${currentLast4})` : currentMethod;
 
-            // Formattiamo il metodo
-            const methodString = currentLast4 !== "****" ? `${currentMethod} (*${currentLast4})` : currentMethod;
+        const addRow = (label, value, isBold = false) => {
+            docPdf.setFontSize(10); docPdf.setTextColor(gold[0], gold[1], gold[2]);
+            docPdf.text(label, 20, startY);
+            docPdf.setTextColor(white[0], white[1], white[2]);
+            if(isBold) docPdf.setFont("courier", "bold"); else docPdf.setFont("courier", "normal");
+            docPdf.text(value, 190, startY, { align: "right" });
+            docPdf.setDrawColor(30, 30, 30); docPdf.setLineDashPattern([], 0); 
+            docPdf.line(20, startY + 4, 190, startY + 4);
+            startY += lineSpace;
+        };
 
-            // Helper per le righe (Etichetta a sinistra, Valore a destra)
-            const addRow = (label, value, isBold = false) => {
-                docPdf.setFontSize(10);
-                docPdf.setTextColor(gold[0], gold[1], gold[2]);
-                docPdf.text(label, 20, startY);
-                
-                docPdf.setTextColor(white[0], white[1], white[2]);
-                if(isBold) docPdf.setFont("courier", "bold"); else docPdf.setFont("courier", "normal");
-                docPdf.text(value, 190, startY, { align: "right" });
-                
-                // Linea separatrice
-                docPdf.setDrawColor(30, 30, 30);
-                docPdf.setLineDashPattern([], 0); // Linea solida
-                docPdf.line(20, startY + 4, 190, startY + 4);
-                
-                startY += lineSpace;
-            };
+        addRow("ID AGENTE:", currentUsername);
+        addRow("EMAIL:", currentUserEmail);
+        addRow("SOFTWARE:", "IL FILO DEL DUBBIO", true);
+        addRow("EDIZIONE:", "DELUXE EDITION");
+        addRow("METODO:", methodString);
+        addRow("IMPORTO PAGATO:", "EUR 29.99", true);
 
-            addRow("ID AGENTE:", currentUsername);
-            addRow("EMAIL:", currentUserEmail);
-            addRow("SOFTWARE:", "IL FILO DEL DUBBIO", true);
-            addRow("EDIZIONE:", "DELUXE EDITION");
-            addRow("METODO:", methodString);
-            addRow("IMPORTO PAGATO:", "EUR 29.99", true);
+        startY += 20;
+        docPdf.setDrawColor(gold[0], gold[1], gold[2]); docPdf.setLineDashPattern([2, 2], 0);
+        docPdf.setFillColor(15, 15, 15); docPdf.rect(20, startY, 170, 40, "FD"); 
 
-            // BOX CHIAVE CRITTOGRAFICA
-            startY += 20;
-            docPdf.setDrawColor(gold[0], gold[1], gold[2]);
-            docPdf.setLineDashPattern([2, 2], 0);
-            docPdf.setFillColor(15, 15, 15);
-            docPdf.rect(20, startY, 170, 40, "FD"); // Rettangolo tratteggiato con sfondo
+        docPdf.setTextColor(gray[0], gray[1], gray[2]); docPdf.setFontSize(9);
+        docPdf.text("CHIAVE CRITTOGRAFICA DI ATTIVAZIONE", 105, startY + 12, { align: "center" });
 
-            docPdf.setTextColor(gray[0], gray[1], gray[2]);
-            docPdf.setFontSize(9);
-            docPdf.text("CHIAVE CRITTOGRAFICA DI ATTIVAZIONE", 105, startY + 12, { align: "center" });
+        docPdf.setTextColor(gold[0], gold[1], gold[2]); docPdf.setFontSize(18); docPdf.setFont("helvetica", "bold");
+        docPdf.text(currentGlobalKey, 105, startY + 28, { align: "center" });
 
-            docPdf.setTextColor(gold[0], gold[1], gold[2]);
-            docPdf.setFontSize(18);
-            docPdf.setFont("helvetica", "bold");
-            docPdf.text(currentGlobalKey, 105, startY + 28, { align: "center" });
+        docPdf.setTextColor(80, 80, 80); docPdf.setFontSize(8); docPdf.setFont("courier", "normal");
+        docPdf.text("Documento generato dal Terminale Kripix OS. Conservare con cura.", 105, 280, { align: "center" });
 
-            // Piè di pagina
-            docPdf.setTextColor(80, 80, 80);
-            docPdf.setFontSize(8);
-            docPdf.setFont("courier", "normal");
-            docPdf.text("Documento generato dal Terminale Kripix OS. Conservare con cura.", 105, 280, { align: "center" });
-
-            // Scarica file!
-            docPdf.save(`Ricevuta_Kripix_${currentUsername}.pdf`);
-        }
-    </script>
+        docPdf.save(`Ricevuta_Kripix_${currentUsername}.pdf`);
+    }
+</script>
 </body>
 </html>
