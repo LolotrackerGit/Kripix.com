@@ -248,18 +248,32 @@
         }
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) { window.location.href = 'login.html'; return; }
-            myUid = user.uid;
-            myDocRef = doc(db, "users", myUid);
+    if (!user) { window.location.href = 'login.html'; return; }
+    myUid = user.uid;
+    myDocRef = doc(db, "users", myUid);
 
-            // Ascolta in tempo reale le modifiche al MIO documento
-            onSnapshot(myDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const me = docSnap.data();
-                    updateProfileUI(me);
-                    updateFriendsAndRequestsUI(me);
+    // Ascolta in tempo reale le modifiche al MIO documento
+    onSnapshot(myDocRef, async (docSnap) => { // <-- Aggiunto 'async' qui
+        if (docSnap.exists()) {
+            const me = docSnap.data();
+            
+            // FIX BUG FATALE: Controlliamo anche il dossier privato
+            const privateSnap = await getDoc(doc(db, "users", myUid, "private", "dossier"));
+            if (!me.games) me.games = []; // Inizializza se vuoto
+            
+            if (privateSnap.exists()) {
+                const pData = privateSnap.data();
+                const hasHarrowKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
+                // Se ha la chiave ma non è nell'array pubblico, lo aggiungiamo in memoria per la UI
+                if (hasHarrowKey && !me.games.includes('harrow')) {
+                    me.games.push('harrow');
                 }
-            });
+            }
+
+            updateProfileUI(me);
+            updateFriendsAndRequestsUI(me);
+        }
+    });
 
             // Ascolta in tempo reale le richieste che IO ho inviato agli ALTRI
             const outboundQuery = query(collection(db, "users"), where("requests", "array-contains", myUid));
