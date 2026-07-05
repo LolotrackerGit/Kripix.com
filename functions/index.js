@@ -443,21 +443,26 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
 });
 
 // ==========================================
-// 6. CREAZIONE SESSIONE STRIPE CHECKOUT
+// CREAZIONE SESSIONE STRIPE CHECKOUT
 // ==========================================
 exports.createPaymentIntent = onCall(europeWest1, async (request) => {
     if (!request.auth) throw new HttpsError('unauthenticated', 'Accesso negato.');
     
     const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
     const uid = request.auth.uid;
     const gameId = request.data.gameId;
+    let amountToCharge = 0;
 
-    if (gameId !== "furnace") throw new HttpsError('invalid-argument', 'Gioco non valido.');
+    // CONTROLLO DEI GIOCHI SUPPORTATI
+    if (gameId === 'furnace') {
+        amountToCharge = 1999; // 19.99€ La Pagoda
+    } else if (gameId === 'harrow') {
+        amountToCharge = 2999; // 29.99€ Il Filo del Dubbio
+    } else {
+        throw new HttpsError('invalid-argument', 'Gioco non valido.');
+    }
 
     try {
-        // --- INIZIO FIX DI SICUREZZA ---
-        // Controlliamo se l'utente ha già il gioco nel profilo pubblico O nel dossier privato
         const userDoc = await db.collection('users').doc(uid).get();
         const dossierDoc = await db.collection('users').doc(uid).collection('private').doc('dossier').get();
         
@@ -465,13 +470,11 @@ exports.createPaymentIntent = onCall(europeWest1, async (request) => {
         const hasGameInDossier = dossierDoc.exists && dossierDoc.data().keys && dossierDoc.data().keys[gameId];
 
         if (hasGameInProfile || hasGameInDossier) {
-            // Se lo possiede già, lanciamo un errore specifico e blocchiamo Stripe
             throw new HttpsError('already-exists', 'GIOCO_GIA_POSSEDUTO');
         }
-        // --- FINE FIX DI SICUREZZA ---
 
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: 1999, // 19.99 Euro
+            amount: amountToCharge,
             currency: 'eur',
             automatic_payment_methods: { enabled: true }, 
             metadata: { firebaseUID: uid, gameId: gameId }
@@ -479,18 +482,19 @@ exports.createPaymentIntent = onCall(europeWest1, async (request) => {
         return { status: 'success', clientSecret: paymentIntent.client_secret };
     } catch (error) {
         console.error("Errore Stripe Intent:", error);
-        // Passiamo l'errore personalizzato al frontend per farglielo leggere
         if (error.code === 'already-exists') throw error;
         throw new HttpsError('internal', 'Errore durante l\'inizializzazione del terminale bancario.');
     }
 });
 
 // ==========================================
-// 7. WEBHOOK STRIPE (Ricezione Pagamento)
+// WEBHOOK STRIPE (Ricezione Pagamento)
 // ==========================================
 const endpointSecret = "whsec_IIv1lLa5ZhcA7JqCjWKRiWIVV8NMybrH"; // <-- Il tuo segreto!
 
 exports.stripeWebhook = onRequest(europeWest1, async (req, res) => {
+    // Reinizializza stripe qui dentro (serve per le chiamate API)
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     const sig = req.headers['stripe-signature'];
     let event;
 
@@ -508,18 +512,19 @@ exports.stripeWebhook = onRequest(europeWest1, async (req, res) => {
         if (uid && gameId) {
             const userRef = db.collection('users').doc(uid);
             const privateRef = userRef.collection('private').doc('dossier');
-            const newKey = generateKripixKey(uid, "HW", "D");
             
-            // Estrazione Dati Pagamento Migliorata!
+            // ASSEGNAZIONE DEL PREFISSO CHIAVE CORRETTO
+            const prefix = gameId === "furnace" ? "FN" : "HW";
+            const newKey = generateKripixKey(uid, prefix, "D");
+            
             let pMethod = "STRIPE";
             let pLast4 = "****";
 
             try {
-                // Recuperiamo i dettagli reali usando le API di Stripe
                 if (paymentIntent.payment_method) {
                     const paymentMethodDetails = await stripe.paymentMethods.retrieve(paymentIntent.payment_method);
                     if (paymentMethodDetails.type === 'card') {
-                        pMethod = paymentMethodDetails.card.brand.toUpperCase(); // VISA, MASTERCARD, ecc.
+                        pMethod = paymentMethodDetails.card.brand.toUpperCase();
                         pLast4 = paymentMethodDetails.card.last4;
                     } else if (paymentMethodDetails.type === 'paypal') {
                         pMethod = "PAYPAL";
