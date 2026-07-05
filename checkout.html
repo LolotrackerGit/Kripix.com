@@ -58,7 +58,7 @@
         .summary-box { background: #05070a; border: 1px solid var(--accent-gold); padding: 30px; height: fit-content; position: sticky; top: 100px;}
         .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; color: #aaa; font-size: 0.9rem; }
         .summary-total { display: flex; justify-content: space-between; margin-top: 25px; padding-top: 20px; border-top: 1px solid #333; color: white; font-size: 1.5rem; font-weight: 900; }
-        .game-thumb { width: 60px; height: 80px; background: #111; border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime'; color: #555; }
+        .game-thumb { width: 60px; height: 80px; background: #0a0a0a; border: 1px solid var(--accent-red); display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime'; color: var(--accent-red); font-weight: bold; }
 
         /* Messaggi e Terminale */
         .error-msg { color: #ff5555; font-family: 'Courier Prime'; font-size: 0.8rem; margin-top: 15px; display: none; text-align: center; font-weight: bold; animation: shake 0.3s;}
@@ -111,20 +111,22 @@
             </div>
         </div>
 
-        <!-- COLONNA DESTRA: RIEPILOGO -->
+        <!-- COLONNA DESTRA: RIEPILOGO LA PAGODA -->
         <div>
             <div class="summary-box">
                 
                 <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 30px;">
-                    <div class="game-thumb">PG</div>
+                    <!-- HW (Harrow) diventa FN (Furnace) -->
+                    <div class="game-thumb">FN</div>
                     <div>
                         <h4 style="color: white; font-size: 1.1rem; margin-bottom: 2px;">La Pagoda</h4>
                         <p style="color: var(--accent-gold); font-family: 'Courier Prime'; font-size: 0.7rem;">DELUXE EDITION (PC)</p>
                     </div>
                 </div>
 
-                <div class="summary-row"><span>Subtotale</span><span>€ 16.39</span></div>
-                <div class="summary-row"><span>Tasse (IVA 22%)</span><span>€ 3.60</span></div>
+                <!-- Prezzi aggiornati a 19.99€ totali -->
+                <div class="summary-row"><span>Subtotale</span><span>€ 16.38</span></div>
+                <div class="summary-row"><span>Tasse (IVA 22%)</span><span>€ 3.61</span></div>
                 
                 <div class="summary-total">
                     <span>TOTALE</span>
@@ -139,8 +141,7 @@
 
     </div>
 
-    <!-- SCRIPT LOGICA PAGAMENTO -->
-    <!-- SCRIPT LOGICA PAGAMENTO STRIPE FIXATA -->
+    <!-- SCRIPT LOGICA PAGAMENTO STRIPE -->
     <script type="module">
         import { app, auth, db } from './script.js';
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
@@ -160,10 +161,10 @@
             const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
 
             try {
+                // ECCO LA MODIFICA CHIAVE: Invia 'furnace' come gameId
                 const result = await createPaymentIntent({ gameId: 'furnace' });
                 const clientSecret = result.data.clientSecret;
 
-                // (Qui c'è il codice "appearance" di Stripe che avevi prima... lascialo inalterato)
                 const appearance = {
                     theme: 'night',
                     variables: {
@@ -211,7 +212,7 @@
                     // Aggiungiamo un bottone per rimandarlo alla libreria
                     setTimeout(() => { window.location.href = "libreria.html"; }, 3000);
                 } else {
-                    document.getElementById('error-alert').innerText = ">> ERRORE DI CONNESSIONE AL GATEWAY BANCARIO.";
+                    document.getElementById('error-alert').innerText = ">> ERRORE DI CONNESSIONE AL GATEWAY BANCARIO: " + error.message;
                     document.getElementById('error-alert').style.display = 'block';
                 }
             }
@@ -232,7 +233,7 @@
                 elements,
                 confirmParams: {
                     // Rimandiamo alla libreria aggiungendo un parametro per far scattare la Ricevuta
-                    return_url: window.location.origin + '/libreria.html?purchase=success',
+                    return_url: window.location.origin + '/libreria.html?redirect_status=succeeded',
                 }
             });
 

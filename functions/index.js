@@ -453,7 +453,7 @@ exports.createPaymentIntent = onCall(europeWest1, async (request) => {
     const uid = request.auth.uid;
     const gameId = request.data.gameId;
 
-    if (gameId !== "harrow") throw new HttpsError('invalid-argument', 'Gioco non valido.');
+    if (gameId !== "furnace") throw new HttpsError('invalid-argument', 'Gioco non valido.');
 
     try {
         // --- INIZIO FIX DI SICUREZZA ---

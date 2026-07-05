@@ -71,8 +71,8 @@ export function injectFooter() {
                 <h4>CONNESSIONI</h4>
                 <ul>
                     <li><a href="https://discord.gg/FwwuYJ4Dn3">Discord Server</a></li>
-                    <li><a href="#">Twitter / X</a></li>
-                    <li><a href="#">YouTube</a></li>
+                    <li><a href="https://x.com/KripixEnt">Twitter / X</a></li>
+                    <li><a href="https://www.youtube.com/@KripixEntertainment">YouTube</a></li>
                 </ul>
             </div>
         </div>
