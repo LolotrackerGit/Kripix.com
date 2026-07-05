@@ -201,11 +201,13 @@
                     if (news.link) cardNode.href = news.link; // Assicurati che news.link sia validato in futuro!
 
                     if (news.link) {
-                        const iconSpan = document.createElement('span');
-                        iconSpan.className = 'link-icon';
-                        iconSpan.textContent = '↗';
-                        cardNode.appendChild(iconSpan);
-                    }
+    // FIX SICUREZZA: Controlla che il link sia un vero URL HTTP/HTTPS
+    if (news.link.startsWith('http://') || news.link.startsWith('https://')) {
+        cardNode.href = news.link;
+    } else {
+        cardNode.href = "#"; // Se tenta hack strani, neutralizza il link
+    }
+}
 
                     const titleDiv = document.createElement('div');
                     titleDiv.className = 'news-card-title';

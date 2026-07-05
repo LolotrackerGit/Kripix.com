@@ -402,11 +402,13 @@
         div.innerHTML = `
             <div class="chat-avatar" style="background-color: ${bgCol};">${title.charAt(0).toUpperCase()}</div>
             <div class="chat-info" style="flex:1;">
-                <h4 style="color:${isSystem ? '#ff5555' : 'white'};">${title}</h4>
+                <h4 style="color:${isSystem ? '#ff5555' : 'white'};" class="safe-title"></h4>
                 <p>${statusHTML}</p>
             </div>
             ${unreadDot}
         `;
+        // Aggiungi questa riga subito dopo per inserire il testo in modo sicuro:
+        div.querySelector('.safe-title').textContent = title;
 
         div.onclick = () => openChat(targetUid, title, bgCol, statusHTML, isSystem, hasUnread);
         listContainer.appendChild(div);

@@ -313,11 +313,17 @@
         // AGGIORNA STATISTICHE E AVATAR DEL PROPRIO PROFILO
         function updateProfileUI(userData) {
             const avatar = document.getElementById('p-avatar');
+            avatar.innerHTML = '';
             if (userData.avatar_img) { 
-                avatar.innerHTML = `<img src="${userData.avatar_img}" style="width:100%; height:100%; object-fit:cover;">`; 
                 avatar.style.backgroundColor = 'transparent'; 
+                const img = document.createElement('img');
+                img.src = userData.avatar_img; // L'assegnazione a .src sterilizza automaticamente l'XSS!
+                img.style.width = '100%'; 
+                img.style.height = '100%'; 
+                img.style.objectFit = 'cover';
+                avatar.appendChild(img);
             } else { 
-                avatar.innerHTML = userData.username.charAt(0).toUpperCase(); 
+                avatar.textContent = userData.username.charAt(0).toUpperCase(); // textContent sterilizza!
                 avatar.style.backgroundColor = userData.color || '#e3c66c'; 
             }
 

@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.addEventListener('beforeunload', () => { goOffline(); });
         }
-// --- F. SISTEMA DI NOTIFICHE TOAST CHAT IN TEMPO REALE ---
+
     // --- F. SISTEMA DI NOTIFICHE TOAST CHAT IN TEMPO REALE ---
     if (user) {
         // Importiamo le funzioni database necessarie
