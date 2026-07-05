@@ -471,7 +471,7 @@ exports.createPaymentIntent = onCall(europeWest1, async (request) => {
         // --- FINE FIX DI SICUREZZA ---
 
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: 2999, // 29.99 Euro
+            amount: 1999, // 19.99 Euro
             currency: 'eur',
             automatic_payment_methods: { enabled: true }, 
             metadata: { firebaseUID: uid, gameId: gameId }

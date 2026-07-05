@@ -90,7 +90,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="stat-tot-games">-</div>
-                    <div class="stat-label">LICENZE "HARROW"</div>
+                    <div class="stat-label">LICENZE "FURNACE"</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="stat-tot-keys">-</div>
@@ -190,7 +190,7 @@
                 const snapUsers = await getCountFromServer(collUsers);
                 document.getElementById('stat-tot-users').innerText = snapUsers.data().count;
 
-                const qGames = query(collection(db, "users"), where("games", "array-contains", "harrow"));
+                const qGames = query(collection(db, "users"), where("games", "array-contains", "furnace"));
                 const snapGames = await getCountFromServer(qGames);
                 document.getElementById('stat-tot-games').innerText = snapGames.data().count;
 

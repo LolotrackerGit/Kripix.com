@@ -126,9 +126,9 @@
                             <span class="badge-icon">🛡️</span>
                             <span class="badge-name">RECLUTA</span>
                         </div>
-                        <div class="badge-item custom-tooltip" id="badge-investigator" data-tooltip="Possiedi 'Il Filo del Dubbio'.">
-                            <span class="badge-icon">🕵️</span>
-                            <span class="badge-name">DETECTIVE</span>
+                        <div class="badge-item custom-tooltip" id="badge-investigator" data-tooltip="Possiedi 'La Pagoda'.">
+                            <span class="badge-icon">📸</span>
+                            <span class="badge-name">Paparazzo</span>
                         </div>
                         <div class="badge-item custom-tooltip" data-tooltip="Partecipazione alla Closed Beta. (Bloccato)">
                             <span class="badge-icon">🧪</span>
@@ -339,7 +339,7 @@
             document.getElementById('xp-bar').style.width = `${(xp / xpNeeded) * 100}%`;
 
             const badgeInvestigator = document.getElementById('badge-investigator');
-            if (userData.games && userData.games.includes('harrow')) { 
+            if (userData.games && userData.games.includes('furnace')) { 
                 badgeInvestigator.classList.add('unlocked'); 
                 document.getElementById('log-purchase').style.display = 'block'; 
             } else { 

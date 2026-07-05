@@ -107,9 +107,9 @@
             <div class="project-card">
                 <div class="project-visual">
                     <!-- Poster -->
-                    <a href="harrow.html" style="text-decoration: none;">
+                    <a href="pagoda.html" style="text-decoration: none;">
                         <div class="poster-placeholder" style="transition: 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='var(--accent-gold)'" onmouseout="this.style.borderColor='#333'">
-                            POSTER<br>IL FILO DEL DUBBIO
+                            POSTER<br>LA PAGODA
                         </div>
                     </a>
                     
@@ -122,22 +122,22 @@
                 </div>
 
                 <div class="project-info">
-                    <h3 class="project-title"><a href="harrow.html" style="color:white; text-decoration:none; transition:0.3s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='white'">IL FILO DEL DUBBIO</a></h3>
-                    <p class="project-meta">IN SVILUPPO | PC | 2026</p>
+                    <h3 class="project-title"><a href="pagoda.html" style="color:white; text-decoration:none; transition:0.3s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='white'">LA PAGODA</a></h3>
+                    <p class="project-meta">IN SVILUPPO | PC | 2027</p>
                     <p class="project-desc">
-                        Un thriller noir psicologico dove ogni fallimento investigativo rende i tuoi nemici più forti.
-                        Harrow ti aspetta.
+                        Un survival horror psicologico in cui la luce è la tua unica arma e 
+                        l'architettura cambia nell'oscurità..
                     </p>
                     
                     <div class="purchase-options">
                         <div class="purchase-card steam-option">
-                            <div class="option-header"><span class="platform-icon">STEAM</span><span class="price">€29.99</span></div>
+                            <div class="option-header"><span class="platform-icon">STEAM</span><span class="price">€19.99</span></div>
                             <p class="option-desc">Edizione Standard</p>
                             <a href="#" class="btn-steam full-width">Wishlist</a>
                         </div>
                         <div class="purchase-card kripix-option">
                             <div class="best-value-tag">MIGLIORE OFFERTA</div>
-                            <div class="option-header"><span class="platform-icon">KRIPIX STORE</span><span class="price">€29.99</span></div>
+                            <div class="option-header"><span class="platform-icon">KRIPIX STORE</span><span class="price">€19.99</span></div>
                             <p class="option-desc" style="color: var(--accent-gold);">
                                 ★ Include DELUXE EDITION<br>
                                 <span style="font-size: 0.8rem; color: #ccc;">(Soundtrack + Artbook + Skin)</span>
@@ -171,7 +171,7 @@
         <div class="modal-box">
             <span class="success-icon">✓</span>
             <h3 class="modal-title">ACQUISTO COMPLETATO</h3>
-            <p style="color:#ccc; margin-bottom:30px;">La licenza per "Il Filo del Dubbio" è stata aggiunta al tuo account.</p>
+            <p style="color:#ccc; margin-bottom:30px;">La licenza per "La Pagoda" è stata aggiunta al tuo account.</p>
             <div class="modal-actions">
                 <button class="btn-outline" onclick="closeModal()">Resta Qui</button>
                 <a href="libreria.html" class="btn-gold">VAI ALLA LIBRERIA</a>
@@ -215,8 +215,8 @@
                 
                 const [userSnap, dossierSnap] = await Promise.all([getDoc(userRef), getDoc(dossierRef)]);
                 
-                const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('harrow');
-                const hasGameInDossier = dossierSnap.exists() && dossierSnap.data().keys?.harrow;
+                const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('furnace');
+                const hasGameInDossier = dossierSnap.exists() && dossierSnap.data().keys?.furnace;
 
                 // Se trova il gioco in UNO dei due documenti, disabilita l'acquisto
                 if (hasGameInProfile || hasGameInDossier) {

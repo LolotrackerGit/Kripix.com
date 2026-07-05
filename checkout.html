@@ -74,7 +74,7 @@
 
     <nav style="border-bottom: 1px solid #111; background: #05070a; z-index: 100; position: fixed;">
         <div class="logo-text"><a href="index.html">KRIPIX</a></div>
-        <a href="harrow.html" class="back-link">← ANNULLA TRANSAZIONE</a>
+        <a href="pagoda.html" class="back-link">← ANNULLA TRANSAZIONE</a>
     </nav>
 
     <div class="checkout-wrapper">
@@ -116,19 +116,19 @@
             <div class="summary-box">
                 
                 <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 30px;">
-                    <div class="game-thumb">HW</div>
+                    <div class="game-thumb">PG</div>
                     <div>
-                        <h4 style="color: white; font-size: 1.1rem; margin-bottom: 2px;">Il Filo del Dubbio</h4>
+                        <h4 style="color: white; font-size: 1.1rem; margin-bottom: 2px;">La Pagoda</h4>
                         <p style="color: var(--accent-gold); font-family: 'Courier Prime'; font-size: 0.7rem;">DELUXE EDITION (PC)</p>
                     </div>
                 </div>
 
-                <div class="summary-row"><span>Subtotale</span><span>€ 24.58</span></div>
-                <div class="summary-row"><span>Tasse (IVA 22%)</span><span>€ 5.41</span></div>
+                <div class="summary-row"><span>Subtotale</span><span>€ 16.39</span></div>
+                <div class="summary-row"><span>Tasse (IVA 22%)</span><span>€ 3.60</span></div>
                 
                 <div class="summary-total">
                     <span>TOTALE</span>
-                    <span style="color: var(--accent-gold);">€ 29.99</span>
+                    <span style="color: var(--accent-gold);">€ 19.99</span>
                 </div>
                 
                 <p style="color: #666; font-size: 0.75rem; margin-top: 30px; line-height: 1.5;">
@@ -160,7 +160,7 @@
             const createPaymentIntent = httpsCallable(functions, 'createPaymentIntent');
 
             try {
-                const result = await createPaymentIntent({ gameId: 'harrow' });
+                const result = await createPaymentIntent({ gameId: 'furnace' });
                 const clientSecret = result.data.clientSecret;
 
                 // (Qui c'è il codice "appearance" di Stripe che avevi prima... lascialo inalterato)
