@@ -490,7 +490,7 @@ exports.createPaymentIntent = onCall(europeWest1, async (request) => {
 // ==========================================
 // WEBHOOK STRIPE (Ricezione Pagamento)
 // ==========================================
-const endpointSecret = "whsec_IIv1lLa5ZhcA7JqCjWKRiWIVV8NMybrH"; // <-- Il tuo segreto!
+const endpointSecret = "whsec_YQ2liPChE7Er4qAbv3sZRWduGuJaFzfh"; // <-- Il tuo segreto!
 
 exports.stripeWebhook = onRequest(europeWest1, async (req, res) => {
     // Reinizializza stripe qui dentro (serve per le chiamate API)
