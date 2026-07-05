@@ -275,8 +275,13 @@ exports.overseerCommand = onCall(europeWest1, async (request) => {
         }
         
         if (action === 'license') {
-            const subAction = args[1]; const targetUid = args[2]; const gameId = args[3];
+            const subAction = args[1] ? args[1].toLowerCase() : null; 
+            const targetUid = args[2]; 
+            // Forza lowercase e trim per combaciare perfettamente con il database
+            const gameId = args[3] ? args[3].toLowerCase().trim() : null; 
+
             if (!subAction || !targetUid || !gameId) return { status: 'error', output: 'Sintassi errata. Uso: license grant/revoke [uid] [game_id]' };
+            
             const userRef = db.collection('users').doc(targetUid);
             const dossierRef = userRef.collection('private').doc('dossier');
 
@@ -286,8 +291,9 @@ exports.overseerCommand = onCall(europeWest1, async (request) => {
                 return { status: 'success', output: `[SUCCESSO] Licenza concessa.` };
             } else if (subAction === 'revoke') {
                 await userRef.update({ games: admin.firestore.FieldValue.arrayRemove(gameId) });
+                // NOTA: il delete su campi annidati (dot notation) funziona solo su UPDATE
                 await dossierRef.update({ [`keys.${gameId}`]: admin.firestore.FieldValue.delete() });
-                return { status: 'success', output: `[SUCCESSO] Licenza revocata.` };
+                return { status: 'success', output: `[SUCCESSO] Licenza revocata per ${gameId}.` };
             }
         }
 
@@ -433,7 +439,7 @@ exports.discordCallback = onRequest(europeWest1, async (req, res) => {
         await kripixUserDoc.ref.update({ discordId: discordUser.id, discordUsername: discordUser.username });
         await stateDocRef.delete();
 
-        res.redirect('https://kripix.netlify.app/profilo.html?sync=success');
+        res.redirect('https://kripixent.netlify.app/profilo.html?sync=success');
 
     } catch (error) {
         console.error("[CRASH OAUTH]:", error);
