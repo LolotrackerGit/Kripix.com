@@ -214,40 +214,37 @@
     // ==========================================
     // RENDER DELLA CARD DI GIOCO
     // ==========================================
-    // ==========================================
-// RENDER DELLA CARD DI GIOCO
-// ==========================================
-function injectGameCard() {
-    const grid = document.getElementById('library-grid');
-    const emptyMsg = document.getElementById('empty-msg');
-    
-    emptyMsg.style.display = 'none';
-    
-    grid.innerHTML = `
-        <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
-            <!-- SFONDO TEMA LA PAGODA -->
-            <div style="height:150px; background:url('https://images.unsplash.com/photo-1483982258113-b72862e6cff6?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover; display:flex; align-items:flex-end; padding:20px; border-bottom:1px solid var(--accent-gold);">
-                 <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff; text-shadow: 0 5px 10px black;">LA PAGODA</span>
-            </div>
-            <div style="padding:25px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
-                    <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.1</span>
+    function injectGameCard() {
+        const grid = document.getElementById('library-grid');
+        const emptyMsg = document.getElementById('empty-msg');
+        
+        emptyMsg.style.display = 'none';
+        
+        grid.innerHTML = `
+            <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
+                <!-- SFONDO TEMA LA PAGODA -->
+                <div style="height:150px; background:url('https://images.unsplash.com/photo-1505691938895-1758d7feb511?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80') center/cover; display:flex; align-items:flex-end; padding:20px; border-bottom:1px solid var(--accent-gold);">
+                     <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff; text-shadow: 0 5px 10px black;">LA PAGODA</span>
                 </div>
-                <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
-                <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
-                    Include gioco completo, Dossier Operazione Fornace e Filtri Fotocamera.
-                </p>
-                
-                <div style="display:flex; gap:10px;" class="btn-container-relative">
-                    <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
-                    <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
-                    <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
+                <div style="padding:25px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
+                        <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.1</span>
+                    </div>
+                    <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
+                    <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
+                        Include gioco completo, Dossier Operazione Fornace e Filtri Fotocamera.
+                    </p>
+                    
+                    <div style="display:flex; gap:10px;" class="btn-container-relative">
+                        <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
+                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
+                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
-}
+        `;
+    }
 
     // ==========================================
     // FLUSSO PRINCIPALE DI VERIFICA (BLINDATO)
@@ -259,7 +256,6 @@ function injectGameCard() {
         const userRef = doc(db, "users", user.uid);
         const privateRef = doc(db, "users", user.uid, "private", "dossier");
 
-        // Otteniamo il nome utente
         try {
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) currentUsername = userSnap.data().username;
@@ -268,23 +264,21 @@ function injectGameCard() {
         const urlParams = new URLSearchParams(window.location.search);
         const isRedirectFromStripe = urlParams.get('redirect_status') === 'succeeded';
 
-        // FUNZIONE DI CONTROLLO INCROCIATO
         const checkAndRenderGames = async () => {
             let ownsGame = false;
             let foundKey = "CHIAVE-IN-ELABORAZIONE";
 
             try {
-                // 1. Controlla il profilo pubblico (dove guarda anche il Launcher)
+                // CERCA FURNACE E NON HARROW
                 const userSnap = await getDoc(userRef);
-                if (userSnap.exists() && userSnap.data().games && userSnap.data().games.includes('harrow')) {
+                if (userSnap.exists() && userSnap.data().games && userSnap.data().games.includes('furnace')) {
                     ownsGame = true;
                 }
 
-                // 2. Controlla il dossier privato (Le chiavi)
                 const privateSnap = await getDoc(privateRef);
                 if (privateSnap.exists()) {
                     const pData = privateSnap.data();
-                    const gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
+                    const gameKey = (pData.keys && pData.keys.furnace) || pData['keys.furnace'];
                     
                     if (gameKey && gameKey !== "ERRORE-LETTURA-CHIAVE") {
                         ownsGame = true;
@@ -296,7 +290,6 @@ function injectGameCard() {
                     }
                 }
 
-                // 3. Verdetto finale
                 if (ownsGame) {
                     currentGlobalKey = foundKey;
                     injectGameCard();
@@ -310,39 +303,28 @@ function injectGameCard() {
         };
 
         if (isRedirectFromStripe) {
-            // Pulisce l'URL in modo pulito
             window.history.replaceState({}, document.title, window.location.pathname);
             if(window.kripixNotify) window.kripixNotify("TRANSAZIONE", "Sincronizzazione Gateway in corso...", "info");
 
-            // Mettiamoci in ascolto LIVE in caso il webhook ci metta qualche secondo
             const unsubscribe = onSnapshot(privateRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const pData = docSnap.data();
-                    const gameKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
+                    const gameKey = (pData.keys && pData.keys.furnace) || pData['keys.furnace'];
                     
                     if (gameKey && gameKey !== "ERRORE-LETTURA-CHIAVE") {
-                        unsubscribe(); // Ricevuto! Stacchiamo il radar
+                        unsubscribe(); 
                         checkAndRenderGames(); 
                         if(window.kripixNotify) window.kripixNotify("SUCCESSO", "Licenza aggiunta all'archivio.", "success");
                     }
                 }
             });
 
-            // Salvagente di sicurezza: Se Stripe è bloccato e non arriva nulla in 10 secondi, forziamo la lettura!
-            setTimeout(() => {
-                unsubscribe();
-                checkAndRenderGames();
-            }, 10000);
-
+            setTimeout(() => { unsubscribe(); checkAndRenderGames(); }, 10000);
         } else {
-            // L'utente ha aggiornato la pagina o è entrato normalmente
             checkAndRenderGames();
         }
     });
 
-    // ==========================================
-    // FUNZIONI MODALI E PDF
-    // ==========================================
     window.openDlModal = () => document.getElementById('dl-modal').style.display = 'flex';
     window.closeDlModal = () => document.getElementById('dl-modal').style.display = 'none';
     
@@ -423,6 +405,6 @@ function injectGameCard() {
 
         docPdf.save(`Ricevuta_Kripix_${currentUsername}.pdf`);
     }
-</script>
+    </script>
 </body>
 </html>

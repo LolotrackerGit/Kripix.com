@@ -190,37 +190,40 @@
 
     <script type="module" src="script.js"></script>
 
-    <!-- LOGICA ACQUISTO SICURA (FIXATA PER FURNACE) -->
+<!-- LOGICA ACQUISTO SICURA (FIXATA PER FURNACE) -->
 <script type="module">
     import { app, auth, db } from './script.js';
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Rileva automaticamente in quale pagina siamo
         const buyBtn = document.getElementById('btn-buy-pagoda-page') || document.getElementById('btn-buy-kripix');
         if(!buyBtn) return;
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                // Se non sei loggato, ti manda al login
                 buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'login.html'; };
                 return;
             }
 
             try {
-                // Leggiamo sia il profilo pubblico che il dossier privato per sicurezza totale
                 const userRef = doc(db, "users", user.uid);
                 const dossierRef = doc(db, "users", user.uid, "private", "dossier");
                 
                 const [userSnap, dossierSnap] = await Promise.all([getDoc(userRef), getDoc(dossierRef)]);
                 
-                // CONTROLLIAMO 'furnace' INVECE DI 'harrow'
-                const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('furnace');
-                const hasGameInDossier = dossierSnap.exists() && dossierSnap.data().keys?.furnace;
+                // CONTROLLO SUPER SICURO:
+                let hasGame = false;
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    if (data.games && data.games.includes('furnace')) hasGame = true;
+                }
+                if (dossierSnap.exists()) {
+                    const data = dossierSnap.data();
+                    if (data.keys && data.keys.furnace) hasGame = true;
+                }
 
-                // Se trova il gioco in UNO dei due documenti, disabilita l'acquisto e rimanda alla libreria
-                if (hasGameInProfile || hasGameInDossier) {
+                if (hasGame) {
                     buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
                     buyBtn.style.background = '#4caf50'; 
                     buyBtn.style.color = '#000';
@@ -235,7 +238,6 @@
                 console.error("Errore verifica libreria utente:", error);
             }
 
-            // Se il codice arriva qui, significa che l'utente NON ha il gioco e può procedere all'acquisto
             buyBtn.onclick = function(e) {
                 e.preventDefault();
                 window.location.href = 'checkout.html';
