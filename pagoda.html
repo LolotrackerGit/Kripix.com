@@ -79,7 +79,7 @@
         <!-- TEASER TRAILER YOUTUBE -->
         <div class="trailer-container">
             <!-- SOSTITUISCI "ID_DEL_VIDEO" CON L'ID DEL TUO VIDEO YOUTUBE (es. dQw4w9WgXcQ) -->
-            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/vCAvVx3rznc?autoplay=1&mute=1&loop=1&rel=0&showinfo=0&color=white" title="La Pagoda Teaser Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe width="100%" height="100%" src="https://www.youtube.com/embed/vCAvVx3rznc ?autoplay=1&mute=1&loop=1&rel=0&showinfo=0&color=white" title="La Pagoda Teaser Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
 
         <button class="btn-gold" style="z-index: 2;" onclick="document.getElementById('buy-section').scrollIntoView({behavior: 'smooth'})">ACQUISISCI LICENZA</button>
@@ -172,51 +172,58 @@
         </div>
     </div>
 
-    <!-- LOGICA ACQUISTO SICURA -->
-    <script type="module">
-        import { app, auth, db } from './script.js';
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    <!-- LOGICA ACQUISTO SICURA (FIXATA PER FURNACE) -->
+<script type="module">
+    import { app, auth, db } from './script.js';
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const buyBtn = document.getElementById('btn-buy-pagoda-page');
-            if(!buyBtn) return;
+    document.addEventListener('DOMContentLoaded', () => {
+        // Rileva automaticamente in quale pagina siamo
+        const buyBtn = document.getElementById('btn-buy-pagoda-page') || document.getElementById('btn-buy-kripix');
+        if(!buyBtn) return;
 
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'login.html'; };
-                    return;
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                // Se non sei loggato, ti manda al login
+                buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'login.html'; };
+                return;
+            }
+
+            try {
+                // Leggiamo sia il profilo pubblico che il dossier privato per sicurezza totale
+                const userRef = doc(db, "users", user.uid);
+                const dossierRef = doc(db, "users", user.uid, "private", "dossier");
+                
+                const [userSnap, dossierSnap] = await Promise.all([getDoc(userRef), getDoc(dossierRef)]);
+                
+                // CONTROLLIAMO 'furnace' INVECE DI 'harrow'
+                const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('furnace');
+                const hasGameInDossier = dossierSnap.exists() && dossierSnap.data().keys?.furnace;
+
+                // Se trova il gioco in UNO dei due documenti, disabilita l'acquisto e rimanda alla libreria
+                if (hasGameInProfile || hasGameInDossier) {
+                    buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
+                    buyBtn.style.background = '#4caf50'; 
+                    buyBtn.style.color = '#000';
+                    buyBtn.style.borderColor = '#4caf50';
+                    buyBtn.onclick = (e) => { 
+                        e.preventDefault(); 
+                        window.location.href = 'libreria.html'; 
+                    };
+                    return; 
                 }
+            } catch (error) {
+                console.error("Errore verifica libreria utente:", error);
+            }
 
-                try {
-                    const userRef = doc(db, "users", user.uid);
-                    const dossierRef = doc(db, "users", user.uid, "private", "dossier");
-                    
-                    const [userSnap, dossierSnap] = await Promise.all([getDoc(userRef), getDoc(dossierRef)]);
-                    
-                    // CONTROLLO AGGIORNATO CON L'ID 'furnace'
-                    const hasGameInProfile = userSnap.exists() && userSnap.data().games?.includes('furnace');
-                    const hasGameInDossier = dossierSnap.exists() && dossierSnap.data().keys?.furnace;
-
-                    if (hasGameInProfile || hasGameInDossier) {
-                        buyBtn.innerText = 'GIÀ NELLA LIBRERIA';
-                        buyBtn.style.background = '#4caf50'; 
-                        buyBtn.style.color = '#000';
-                        buyBtn.style.borderColor = '#4caf50';
-                        buyBtn.onclick = (e) => { e.preventDefault(); window.location.href = 'libreria.html'; };
-                        return; 
-                    }
-                } catch (error) {
-                    console.error("Errore verifica libreria utente:", error);
-                }
-
-                // Se l'utente NON ha il gioco
-                buyBtn.onclick = function(e) {
-                    e.preventDefault();
-                    window.location.href = 'checkout.html';
-                };
-            });
+            // Se il codice arriva qui, significa che l'utente NON ha il gioco e può procedere all'acquisto
+            buyBtn.onclick = function(e) {
+                e.preventDefault();
+                window.location.href = 'checkout.html';
+            };
         });
-    </script>
+    });
+</script>
 </body>
 </html>

@@ -126,10 +126,10 @@
                             <span class="badge-icon">🛡️</span>
                             <span class="badge-name">RECLUTA</span>
                         </div>
-                        <div class="badge-item custom-tooltip" id="badge-investigator" data-tooltip="Possiedi 'La Pagoda'.">
-                            <span class="badge-icon">📸</span>
-                            <span class="badge-name">Paparazzo</span>
-                        </div>
+                        <div class="badge-item custom-tooltip" id="badge-pagoda" data-tooltip="Possiedi 'La Pagoda'.">
+    <span class="badge-icon">📸</span>
+    <span class="badge-name">FOTOREPORTER</span>
+</div>
                         <div class="badge-item custom-tooltip" data-tooltip="Partecipazione alla Closed Beta. (Bloccato)">
                             <span class="badge-icon">🧪</span>
                             <span class="badge-name">BETA TESTER</span>
@@ -263,10 +263,10 @@
             
             if (privateSnap.exists()) {
                 const pData = privateSnap.data();
-                const hasHarrowKey = (pData.keys && pData.keys.harrow) || pData['keys.harrow'];
+                const hasGameKey = (pData.keys && pData.keys.furnace) || pData['keys.furnace'];
                 // Se ha la chiave ma non è nell'array pubblico, lo aggiungiamo in memoria per la UI
-                if (hasHarrowKey && !me.games.includes('harrow')) {
-                    me.games.push('harrow');
+                if (hasGameKey && !me.games.includes('furnace')) {
+                    me.games.push('furnace');
                 }
             }
 
@@ -338,12 +338,14 @@
             document.getElementById('xp-text').textContent = `${xp} / ${xpNeeded} XP`;
             document.getElementById('xp-bar').style.width = `${(xp / xpNeeded) * 100}%`;
 
-            const badgeInvestigator = document.getElementById('badge-investigator');
+            const badgePagoda = document.getElementById('badge-pagoda');
             if (userData.games && userData.games.includes('furnace')) { 
-                badgeInvestigator.classList.add('unlocked'); 
-                document.getElementById('log-purchase').style.display = 'block'; 
+            badgePagoda.classList.add('unlocked'); 
+            document.getElementById('log-purchase').style.display = 'block'; 
+            // Opzionale: puoi cambiare il testo del log per la Pagoda
+            document.getElementById('log-purchase').innerText = '> [SISTEMA] Acquisizione licenza "La Pagoda".';
             } else { 
-                badgeInvestigator.classList.remove('unlocked'); 
+            badgePagoda.classList.remove('unlocked'); 
             }
             
             const statusEl = document.getElementById('p-status');

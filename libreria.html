@@ -148,7 +148,7 @@
                         <span style="color: var(--accent-gold);">METODO:</span> <span id="rec-method">CARTE/STRIPE</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #111; padding: 10px 0;">
-                        <span style="color: var(--accent-gold);">IMPORTO:</span> <span>€ 29.99</span>
+                        <span style="color: var(--accent-gold);">IMPORTO:</span> <span>€ 19.99</span>
                     </div>
                 </div>
 
@@ -185,7 +185,7 @@
             <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">SOFTWARE:</td><td style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; font-weight: bold; color: #fff;">IL FILO DEL DUBBIO</td></tr>
             <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">EDIZIONE:</td><td style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; color: #fff;">DELUXE EDITION</td></tr>
             <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">METODO DI PAGAMENTO:</td><td id="pdf-method" style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; color: #fff;">...</td></tr>
-            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">IMPORTO:</td><td style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; font-weight: bold; color: #fff;">€ 29.99</td></tr>
+            <tr><td style="padding: 15px 0; border-bottom: 1px solid #222; color: #e3c66c;">IMPORTO:</td><td style="padding: 15px 0; border-bottom: 1px solid #222; text-align: right; font-weight: bold; color: #fff;">€ 19.99</td></tr>
         </table>
 
         <div style="background: rgba(227, 198, 108, 0.1); border: 2px dashed #e3c66c; padding: 40px; text-align: center;">
@@ -214,36 +214,40 @@
     // ==========================================
     // RENDER DELLA CARD DI GIOCO
     // ==========================================
-    function injectGameCard() {
-        const grid = document.getElementById('library-grid');
-        const emptyMsg = document.getElementById('empty-msg');
-        
-        emptyMsg.style.display = 'none';
-        
-        grid.innerHTML = `
-            <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
-                <div style="height:150px; background:url('https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80') center/cover; display:flex; align-items:flex-end; padding:20px; border-bottom:1px solid var(--accent-gold);">
-                     <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff; text-shadow: 0 5px 10px black;">LA PAGODA</span>
+    // ==========================================
+// RENDER DELLA CARD DI GIOCO
+// ==========================================
+function injectGameCard() {
+    const grid = document.getElementById('library-grid');
+    const emptyMsg = document.getElementById('empty-msg');
+    
+    emptyMsg.style.display = 'none';
+    
+    grid.innerHTML = `
+        <div class="os-card highlighted" style="text-align:left; padding:0; overflow:hidden;">
+            <!-- SFONDO TEMA LA PAGODA -->
+            <div style="height:150px; background:url('https://images.unsplash.com/photo-1483982258113-b72862e6cff6?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover; display:flex; align-items:flex-end; padding:20px; border-bottom:1px solid var(--accent-gold);">
+                 <span style="font-weight:900; letter-spacing:2px; font-size:1.5rem; color:#fff; text-shadow: 0 5px 10px black;">LA PAGODA</span>
+            </div>
+            <div style="padding:25px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
+                    <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.1</span>
                 </div>
-                <div style="padding:25px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <span style="color:#4caf50; font-weight:bold; font-size:0.8rem; font-family:'Courier Prime';">● LICENZA ATTIVA</span>
-                        <span style="font-family:'Courier Prime'; font-size:0.8rem; color:#666;">Ver. 1.0.2</span>
-                    </div>
-                    <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
-                    <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
-                        Include gioco completo, Artbook Digitale e Soundtrack Originale.
-                    </p>
-                    
-                    <div style="display:flex; gap:10px;" class="btn-container-relative">
-                        <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
-                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
-                        <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
-                    </div>
+                <h3 style="font-size:1.2rem; margin-bottom:10px;">Deluxe Edition</h3>
+                <p style="font-size:0.9rem; opacity:0.7; margin-bottom:25px; line-height:1.4;">
+                    Include gioco completo, Dossier Operazione Fornace e Filtri Fotocamera.
+                </p>
+                
+                <div style="display:flex; gap:10px;" class="btn-container-relative">
+                    <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
+                    <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
+                    <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
                 </div>
             </div>
-        `;
-    }
+        </div>
+    `;
+}
 
     // ==========================================
     // FLUSSO PRINCIPALE DI VERIFICA (BLINDATO)
@@ -399,10 +403,10 @@
 
         addRow("ID AGENTE:", currentUsername);
         addRow("EMAIL:", currentUserEmail);
-        addRow("SOFTWARE:", "IL FILO DEL DUBBIO", true);
+        addRow("SOFTWARE:", "LA PAGODA", true);
         addRow("EDIZIONE:", "DELUXE EDITION");
         addRow("METODO:", methodString);
-        addRow("IMPORTO PAGATO:", "EUR 29.99", true);
+        addRow("IMPORTO PAGATO:", "EUR 19.99", true);
 
         startY += 20;
         docPdf.setDrawColor(gold[0], gold[1], gold[2]); docPdf.setLineDashPattern([2, 2], 0);
