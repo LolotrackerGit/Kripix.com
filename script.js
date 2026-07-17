@@ -1,17 +1,23 @@
-// ==========================================
-// 1. IMPORTAZIONI
-// ==========================================
+// ============================================================
+//  SCRIPT.JS — Kripix Entertainment
+//  Core: Firebase init, navbar auth, notifications, telemetry
+// ============================================================
+
+
+// ── 1. IMPORTAZIONI ─────────────────────────────────────────
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
 
-import { injectNavbar, injectFooter } from './components.js';
-import { initTranslator, switchLanguage } from './translator.js'; // Assicurati che translator.js esista!
+import { injectNavbar, injectFooter, injectPageLoader } from './components.js';
+import { initTranslator, switchLanguage } from './translator.js';
 
-// ==========================================
-// 2. INIZIALIZZAZIONE FIREBASE
-// ==========================================
+
+// ── 2. INIZIALIZZAZIONE FIREBASE ────────────────────────────
+
 const firebaseConfig = {
     apiKey: "AIzaSyCSCYzPprBLnd49x41WZ4jMBVyNDCOdJ64",
     authDomain: "kripix-ent.firebaseapp.com",
@@ -25,39 +31,67 @@ export const app = initializeApp(firebaseConfig);
 
 // Scudo Anti-Bot (App Check)
 initializeAppCheck(app, {
-  provider: new ReCaptchaEnterpriseProvider('6Lc3qOssAAAAACJLhU6erRnF8MrTObDnP5zoXJqn'),
-  isTokenAutoRefreshEnabled: true
+    provider: new ReCaptchaEnterpriseProvider('6Lc3qOssAAAAACJLhU6erRnF8MrTObDnP5zoXJqn'),
+    isTokenAutoRefreshEnabled: true
 });
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// ==========================================
-// 3. ESECUZIONE PRINCIPALE (Al caricamento della pagina)
-// ==========================================
+
+// ── 3. UTILITÀ: Sanitizzazione HTML ─────────────────────────
+//    Previene XSS nelle notifiche che contengono link interni.
+//    Consente solo <a>, <br>, <strong>, <em> con attributi sicuri.
+
+function sanitizeHTML(raw) {
+    const temp = document.createElement('div');
+    temp.textContent = raw;
+    let safe = temp.innerHTML;
+
+    // Ripristina solo i tag sicuri che usiamo nelle notifiche
+    safe = safe
+        .replace(/&lt;br\s*\/?&gt;/gi, '<br>')
+        .replace(/&lt;strong&gt;/gi, '<strong>').replace(/&lt;\/strong&gt;/gi, '</strong>')
+        .replace(/&lt;em&gt;/gi, '<em>').replace(/&lt;\/em&gt;/gi, '</em>');
+
+    // Ripristina <a> solo verso pagine interne del sito (no URL esterni iniettati)
+    safe = safe.replace(
+        /&lt;a href=&quot;((?:terminale|profilo|libreria|index|login|progetti|contatti|download|impostazioni|studio|pagoda|engine|admin)\.html[^&]*)&quot;([^&]*)&gt;(.*?)&lt;\/a&gt;/gi,
+        (_, href, attrs, text) => {
+            const cleanAttrs = attrs.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+            return `<a href="${href}"${cleanAttrs}>${text}</a>`;
+        }
+    );
+    return safe;
+}
+
+
+// ── 4. ESECUZIONE PRINCIPALE ────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- A. INIEZIONE COMPONENTI (Deve essere la prima cosa!) ---
+    // ─ A. Iniezione componenti (deve essere la prima cosa) ──
     injectNavbar();
     injectFooter();
+    injectPageLoader();
 
-    // --- B. MENU HAMBURGER E TRADUTTORE ---
+    // ─ B. Menu hamburger e traduttore ───────────────────────
     const hamburger = document.querySelector(".hamburger");
     const navMenu = document.querySelector(".nav-menu");
 
     if (hamburger && navMenu) {
-        hamburger.addEventListener("click", () => { 
-            hamburger.classList.toggle("active"); 
-            navMenu.classList.toggle("active"); 
+        hamburger.addEventListener("click", () => {
+            hamburger.classList.toggle("active");
+            navMenu.classList.toggle("active");
             document.body.classList.toggle("no-scroll", navMenu.classList.contains("active"));
         });
     }
 
-    // Rendiamo il traduttore globale per i bottoni HTML
+    // Inizializzazione traduttore e funzione globale per i bottoni HTML
     initTranslator();
     window.cambiaLingua = switchLanguage;
 
-    // --- C. SISTEMA DI NOTIFICHE GLOBALI ---
+    // ─ C. Sistema notifiche globali (toast) ─────────────────
     let toastContainer = document.getElementById('kripix-toast-container');
     if (!toastContainer) {
         toastContainer = document.createElement('div');
@@ -68,31 +102,34 @@ document.addEventListener('DOMContentLoaded', () => {
     window.kripixNotify = function(title, message, type = 'info') {
         const toast = document.createElement('div');
         toast.className = 'kripix-toast';
-        let borderColor = type === 'success' ? '#4caf50' : type === 'error' ? '#ff5555' : 'var(--accent-gold)';
+        const borderColor = type === 'success' ? '#4caf50' : type === 'error' ? '#ff5555' : 'var(--accent-gold)';
         toast.style.borderLeftColor = borderColor;
-        
+
         const titleDiv = document.createElement('div');
         titleDiv.className = 'kripix-toast-title';
         titleDiv.style.color = borderColor;
         titleDiv.textContent = `>> ${title}`;
-        
+
         const msgDiv = document.createElement('div');
-        msgDiv.innerHTML = message; // <--- FIX: DA textContent a innerHTML
+        // SICUREZZA: sanitizziamo l'HTML per prevenire XSS
+        msgDiv.innerHTML = sanitizeHTML(message);
 
         toast.appendChild(titleDiv);
         toast.appendChild(msgDiv);
-        
+
         toastContainer.appendChild(toast);
         setTimeout(() => toast.classList.add('show'), 10);
-        setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 5000);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 5000);
     };
 
-    // --- D. LOGICA AVATAR NAVBAR E GHOST ACCOUNT ---
-    // (Ora che la navbar è iniettata, possiamo cercare .nav-menu)
+    // ─ D. Logica avatar navbar e protezione ghost account ───
     const navbarList = document.querySelector('.nav-menu') || document.querySelector('.nav-links');
-    
-    // Se non siamo in una pagina con la navbar standard (es. Login), saltiamo questa parte
-    if (!navbarList) return; 
+
+    // Se la pagina non ha una navbar standard (es. Login), ci fermiamo
+    if (!navbarList) return;
 
     const dlBtnLi = navbarList.querySelector('.btn-launcher');
     const targetNode = dlBtnLi ? dlBtnLi.closest('li') : null;
@@ -103,9 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.updateNavbarAvatarDisplay = async function(user) {
         if (!user) {
-            li.innerHTML = `<a href="login.html" class="btn-login-nav">ACCEDI</a>`;
+            li.innerHTML = `<a href="login.html" class="btn-login-nav" data-i18n="ACCEDI">ACCEDI</a>`;
             if (!document.getElementById('auth-item')) {
-                if (targetNode) navbarList.insertBefore(li, targetNode); else navbarList.appendChild(li);
+                if (targetNode) navbarList.insertBefore(li, targetNode);
+                else navbarList.appendChild(li);
             }
             return;
         }
@@ -114,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userRef);
 
-            // GHOST ACCOUNT FIX (Se chiude il popup di Google prima di registrarsi)
+            // Protezione ghost account (registrazione Google interrotta)
             if (!userSnap.exists()) {
                 console.warn(">> PROTOCOLLO INCOMPLETO: Profilo database mancante.");
                 if (!window.location.href.includes("login.html") && !window.location.href.includes("register.html")) {
@@ -123,20 +161,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = "login.html";
                     return;
                 }
+                return;
             }
 
             const me = userSnap.data();
             li.innerHTML = '';
-            
+
+            // Avatar
             const avatarDiv = document.createElement('div');
             avatarDiv.className = 'user-avatar';
-            if(me.avatar_img) {
+            if (me.avatar_img) {
                 avatarDiv.style.backgroundColor = 'transparent';
                 avatarDiv.style.border = 'none';
                 const img = document.createElement('img');
                 img.src = me.avatar_img;
-                img.style.width = '100%'; img.style.height = '100%'; 
-                img.style.borderRadius = '50%'; img.style.objectFit = 'cover';
+                img.alt = 'Avatar';
+                img.style.cssText = 'width:100%; height:100%; border-radius:50%; object-fit:cover;';
                 avatarDiv.appendChild(img);
             } else {
                 avatarDiv.style.backgroundColor = me.color || '#e3c66c';
@@ -144,180 +184,193 @@ document.addEventListener('DOMContentLoaded', () => {
                 avatarDiv.textContent = me.username.charAt(0).toUpperCase();
             }
 
+            // Dropdown menu
             const dropdown = document.createElement('div');
             dropdown.className = 'user-dropdown';
-            
+
             const header = document.createElement('div');
             header.className = 'user-header';
-            
+
             const userNameSpan = document.createElement('span');
             userNameSpan.className = 'user-name';
             userNameSpan.textContent = me.username;
-            
+
             const userRoleSpan = document.createElement('span');
             userRoleSpan.className = 'user-role';
             userRoleSpan.textContent = me.isAdmin ? 'OVERSEER' : 'Agente Operativo';
-            
+
             header.appendChild(userNameSpan);
             header.appendChild(userRoleSpan);
             dropdown.appendChild(header);
 
-            dropdown.insertAdjacentHTML('beforeend', `
-                <a href="profilo.html">IL MIO PROFILO</a>
-                <a href="libreria.html">Libreria Giochi</a>
-                <a href="impostazioni.html">Configurazione</a>
-                ${me.isAdmin ? '<a href="admin.html" style="color:var(--accent-gold)">Terminale Overseer</a>' : ''}
-                <a href="#" id="action-logout" style="color:#ff5555">Disconnetti</a>
-            `);
+            // Link dropdown (costruiti in sicurezza)
+            const links = [
+                { href: 'profilo.html', text: 'IL MIO PROFILO' },
+                { href: 'libreria.html', text: 'Libreria Giochi' },
+                { href: 'impostazioni.html', text: 'Configurazione' },
+            ];
+            if (me.isAdmin) {
+                links.push({ href: 'admin.html', text: 'Terminale Overseer', style: 'color:var(--accent-gold)' });
+            }
+            links.push({ href: '#', text: 'Disconnetti', id: 'action-logout', style: 'color:#ff5555' });
+
+            links.forEach(l => {
+                const a = document.createElement('a');
+                a.href = l.href;
+                a.textContent = l.text;
+                a.setAttribute('data-i18n', l.text);
+                if (l.id) a.id = l.id;
+                if (l.style) a.style.cssText = l.style;
+                dropdown.appendChild(a);
+            });
 
             li.appendChild(avatarDiv);
             li.appendChild(dropdown);
 
             if (!document.getElementById('auth-item')) {
-                if (targetNode) navbarList.insertBefore(li, targetNode); else navbarList.appendChild(li);
+                if (targetNode) navbarList.insertBefore(li, targetNode);
+                else navbarList.appendChild(li);
             }
 
-            const avatarBtn = li.querySelector('.user-avatar');
-            if (avatarBtn) avatarBtn.onclick = (e) => { dropdown.classList.toggle('show'); e.stopPropagation(); };
+            // Toggle dropdown
+            avatarDiv.onclick = (e) => {
+                dropdown.classList.toggle('show');
+                e.stopPropagation();
+            };
 
+            // Logout
             li.querySelector('#action-logout').onclick = async (e) => {
                 e.preventDefault();
                 await signOut(auth);
-                window.location.href = 'index.html'; 
+                window.location.href = 'index.html';
             };
 
-            document.onclick = (e) => { if (dropdown && !li.contains(e.target)) dropdown.classList.remove('show'); };
-            
-        } catch (error) { console.error("Errore Auth State:", error); }
+            // Chiudi dropdown cliccando fuori
+            document.addEventListener('click', (e) => {
+                if (dropdown && !li.contains(e.target)) dropdown.classList.remove('show');
+            });
+
+        } catch (error) {
+            console.error("Errore Auth State:", error);
+        }
     };
 
-    // --- E. ASCOLTATORE DI STATO ONLINE/OFFLINE ---
+    // ─ E. Ascoltatore stato online/offline ──────────────────
     onAuthStateChanged(auth, async (user) => {
         window.updateNavbarAvatarDisplay(user);
 
         if (user) {
             const userRef = doc(db, "users", user.uid);
-            
+
             const goOnline = async () => {
                 try {
                     const snap = await getDoc(userRef);
                     if (snap.exists() && (!snap.data().privacy || snap.data().privacy.invisible !== true)) {
                         await updateDoc(userRef, { onlineStatus: "online" });
                     }
-                } catch(e) {}
+                } catch (e) { /* Silenzioso — errore di rete non critico */ }
             };
 
             const goOffline = () => {
-                updateDoc(userRef, { onlineStatus: "offline" }).catch(()=>{});
+                updateDoc(userRef, { onlineStatus: "offline" }).catch(() => {});
             };
 
             goOnline();
 
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible') { goOnline(); } 
-                else { goOffline(); }
+                if (document.visibilityState === 'visible') goOnline();
+                else goOffline();
             });
 
-            window.addEventListener('beforeunload', () => { goOffline(); });
+            window.addEventListener('beforeunload', goOffline);
         }
 
-    // --- F. SISTEMA DI NOTIFICHE TOAST CHAT IN TEMPO REALE ---
-    if (user) {
-        // Importiamo le funzioni database necessarie
-        import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({ query, collection, where, onSnapshot }) => {
-            
-            let isFirstChatLoad = true;
-            let knownChatTimes = {}; // Memoria per non ripetere le notifiche
+        // ─ F. Notifiche chat in tempo reale ─────────────────
+        if (user) {
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({ query, collection, where, onSnapshot }) => {
 
-            const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
-            
-            onSnapshot(chatsQuery, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    const cData = change.doc.data();
-                    const chatId = change.doc.id;
-                    const lastTime = cData.lastMessageTime ? cData.lastMessageTime.toMillis() : 0;
+                let isFirstChatLoad = true;
+                const knownChatTimes = {};
 
-                    // Al primo caricamento del sito, salviamo gli orari ma NON inviamo notifiche
-                    if (isFirstChatLoad) {
-                        knownChatTimes[chatId] = lastTime;
-                    } 
-                    // Se siamo online e arriva un messaggio NUOVO e NON LETTO
-                    else {
+                const chatsQuery = query(collection(db, "chats"), where("participants", "array-contains", user.uid));
+
+                onSnapshot(chatsQuery, (snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        const cData = change.doc.data();
+                        const chatId = change.doc.id;
+                        const lastTime = cData.lastMessageTime ? cData.lastMessageTime.toMillis() : 0;
+
+                        // Primo caricamento: salva orari senza inviare notifiche
+                        if (isFirstChatLoad) {
+                            knownChatTimes[chatId] = lastTime;
+                            return;
+                        }
+
+                        // Messaggio nuovo e non letto
                         if (cData[`unread_${user.uid}`] === true && (!knownChatTimes[chatId] || lastTime > knownChatTimes[chatId])) {
-                            
-                            knownChatTimes[chatId] = lastTime; // Aggiorniamo la memoria
-                            
-                            // Non disturbiamo l'utente se è già nel terminale
-                            if (!window.location.href.includes("terminale.html")) {
-                                
-                                // Gestione Notifica KRIPIX ADMIN (Rossa)
-                                if (cData.isSystemChat) {
-                                    window.kripixNotify(
-                                        "DIRETTIVA DI SISTEMA", 
-                                        `Messaggio critico dal Kripix Admin. <br><a href="terminale.html" style="color:#ff5555; text-decoration:underline; font-weight:bold; margin-top:5px; display:inline-block;">APRI TERMINALE</a>`, 
-                                        "error"
-                                    );
-                                } 
-                                // Gestione Notifica Agente Normale (Oro)
-                                else {
-                                    const otherGuy = cData.participants.find(p => p !== user.uid);
-                                    if (otherGuy) {
-                                        getDoc(doc(db, "users", otherGuy)).then(uSnap => {
-                                            if (uSnap.exists()) {
-                                                const senderName = uSnap.data().username;
-                                                window.kripixNotify(
-                                                    "TRASMISSIONE IN ENTRATA", 
-                                                    `Messaggio da ${senderName}. <br><a href="terminale.html?agent=${otherGuy}" style="color:var(--accent-gold); text-decoration:underline; font-weight:bold; margin-top:5px; display:inline-block;">APRI TERMINALE</a>`, 
-                                                    "info"
-                                                );
-                                            }
-                                        });
-                                    }
+                            knownChatTimes[chatId] = lastTime;
+
+                            // Non disturbare se l'utente è già nel terminale
+                            if (window.location.href.includes("terminale.html")) return;
+
+                            if (cData.isSystemChat) {
+                                window.kripixNotify(
+                                    "DIRETTIVA DI SISTEMA",
+                                    `Messaggio critico dal Kripix Admin. <br><a href="terminale.html" style="color:#ff5555; text-decoration:underline; font-weight:bold; margin-top:5px; display:inline-block;">APRI TERMINALE</a>`,
+                                    "error"
+                                );
+                            } else {
+                                const otherGuy = cData.participants.find(p => p !== user.uid);
+                                if (otherGuy) {
+                                    getDoc(doc(db, "users", otherGuy)).then(uSnap => {
+                                        if (!uSnap.exists()) return;
+                                        const senderName = uSnap.data().username;
+                                        window.kripixNotify(
+                                            "TRASMISSIONE IN ENTRATA",
+                                            `Messaggio da ${senderName}. <br><a href="terminale.html?agent=${encodeURIComponent(otherGuy)}" style="color:var(--accent-gold); text-decoration:underline; font-weight:bold; margin-top:5px; display:inline-block;">APRI TERMINALE</a>`,
+                                            "info"
+                                        );
+                                    });
                                 }
                             }
-                        } 
-                        // Se l'utente ha letto il messaggio, aggiorniamo l'orario così non si blocca al prossimo
+                        }
+                        // Aggiorna timestamp se letto
                         else if (cData[`unread_${user.uid}`] === false) {
                             knownChatTimes[chatId] = lastTime;
                         }
-                    }
-                });
+                    });
 
-                // Finito il primo caricamento, togliamo la sicura
-                if (isFirstChatLoad) {
-                    isFirstChatLoad = false;
-                }
+                    if (isFirstChatLoad) isFirstChatLoad = false;
+                });
             });
-        });
-    }
-  });
+        }
+    });
 });
 
-// ==========================================
-// 4. TELEMETRIA E COOKIE CONSENT
-// ==========================================
 
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+// ── 5. TELEMETRIA E COOKIE CONSENT ──────────────────────────
 
-// Funzione interna per estrarre i dati del dispositivo
+/**
+ * Rileva browser e OS dell'utente per la telemetria.
+ * Restituisce null se il consenso è negato.
+ */
 function getDeviceData() {
+    const ua = navigator.userAgent;
     let browserName = "Unknown";
     let osName = "Unknown";
-    const ua = navigator.userAgent;
 
-    // Rilevamento basico Browser
-    if (ua.match(/chrome|chromium|crios/i)) browserName = "Chrome";
+    // Ordine importante: Edge contiene "Chrome", Safari contiene "Chrome" su iOS, ecc.
+    if (ua.match(/edg/i)) browserName = "Edge";
+    else if (ua.match(/opr\//i)) browserName = "Opera";
+    else if (ua.match(/chrome|chromium|crios/i)) browserName = "Chrome";
     else if (ua.match(/firefox|fxios/i)) browserName = "Firefox";
     else if (ua.match(/safari/i)) browserName = "Safari";
-    else if (ua.match(/opr\//i)) browserName = "Opera";
-    else if (ua.match(/edg/i)) browserName = "Edge";
 
-    // Rilevamento basico OS
     if (ua.indexOf("Win") !== -1) osName = "Windows";
-    else if (ua.indexOf("Mac") !== -1) osName = "MacOS";
-    else if (ua.indexOf("Linux") !== -1) osName = "Linux";
     else if (ua.indexOf("Android") !== -1) osName = "Android";
     else if (ua.indexOf("like Mac") !== -1) osName = "iOS";
+    else if (ua.indexOf("Mac") !== -1) osName = "MacOS";
+    else if (ua.indexOf("Linux") !== -1) osName = "Linux";
 
     return {
         browser: browserName,
@@ -328,12 +381,14 @@ function getDeviceData() {
     };
 }
 
-// Funzione che spara i dati al server
+/**
+ * Invia i dati di telemetria alla Cloud Function.
+ * Se consent = "rejected", invia solo la pagina visitata (niente device data).
+ */
 async function dispatchTelemetry(consent) {
     const functions = getFunctions(app, 'europe-west1');
     const logTelemetry = httpsCallable(functions, 'logTelemetry');
-    
-    // Prepariamo il pacco dati. Se rejected, deviceData è null.
+
     const payload = {
         consentLevel: consent,
         page: window.location.pathname.split('/').pop() || 'index.html',
@@ -348,23 +403,21 @@ async function dispatchTelemetry(consent) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    
     const existingConsent = localStorage.getItem('kripix_cookie_consent');
 
     if (!existingConsent) {
-        // --- IL BANNER NON ESISTE, L'UTENTE DEVE SCEGLIERE ---
-        
+        // Prima visita: mostra banner consenso cookie
         const cookieBanner = document.createElement('div');
         cookieBanner.id = 'kripix-cookie-banner';
         cookieBanner.innerHTML = `
-            <div class="cookie-title">> INIZIALIZZAZIONE COOKIE</div>
-            <div class="cookie-text">
-                Il Network Operativo Kripix utilizza pacchetti di tracciamento (Cookie) essenziali per mantenere la connessione stabile e salvare le tue preferenze. Non vendiamo i tuoi dati ai corporati. 
+            <div class="cookie-title" data-i18n="cookie_title">> INIZIALIZZAZIONE COOKIE</div>
+            <div class="cookie-text" data-i18n="cookie_text">
+                Il Network Operativo Kripix utilizza pacchetti di tracciamento (Cookie) essenziali per mantenere la connessione stabile e salvare le tue preferenze. Non vendiamo i tuoi dati ai corporati.
                 <br><br>Puoi leggere il <a href="privacy.html">Dossier Privacy</a> per i dettagli completi.
             </div>
             <div class="cookie-buttons">
-                <button id="btn-cookie-accept" class="btn-cookie btn-cookie-accept">ACCETTA TUTTI</button>
-                <button id="btn-cookie-reject" class="btn-cookie btn-cookie-reject">SOLO ESSENZIALI</button>
+                <button id="btn-cookie-accept" class="btn-cookie btn-cookie-accept" data-i18n="ACCETTA TUTTI">ACCETTA TUTTI</button>
+                <button id="btn-cookie-reject" class="btn-cookie btn-cookie-reject" data-i18n="SOLO ESSENZIALI">SOLO ESSENZIALI</button>
             </div>
         `;
         document.body.appendChild(cookieBanner);
@@ -374,9 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('kripix_cookie_consent', 'accepted');
             cookieBanner.classList.remove('show');
             setTimeout(() => cookieBanner.remove(), 600);
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento completo autorizzato.", "success");
-            
-            // Spara subito i dati completi
+            if (window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento completo autorizzato.", "success");
             dispatchTelemetry("accepted");
         });
 
@@ -384,19 +435,12 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('kripix_cookie_consent', 'rejected');
             cookieBanner.classList.remove('show');
             setTimeout(() => cookieBanner.remove(), 600);
-            if(window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento limitato ai pacchetti essenziali.", "info");
-            
-            // Spara solo IP (tramite server) e basta
+            if (window.kripixNotify) window.kripixNotify("SISTEMA", "Tracciamento limitato ai pacchetti essenziali.", "info");
             dispatchTelemetry("rejected");
         });
 
     } else {
-        // --- L'UTENTE HA GIA' FATTO LA SCELTA IN PASSATO ---
-        // Spara la telemetria silente ogni volta che cambia pagina
-        
-        // Piccolo ritardo per assicurarsi che Firebase Auth sia caricato se l'utente è loggato
-        setTimeout(() => {
-            dispatchTelemetry(existingConsent);
-        }, 1500);
+        // Visita successiva: telemetria silenziosa dopo che Firebase Auth è pronto
+        setTimeout(() => dispatchTelemetry(existingConsent), 1500);
     }
 });

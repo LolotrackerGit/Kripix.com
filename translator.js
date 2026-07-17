@@ -1,9 +1,15 @@
-// translator.js
+// ============================================================
+//  TRANSLATOR.JS — Kripix Entertainment
+//  Sistema di traduzione IT ↔ EN con supporto data-i18n
+//  e fallback su text-node matching per retrocompatibilità.
+// ============================================================
+
+
+// ── DIZIONARIO IT → EN ──────────────────────────────────────
 
 const dizionario_EN = {
-    // ==========================================
-    // COMPONENTI GLOBALI (Navbar & Footer)
-    // ==========================================
+
+    // ── Componenti globali (Navbar & Footer) ────────────────
     "Progetti": "Projects",
     "Chi Siamo": "About Us",
     "Contatti": "Contact",
@@ -40,17 +46,13 @@ const dizionario_EN = {
     "Twitter / X": "Twitter / X",
     "YouTube": "YouTube",
 
-    // ==========================================
-    // INDEX.HTML (Home)
-    // ==========================================
+    // ── Index (Home) ────────────────────────────────────────
     "I Nostri Giochi": "Our Games",
     "La Nostra Visione": "Our Vision",
     ">> Intercettazione segnali di rete...": ">> Intercepting network signals...",
     ">> Nessuna comunicazione attiva.": ">> No active communications.",
 
-    // ==========================================
-    // STUDIO.HTML (Chi Siamo)
-    // ==========================================
+    // ── Studio (Chi Siamo) ──────────────────────────────────
     "LO STUDIO": "THE STUDIO",
     "LA NOSTRA MISSIONE": "OUR MISSION",
     "Da Kripix Entertainment, crediamo che i videogiochi siano la forma d'arte più potente del nostro tempo. Non creiamo semplici passatempi, ma mondi immersivi e atmosfere dense che sfidano l'intelletto.": "At Kripix Entertainment, we believe video games are the most powerful art form of our time. We don't create simple pastimes, but immersive worlds and dense atmospheres that challenge the intellect.",
@@ -64,9 +66,7 @@ const dizionario_EN = {
     "04. QUALITÀ SULLA QUANTITÀ": "04. QUALITY OVER QUANTITY",
     "Preferiamo creare 10 ore indimenticabili piuttosto che 100 ore di contenuti ripetitivi.": "We prefer to create 10 unforgettable hours rather than 100 hours of repetitive content.",
 
-    // ==========================================
-    // CONTATTI.HTML
-    // ==========================================
+    // ── Contatti ─────────────────────────────────────────────
     "PARLA CON NOI": "TALK TO US",
     "INFO": "INFO",
     "Siamo sempre alla ricerca di collaboratori, feedback o opportunità di publishing.": "We are always looking for collaborators, feedback, or publishing opportunities.",
@@ -78,9 +78,7 @@ const dizionario_EN = {
     "Scrivi qui il tuo feedback o richiesta...": "Write your feedback or request here...",
     "TRASMETTI DATI": "TRANSMIT DATA",
 
-    // ==========================================
-    // PROGETTI.HTML & HARROW.HTML
-    // ==========================================
+    // ── Progetti & Pagoda ───────────────────────────────────
     "CATALOGO PROGETTI": "PROJECT CATALOG",
     "IL FILO DEL DUBBIO": "A THREAD OF DOUBT",
     "IN SVILUPPO | PC | 2026": "IN DEVELOPMENT | PC | 2026",
@@ -95,8 +93,6 @@ const dizionario_EN = {
     "PROGETTO SEGRETO": "CLASSIFIED PROJECT",
     "PRE-PRODUZIONE": "PRE-PRODUCTION",
     "Un nuovo capitolo nell'universo Kripix.": "A new chapter in the Kripix universe.",
-    
-    // Harrow (Pagina del gioco)
     "Realismo Sporco Noir": "Dirty Noir Realism",
     "1973. Harrow non è solo un'ambientazione, è un personaggio antagonista. Una città avvolta da pioggia incessante, nebbia e decadenza morale.": "1973. Harrow isn't just a setting, it's an antagonistic character. A city shrouded in relentless rain, fog, and moral decay.",
     "ACQUISICI LICENZA": "ACQUIRE LICENSE",
@@ -128,9 +124,7 @@ const dizionario_EN = {
     "Include OST Industrial Jazz e Artbook Digitale.": "Includes Industrial Jazz OST and Digital Artbook.",
     "(No DRM)": "(No DRM)",
 
-    // ==========================================
-    // DOWNLOAD.HTML
-    // ==========================================
+    // ── Download ─────────────────────────────────────────────
     "KRIPIX LAUNCHER": "KRIPIX LAUNCHER",
     "Il tuo portale per Harrow e oltre.": "Your portal for Harrow and beyond.",
     "Rilevato": "Detected",
@@ -150,9 +144,7 @@ const dizionario_EN = {
     "Non cerchiamo creatori di giochi. Cerchiamo architetti di mondi. Scopri Pixel Otros, il nostro motore proprietario basato su streaming SSD e rendering Nanovoxel.": "We don't look for game creators. We look for world architects. Discover Pixel Otros, our proprietary engine based on SSD streaming and Nanovoxel rendering.",
     "ENTRA NEL PROGRAMMA DEV": "JOIN THE DEV PROGRAM",
 
-    // ==========================================
-    // ENGINE.HTML
-    // ==========================================
+    // ── Engine ───────────────────────────────────────────────
     "DEVELOPER KIT[ALPHA]": "DEVELOPER KIT[ALPHA]",
     "The Ultimate Storytelling Engine.": "The Ultimate Storytelling Engine.",
     "ATTENZIONE: ARCHITETTURA AD ALTO COSTO": "WARNING: HIGH-COST ARCHITECTURE",
@@ -166,9 +158,7 @@ const dizionario_EN = {
     "SCARICA SDK (45 GB)": "DOWNLOAD SDK (45 GB)",
     "INIZIALIZZAZIONE...": "INITIALIZING...",
 
-    // ==========================================
-    // LOGIN, REGISTER, RESET, VERIFY
-    // ==========================================
+    // ── Login, Register, Reset, Verify ──────────────────────
     "ACCESSO": "SYSTEM ACCESS",
     "E-MAIL": "E-MAIL",
     "PASSWORD": "PASSWORD",
@@ -200,9 +190,7 @@ const dizionario_EN = {
     ">> Decrittazione del token...": ">> Decrypting token...",
     "ACCEDI AL TERMINALE": "ACCESS TERMINAL",
 
-    // ==========================================
-    // PROFILO.HTML
-    // ==========================================
+    // ── Profilo ─────────────────────────────────────────────
     "Il mio Profilo": "My Profile",
     "LIVELLO 1": "LEVEL 1",
     "AGENTE": "AGENT",
@@ -243,10 +231,10 @@ const dizionario_EN = {
     "ANNULLA INVIO": "CANCEL REQUEST",
     ">> IN ATTESA DI RISPOSTA": ">> AWAITING RESPONSE",
     ">> RICHIESTA CONNESSIONE": ">> CONNECTION REQUEST",
+    "FOTOREPORTER": "PHOTOREPORTER",
+    "ACCEDI": "ACCESS",
 
-    // ==========================================
-    // IMPOSTAZIONI.HTML
-    // ==========================================
+    // ── Impostazioni ────────────────────────────────────────
     "CONFIGURAZIONE": "CONFIGURATION",
     "PROFILO AGENTE": "AGENT PROFILE",
     "PRIVACY & DATI": "PRIVACY & DATA",
@@ -292,9 +280,7 @@ const dizionario_EN = {
     "Inserisci il codice criptato a 16 o 20 cifre.": "Enter the 16 or 20 digit encrypted code.",
     "DECRIPTA CHIAVE": "DECRYPT KEY",
 
-    // ==========================================
-    // LIBRERIA.HTML
-    // ==========================================
+    // ── Libreria ────────────────────────────────────────────
     "ARCHIVIO PERSONALE": "PERSONAL ARCHIVE",
     "Licenze attive e software assegnato.": "Active licenses and assigned software.",
     "NESSUNA LICENZA TROVATA": "NO LICENSE FOUND",
@@ -308,9 +294,7 @@ const dizionario_EN = {
     "VAI ALLA LIBRERIA": "GO TO LIBRARY",
     "Resta Qui": "Stay Here",
 
-    // ==========================================
-    // ADMIN.HTML (OVERSEER TERMINAL)
-    // ==========================================
+    // ── Admin ───────────────────────────────────────────────
     "TERMINALE OVERSEER": "OVERSEER TERMINAL",
     "Accesso di Livello 5. Autorizzazione concessa.": "Level 5 Access. Authorization granted.",
     "AGENTI REGISTRATI": "REGISTERED AGENTS",
@@ -323,17 +307,37 @@ const dizionario_EN = {
     "STORICO COMUNICAZIONI": "COMMUNICATIONS HISTORY",
     ">> VERIFICA CREDENZIALI OVERSEER IN CORSO...": ">> VERIFYING OVERSEER CREDENTIALS...",
 
-    // ==========================================
-    // 404 & AUTH-ACTION
-    // ==========================================
+    // ── 404 & Auth-Action ───────────────────────────────────
     "DOSSIER SCONOSCIUTO": "UNKNOWN DOSSIER",
     "Il percorso che stai cercando di seguire non esiste o è stato cancellato.": "The path you are trying to follow does not exist or has been deleted.",
     "Non c'è nulla da vedere qui, Agente.": "There's nothing to see here, Agent.",
     ">> ANALISI SEGNALE CRITTOGRAFATO IN CORSO...": ">> ANALYZING ENCRYPTED SIGNAL...",
 
-    // ==========================================
-    // PLACEHOLDER & FORM INPUTS (Aggiunti tutti)
-    // ==========================================
+    // ── Terminale ───────────────────────────────────────────
+    "> CANALI CRITTOGRAFATI_": "> ENCRYPTED CHANNELS_",
+    "Sincronizzazione contatti in corso...": "Syncing contacts...",
+    "SELEZIONA UN CANALE OPERATIVO": "SELECT AN OPERATIVE CHANNEL",
+    "Agente Sconosciuto": "Unknown Agent",
+    "Stato Sconosciuto": "Unknown Status",
+    "Scrivi un messaggio crittografato...": "Write an encrypted message...",
+    "INVIA": "SEND",
+    "[ PROTOCOLLO A SENSO UNICO ] Impossibile trasmettere al livello 5.": "[ ONE-WAY PROTOCOL ] Cannot transmit to level 5.",
+    "Nessun contatto disponibile.": "No contacts available.",
+    "Canale Diretto": "Direct Channel",
+    "Online": "Online",
+    "Offline": "Offline",
+    "[ INIZIO TRASMISSIONE SECURA ]": "[ SECURE TRANSMISSION START ]",
+    "> CONSEGNATO": "> DELIVERED",
+    "> LETTO": "> READ",
+    "Adesso": "Now",
+
+    // ── Cookie banner ───────────────────────────────────────
+    "cookie_title": "> COOKIE INITIALIZATION",
+    "cookie_text": "The Kripix Operative Network uses essential tracking packets (Cookies) to keep the connection stable and save your preferences. We do not sell your data to corporates. <br><br>You can read the <a href='privacy.html'>Privacy Dossier</a> for full details.",
+    "ACCETTA TUTTI": "ACCEPT ALL",
+    "SOLO ESSENZIALI": "ESSENTIALS ONLY",
+
+    // ── Placeholder & Form ──────────────────────────────────
     "La tua email...": "Your email...",
     "••••••••": "••••••••",
     "nome@esempio.com": "name@example.com",
@@ -354,10 +358,9 @@ const dizionario_EN = {
     "KRPX-XXXX-XXXX-XXXX": "KRPX-XXXX-XXXX-XXXX",
     "Nome in Codice Unico...": "Unique Codename...",
     "Inserisci nuova password": "Enter new password",
+    "latua@email.com": "your@email.com",
 
-    // ==========================================
-    // MESSAGGI DINAMICI JS E NOTIFICHE
-    // ==========================================
+    // ── Messaggi dinamici JS & Notifiche ────────────────────
     "VERIFICA NEL CLOUD...": "VERIFYING IN CLOUD...",
     "ACCESSO CONSENTITO": "ACCESS GRANTED",
     ">> ERRORE CLOUD: EMAIL O PASSWORD NON VALIDE": ">> CLOUD ERROR: INVALID EMAIL OR PASSWORD",
@@ -380,85 +383,183 @@ const dizionario_EN = {
     ">> La password è troppo corta.": ">> Password is too short.",
     "ATTENZIONE: Devi completare la registrazione scegliendo un Nome in Codice.": "WARNING: You must complete registration by choosing a Codename.",
     "LICENZA ACQUISITA.\nIl download è stato aggiunto alla coda del tuo Kripix Launcher.": "LICENSE ACQUIRED.\nThe download has been added to your Kripix Launcher queue.",
-    "ACCESSO NEGATO\n\nDevi identificarti come Developer registrato.": "ACCESS DENIED\n\nYou must identify yourself as a registered Developer."
+    "ACCESSO NEGATO\n\nDevi identificarti come Developer registrato.": "ACCESS DENIED\n\nYou must identify yourself as a registered Developer.",
+    ">> ERRORE: Il Nome in Codice non può contenere spazi.": ">> ERROR: Codename cannot contain spaces.",
+    ">> Questo ID è già in uso nel Network.": ">> This ID is already in use on the Network.",
+    "RIPRISTINO CONNESSIONE": "CONNECTION RESET",
+    "TORNA AL LOGIN": "RETURN TO LOGIN",
+
+    // ── Loading screen ──────────────────────────────────────
+    "CONNESSIONE AL NETWORK...": "CONNECTING TO NETWORK...",
+    "DECRITTAZIONE DATI...": "DECRYPTING DATA...",
+    "SINCRONIZZAZIONE...": "SYNCHRONIZING...",
 };
 
-export function initTranslator() {
-    const currentLang = localStorage.getItem('kripix_lang') || 'it';
-    if (currentLang === 'it') return;
-    
-    const dict = currentLang === 'en' ? dizionario_EN : {};
 
-    // Traduzione sicura (non va in loop)
-    function translateNode(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.nodeValue.trim();
-            if (text && dict[text] && text !== dict[text]) {
-                node.nodeValue = dict[text]; 
-            }
-        } 
-        else if (node.nodeType === Node.ELEMENT_NODE) {
-            if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE' || node.classList.contains('no-translate')) return;
+// ── LINGUA ATTIVA ───────────────────────────────────────────
 
-            if (node.hasAttribute('placeholder')) {
-                const text = node.getAttribute('placeholder').trim();
-                if (dict[text] && text !== dict[text]) {
-                    node.setAttribute('placeholder', dict[text]);
-                }
-            }
+let currentDict = {};
+let currentLang = 'it';
+
+
+// ── FUNZIONE: Traduci un singolo nodo DOM ───────────────────
+
+function translateNode(node) {
+    if (!currentDict || Object.keys(currentDict).length === 0) return;
+
+    // Nodo di testo puro
+    if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.nodeValue.trim();
+        if (text && currentDict[text] && text !== currentDict[text]) {
+            node.nodeValue = node.nodeValue.replace(text, currentDict[text]);
+        }
+        return;
+    }
+
+    // Nodo elemento
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE' || node.classList.contains('no-translate')) return;
+
+    // 1) Attributo data-i18n (priorità massima)
+    const i18nKey = node.getAttribute('data-i18n');
+    if (i18nKey && currentDict[i18nKey]) {
+        // Se il nodo ha figli HTML interni (link, ecc.), usa innerHTML; altrimenti textContent
+        if (node.children.length === 0) {
+            node.textContent = currentDict[i18nKey];
+        } else {
+            // Conserva i figli, traduci solo il testo diretto
             node.childNodes.forEach(translateNode);
         }
     }
 
+    // 2) Placeholder degli input
+    if (node.hasAttribute('placeholder')) {
+        const ph = node.getAttribute('placeholder').trim();
+        if (currentDict[ph] && ph !== currentDict[ph]) {
+            node.setAttribute('placeholder', currentDict[ph]);
+        }
+    }
+
+    // 3) Attributo title
+    if (node.hasAttribute('title')) {
+        const t = node.getAttribute('title').trim();
+        if (currentDict[t] && t !== currentDict[t]) {
+            node.setAttribute('title', currentDict[t]);
+        }
+    }
+
+    // 4) data-tooltip (usato nei badge profilo)
+    if (node.hasAttribute('data-tooltip')) {
+        const tt = node.getAttribute('data-tooltip').trim();
+        if (currentDict[tt] && tt !== currentDict[tt]) {
+            node.setAttribute('data-tooltip', currentDict[tt]);
+        }
+    }
+
+    // Ricorsione sui figli
+    node.childNodes.forEach(translateNode);
+}
+
+
+// ── FUNZIONE: Evidenzia lingua attiva nel selettore ─────────
+
+function updateLanguageIndicator() {
+    document.querySelectorAll('.lang-switcher span:not(.lang-separator)').forEach(span => {
+        const lang = span.textContent.trim().toLowerCase();
+        if (lang === currentLang) {
+            span.style.color = 'var(--accent-gold)';
+            span.style.fontWeight = 'bold';
+            span.style.textDecoration = 'underline';
+            span.style.textUnderlineOffset = '4px';
+        } else {
+            span.style.color = '';
+            span.style.fontWeight = '';
+            span.style.textDecoration = '';
+        }
+    });
+}
+
+
+// ── EXPORT: Inizializza il traduttore ───────────────────────
+
+export function initTranslator() {
+    currentLang = localStorage.getItem('kripix_lang') || 'it';
+
+    if (currentLang === 'it') {
+        currentDict = {};
+        updateLanguageIndicator();
+        return;
+    }
+
+    currentDict = currentLang === 'en' ? dizionario_EN : {};
+
+    // Traduci tutto il body
     translateNode(document.body);
 
+    // Evidenzia la lingua attiva
+    updateLanguageIndicator();
+
+    // MutationObserver per contenuto aggiunto dinamicamente (modali, notifiche, ecc.)
     const observer = new MutationObserver((mutations) => {
-        observer.disconnect(); // Disinnesco la bomba
+        observer.disconnect();
         mutations.forEach((mutation) => {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                mutation.addedNodes.forEach((node) => {
-                    translateNode(node);
-                });
+            if (mutation.type === 'childList') {
+                mutation.addedNodes.forEach(node => translateNode(node));
             }
             if (mutation.type === 'characterData') {
                 const text = mutation.target.nodeValue.trim();
-                if (text && dict[text] && text !== dict[text]) {
-                    mutation.target.nodeValue = dict[text];
+                if (text && currentDict[text] && text !== currentDict[text]) {
+                    mutation.target.nodeValue = currentDict[text];
                 }
             }
         });
-        startObserver(); // Riaccendo l'allarme
+        startObserver();
     });
 
     function startObserver() {
-        observer.observe(document.body, { 
-            childList: true, 
-            subtree: true, 
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
             characterData: true,
-            attributes: false 
+            attributes: false
         });
     }
 
     startObserver();
 }
 
+
+// ── EXPORT: Cambia lingua ───────────────────────────────────
+
 export function switchLanguage(lang) {
     localStorage.setItem('kripix_lang', lang);
-    
-    // Redirect per le pagine lunghe
-    const currentUrl = window.location.pathname;
-    
-    // EULA
-    if (currentUrl.includes("eula.html") && lang === "en") { window.location.href = "eula-eng.html"; return; }
-    if (currentUrl.includes("eula-eng.html") && lang === "it") { window.location.href = "eula.html"; return; }
-    
-    // DRM
-    if (currentUrl.includes("dmr.html") && lang === "en") { window.location.href = "dmr-eng.html"; return; }
-    if (currentUrl.includes("dmr-eng.html") && lang === "it") { window.location.href = "dmr.html"; return; }
-    
-    // PRIVACY
-    if (currentUrl.includes("privacy.html") && lang === "en") { window.location.href = "privacy-eng.html"; return; }
-    if (currentUrl.includes("privacy-eng.html") && lang === "it") { window.location.href = "privacy.html"; return; }
 
-    location.reload(); 
+    // Redirect per le pagine legali (testo lungo, versioni separate)
+    const path = window.location.pathname;
+
+    const legalRedirects = {
+        'eula.html':        { en: 'eula-eng.html' },
+        'eula-eng.html':    { it: 'eula.html' },
+        'dmr.html':         { en: 'dmr-eng.html' },
+        'dmr-eng.html':     { it: 'dmr.html' },
+        'privacy.html':     { en: 'privacy-eng.html' },
+        'privacy-eng.html': { it: 'privacy.html' },
+    };
+
+    for (const [file, targets] of Object.entries(legalRedirects)) {
+        if (path.includes(file) && targets[lang]) {
+            window.location.href = targets[lang];
+            return;
+        }
+    }
+
+    location.reload();
+}
+
+
+// ── EXPORT: Traduci una stringa a runtime (per uso JS) ──────
+
+export function t(key) {
+    if (currentLang === 'it' || !currentDict[key]) return key;
+    return currentDict[key];
 }

@@ -213,15 +213,20 @@
             const msgEl = document.getElementById('google-reg-msg');
             msgEl.style.display = 'none';
 
-            if (!email || !username || !password) return;
+            // Validazione: username obbligatorio
+            if (!username) {
+                msgEl.innerText = ">> Inserisci un Nome in Codice.";
+                msgEl.style.display = 'block';
+                return;
+            }
 
-            // CONTROLLO SPAZI FORZATO
+            // Controllo spazi nel nome in codice
             if (username.indexOf(' ') >= 0) {
-            serverMsg.innerText = ">> ERRORE: Il Nome in Codice non può contenere spazi.";
-            serverMsg.style.color = '#ff5555';
-            serverMsg.style.display = 'block';
-            return;
-        }
+                msgEl.innerText = ">> ERRORE: Il Nome in Codice non può contenere spazi.";
+                msgEl.style.color = '#ff5555';
+                msgEl.style.display = 'block';
+                return;
+            }
 
             // Controlla se l'username è già stato preso
             const usernameDocRef = doc(db, "usernames", usernameLower);

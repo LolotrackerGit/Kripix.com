@@ -379,12 +379,20 @@
                 const suspensionBanner = document.createElement('div');
                 suspensionBanner.id = 'suspension-banner-alert'; // Assegniamo un ID per riconoscerlo
                 suspensionBanner.style = "background: rgba(139, 35, 35, 0.2); border: 1px solid var(--accent-red); padding: 20px; margin-bottom: 40px; text-align: center;";
-                suspensionBanner.innerHTML = `
-                    <h4 style="color:#ff5555; margin-bottom:10px; font-size: 1.1rem; text-transform:uppercase;">ACCOUNT SOSPESO</h4>
-                    <p style="color:#ccc; font-family:'Courier Prime'; font-size:0.9rem;">
-                        <strong>Motivo:</strong> ${userData.accountStatus.reason}
-                    </p>
-                `;
+                // Costruzione DOM sicura (anti-XSS: reason potrebbe contenere HTML malevolo)
+                const bannerTitle = document.createElement('h4');
+                bannerTitle.style.cssText = 'color:#ff5555; margin-bottom:10px; font-size:1.1rem; text-transform:uppercase;';
+                bannerTitle.textContent = 'ACCOUNT SOSPESO';
+
+                const bannerText = document.createElement('p');
+                bannerText.style.cssText = "color:#ccc; font-family:'Courier Prime'; font-size:0.9rem;";
+                const boldLabel = document.createElement('strong');
+                boldLabel.textContent = 'Motivo: ';
+                bannerText.appendChild(boldLabel);
+                bannerText.appendChild(document.createTextNode(userData.accountStatus.reason || 'Non specificato'));
+
+                suspensionBanner.appendChild(bannerTitle);
+                suspensionBanner.appendChild(bannerText);
                 
                 // Inseriamo il banner sopra il blocco del devkit
                 const devCard = document.querySelector('.dev-access-card');
@@ -426,7 +434,7 @@
                         el.style.borderTopColor = 'var(--accent-gold)'; // Evidenzia la richiesta
                         el.innerHTML = `
                             <div class="friend-info">
-                                <div class="friend-avatar" style="background-color: ${rData.color || '#e3c66c'}">${rData.username.charAt(0).toUpperCase()}</div>
+                                <div class="friend-avatar req-avatar"></div>
                                 <div>
                                     <div class="friend-name safe-name"></div>
                                     <div class="friend-status" style="color:var(--accent-gold)">>> RICHIESTA CONNESSIONE</div>
@@ -437,7 +445,10 @@
                                 <button class="btn-mini btn-reject rej-btn">RIFIUTA</button>
                             </div>
                         `;
-                        // Anti-XSS
+                        // Anti-XSS: sanitizza color e username
+                        const reqAvatar = el.querySelector('.req-avatar');
+                        reqAvatar.style.backgroundColor = (rData.color || '#e3c66c').replace(/[^#a-fA-F0-9]/g, '');
+                        reqAvatar.textContent = rData.username.charAt(0).toUpperCase();
                         el.querySelector('.safe-name').textContent = rData.username;
                         // Assegna funzioni bottoni
                         el.querySelector('.acc-btn').onclick = () => window.acceptRequest(reqId);
@@ -458,22 +469,37 @@
                         const el = document.createElement('div');
                         el.className = 'friend-item';
                         
-                        let fAvatar = `<div class="friend-avatar" style="background-color: ${fData.color || '#e3c66c'}">${fData.username.charAt(0).toUpperCase()}</div>`;
-                        if (fData.avatar_img) fAvatar = `<div class="friend-avatar"><img src="${fData.avatar_img}" style="width:100%; height:100%; object-fit:cover;"></div>`;
-                        
+                        // Costruzione avatar sicura (anti-XSS su color e avatar_img)
+                        const avatarDiv = document.createElement('div');
+                        avatarDiv.className = 'friend-avatar';
+                        if (fData.avatar_img && /^https?:\/\/.+\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i.test(fData.avatar_img)) {
+                            const img = document.createElement('img');
+                            img.src = fData.avatar_img;
+                            img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+                            img.alt = '';
+                            avatarDiv.appendChild(img);
+                        } else {
+                            avatarDiv.style.backgroundColor = (fData.color || '#e3c66c').replace(/[^#a-fA-F0-9]/g, '');
+                            avatarDiv.textContent = fData.username.charAt(0).toUpperCase();
+                        }
+
                         let isOnline = (fData.onlineStatus === "online" && (!fData.privacy || fData.privacy.invisible !== true));
-                        let statusHtml = isOnline ? `<div class="friend-status" style="color:#4caf50;">● ONLINE</div>` : `<div class="friend-status" style="color:#666;">○ OFFLINE</div>`;
 
                         el.innerHTML = `
-    <div class="friend-info">
-        ${fAvatar}
-        <div><div class="friend-name safe-name"></div>${statusHtml}</div>
-    </div>
-    <div style="display: flex; gap: 5px;">
-        <button class="btn-mini msg-btn" style="border-color: #4caf50; color: #4caf50;" onmouseover="this.style.background='#4caf50'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#4caf50';">MESSAGGIO</button>
-        <button class="btn-mini btn-reject rem-btn">RIMUOVI</button>
-    </div>
-`;
+                            <div class="friend-info">
+                                <div class="avatar-slot"></div>
+                                <div>
+                                    <div class="friend-name safe-name"></div>
+                                    <div class="friend-status" style="color:${isOnline ? '#4caf50' : '#666'};">${isOnline ? '● ONLINE' : '○ OFFLINE'}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn-mini msg-btn" style="border-color: #4caf50; color: #4caf50;" onmouseover="this.style.background='#4caf50'; this.style.color='#000';" onmouseout="this.style.background='transparent'; this.style.color='#4caf50';">MESSAGGIO</button>
+                                <button class="btn-mini btn-reject rem-btn">RIMUOVI</button>
+                            </div>
+                        `;
+                        // Inserisci avatar costruito in modo sicuro
+                        el.querySelector('.avatar-slot').replaceWith(avatarDiv);
 
 el.querySelector('.safe-name').textContent = fData.username;
 
@@ -482,11 +508,8 @@ el.querySelector('.rem-btn').onclick = () => window.openRemoveModal(friendId, fD
 
 // Il nuovo bottone manda al terminale aprendo direttamente la chat con quell'utente
 el.querySelector('.msg-btn').onclick = () => {
-    window.location.href = `terminale.html?agent=${friendId}`;
+    window.location.href = `terminale.html?agent=${encodeURIComponent(friendId)}`;
 };
-                        
-                        el.querySelector('.safe-name').textContent = fData.username;
-                        el.querySelector('.rem-btn').onclick = () => window.openRemoveModal(friendId, fData.username);
                         
                         friendElements.push(el);
                     }

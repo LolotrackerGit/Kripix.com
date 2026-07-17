@@ -990,3 +990,79 @@ body.no-scroll {
         }
         .receipt-sent { color: #666; } /* Grigio scuro, non dà nell'occhio */
         .receipt-read { color: var(--accent-gold); } /* Oro Kripix quando viene letto */
+
+
+/* ============================================================
+   PAGE LOADER — Schermata di caricamento tra le pagine
+   Stile terminale / noir coerente con l'estetica Kripix.
+   ============================================================ */
+
+#page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: var(--bg-darker, #020202);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity .4s ease;
+}
+
+#page-loader.loader-fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.loader-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 10px;
+    color: var(--text-main, #e8e6d9);
+    text-shadow: 0 0 30px rgba(227, 198, 108, .15);
+}
+
+/* Barra di progresso animata */
+.loader-bar {
+    width: 180px;
+    height: 3px;
+    background: #222;
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.loader-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-gold, #e3c66c);
+    animation: loaderFill 1.2s ease-in-out forwards;
+}
+
+@keyframes loaderFill {
+    0%   { width: 0%; }
+    60%  { width: 70%; }
+    100% { width: 100%; }
+}
+
+.loader-text {
+    font-family: 'Courier Prime', monospace;
+    font-size: .75rem;
+    color: #555;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: loaderBlink 1s step-end infinite;
+}
+
+@keyframes loaderBlink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .3; }
+}
