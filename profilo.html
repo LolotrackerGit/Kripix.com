@@ -27,7 +27,9 @@
         .badge-item { background: #0f0f0f; border: 1px solid #333; width: 100px; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 4px; transition: 0.3s; cursor: help; opacity: 1; }
         .badge-item:not(.unlocked) .badge-icon, .badge-item:not(.unlocked) .badge-name { opacity: 0.3; filter: grayscale(100%); }
         .badge-item.unlocked { border-color: var(--accent-gold); background: rgba(227, 198, 108, 0.05); box-shadow: 0 0 15px rgba(227, 198, 108, 0.1); }
-        .badge-icon { font-size: 2rem; margin-bottom: 5px; transition: 0.3s; }
+        .badge-icon { display: flex; margin-bottom: 8px; transition: 0.3s; color: var(--accent-gold); }
+        .badge-icon .icon { width: 2rem; height: 2rem; stroke-width: 1.25; }
+        .badge-item:not(.unlocked) .badge-icon { color: var(--text-muted); }
         .badge-name { font-size: 0.6rem; text-transform: uppercase; color: #888; text-align: center; transition: 0.3s; }
         .custom-tooltip { position: relative; }
         .custom-tooltip::after { content: attr(data-tooltip); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%) translateY(10px); background: #05070a; border: 1px solid var(--accent-gold); color: var(--text-main); padding: 8px 12px; font-family: 'Courier Prime', monospace; font-size: 0.8rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: all 0.2s ease; z-index: 100; box-shadow: 0 5px 20px rgba(0,0,0,0.9); }
@@ -37,6 +39,36 @@
         .progress-bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--accent-gold); width: 0%; transition: width 1s ease-out; }
         .network-section { background: rgba(10, 10, 10, 0.8); border: 1px solid #333; border-top: 3px solid var(--accent-gold); padding: 30px; margin-bottom: 40px; position: relative; }
+        /* ── Accessi beta ── */
+        .beta-access-card { border-color: #444; background: linear-gradient(45deg, rgba(255,255,255,0.03), transparent); }
+        .beta-count {
+            display: inline-block; margin-left: 8px; padding: 1px 7px;
+            background: var(--accent-red); color: #fff; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 900;
+        }
+        .beta-loading { color:#666; font-family:'Courier Prime'; text-align:center; padding:20px; }
+        .beta-item {
+            border: 1px solid #222; border-left: 2px solid #333;
+            padding: 20px; margin-bottom: 14px; transition: 0.3s;
+        }
+        .beta-item:hover { border-color: #333; border-left-color: #555; }
+        .beta-item.is-active { border-left-color: #4caf50; background: rgba(76,175,80,0.03); }
+        .beta-item.is-pending { border-left-color: var(--accent-gold); background: rgba(227,198,108,0.03); }
+        .beta-item.is-rejected { opacity: 0.55; }
+        .beta-item-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+        .beta-item h4 { color: #fff; font-size: 1.05rem; letter-spacing: 1px; }
+        .beta-item .beta-tagline { color: var(--accent-gold); font-family: 'Courier Prime'; font-size: 0.75rem; margin-bottom: 12px; }
+        .beta-item p.beta-desc { color: #999; font-size: 0.87rem; line-height: 1.6; margin-bottom: 16px; }
+        .beta-state {
+            flex-shrink: 0; font-family: 'Courier Prime', monospace; font-size: 0.7rem;
+            font-weight: bold; letter-spacing: 1px; padding: 4px 10px; border: 1px solid; border-radius: 2px;
+        }
+        .beta-state.active   { color:#4caf50; border-color:rgba(76,175,80,.5);  background:rgba(76,175,80,.08); }
+        .beta-state.pending  { color:var(--accent-gold); border-color:rgba(227,198,108,.5); background:rgba(227,198,108,.08); }
+        .beta-state.rejected { color:#ff5555; border-color:rgba(255,85,85,.4); background:rgba(255,85,85,.06); }
+        .beta-state.none     { color:#777; border-color:#333; }
+        .beta-note { font-family:'Courier Prime'; font-size:0.78rem; color:#777; line-height:1.6; }
+
         .network-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
         .network-header h3 { font-size: 1.2rem; color: white; }
         .add-friend-box { display: flex; gap: 0; margin-bottom: 15px; border: 1px solid #333; background: #000; padding: 5px; border-radius: 2px; }
@@ -123,19 +155,27 @@
                     <h3 class="box-header">MEDAGLIERE & OBIETTIVI</h3>
                     <div class="badges-grid">
                         <div class="badge-item unlocked custom-tooltip" data-tooltip="Reclutamento completato con successo.">
-                            <span class="badge-icon">🛡️</span>
+                            <span class="badge-icon" aria-hidden="true">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                            </span>
                             <span class="badge-name">RECLUTA</span>
                         </div>
                         <div class="badge-item custom-tooltip" id="badge-pagoda" data-tooltip="Possiedi 'La Pagoda'.">
-    <span class="badge-icon">📸</span>
-    <span class="badge-name">FOTOREPORTER</span>
-</div>
-                        <div class="badge-item custom-tooltip" data-tooltip="Partecipazione alla Closed Beta. (Bloccato)">
-                            <span class="badge-icon">🧪</span>
+                            <span class="badge-icon" aria-hidden="true">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M3 8h3.5l1.6-2.4A1 1 0 0 1 9 5h6a1 1 0 0 1 .9.6L17.5 8H21v11H3z"/><circle cx="12" cy="13.5" r="3.5"/></svg>
+                            </span>
+                            <span class="badge-name">FOTOREPORTER</span>
+                        </div>
+                        <div class="badge-item custom-tooltip" id="badge-beta" data-tooltip="Partecipazione alla Closed Beta. (Bloccato)">
+                            <span class="badge-icon" aria-hidden="true">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M9.5 2v6.2L4.6 17a2.5 2.5 0 0 0 2.2 3.8h10.4a2.5 2.5 0 0 0 2.2-3.8l-4.9-8.8V2"/><path d="M8 2h8"/><path d="M7.2 14h9.6"/></svg>
+                            </span>
                             <span class="badge-name">BETA TESTER</span>
                         </div>
                         <div class="badge-item custom-tooltip" data-tooltip="Finanziatore del progetto originale. (Bloccato)">
-                            <span class="badge-icon">⭐</span>
+                            <span class="badge-icon" aria-hidden="true">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.2-5.4-3-5.4 3 1-6.2L3.2 9.5l6.1-.9z"/></svg>
+                            </span>
                             <span class="badge-name">GOLD MEMBER</span>
                         </div>
                     </div>
@@ -143,10 +183,12 @@
 
                 <div class="network-section">
                     <div class="network-header">
-    <span style="font-size: 1.5rem;">🌐</span>
+    <span style="display:flex; color:var(--accent-gold);" aria-hidden="true">
+        <svg class="icon icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
+    </span>
     <a href="terminale.html" style="text-decoration: none; color: white; display: flex; align-items: center; gap: 10px; transition: 0.3s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='white'">
         <h3>RETE OPERATIVA</h3>
-        <span style="font-family: 'Courier Prime'; font-size: 0.8rem; background: var(--accent-gold); color: #000; padding: 2px 8px; font-weight: bold; border-radius: 2px;">ACCEDI</span>
+        <span data-i18n="profilo_badge_accedi" style="font-family: 'Courier Prime'; font-size: 0.8rem; background: var(--accent-gold); color: #000; padding: 2px 8px; font-weight: bold; border-radius: 2px;">ACCEDI</span>
     </a>
 </div>
                     
@@ -160,6 +202,17 @@
                     <div id="sent-requests-area" style="margin-bottom: 20px;"></div>
                     <div class="friend-list" id="friends-list-container"></div>
                 </div>
+
+<!-- Modulo Accessi Beta -->
+    <div class="section-box dev-access-card beta-access-card">
+        <div class="dev-text">
+            <h4>ACCESSI BETA</h4>
+            <p>> Programmi sperimentali riservati agli agenti selezionati.</p>
+        </div>
+        <button id="btn-open-beta" class="btn-dev-action" type="button">
+            APRI ELENCO<span id="beta-badge-count" class="beta-count" hidden></span>
+        </button>
+    </div>
 
 <!-- Modulo Programma DEV -->
     <div id="pixel-otros-card" class="section-box dev-access-card" style="display: none;">
@@ -194,10 +247,31 @@
         </div>
     </section>
 
+    <!-- ============ ACCESSI BETA ============ -->
+    <div id="beta-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width:560px; text-align:left;">
+            <h3 style="color:var(--accent-gold); margin-bottom:8px; text-align:center;">ACCESSI BETA</h3>
+            <p style="color:#888; font-size:0.85rem; text-align:center; margin-bottom:25px; font-family:'Courier Prime';">
+                Funzioni in prova, aperte a pochi agenti per volta.
+            </p>
+
+            <div id="beta-list">
+                <p class="beta-loading">&gt;&gt; Interrogazione del registro programmi...</p>
+            </div>
+
+            <div style="text-align:center; margin-top:25px;">
+                <button class="btn-outline" onclick="closeBetaModal()">CHIUDI</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modale Rimuovi Amico -->
     <div id="remove-friend-modal" class="modal-overlay">
         <div class="modal-box" style="border-top-color: #ff5555; max-width: 450px;">
-            <h3 style="color: #ff5555; margin-bottom: 15px; font-size: 1.5rem;">⚠ INTERROMPI CONNESSIONE</h3>
+            <h3 style="color: #ff5555; margin-bottom: 15px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <svg class="icon icon-md" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <span data-i18n="INTERROMPI CONNESSIONE">INTERROMPI CONNESSIONE</span>
+            </h3>
             <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 25px;">
                 Stai per rimuovere l'Agente <strong id="remove-target-name" style="color:white; font-family:'Courier Prime';"></strong> dalla tua rete.<br>
                 Questa azione è irreversibile.
@@ -654,6 +728,153 @@ window.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 });
+    </script>
+
+    <!-- ============================================================
+         ACCESSI BETA
+         Gli stati arrivano dal server: betaAccess non è scrivibile dal
+         client, altrimenti basterebbe la console del browser per
+         auto-concedersi l'accesso.
+         ============================================================ -->
+    <script type="module">
+        import { app, auth } from './script.js';
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        const functions = getFunctions(app, 'europe-west1');
+        const getBetaAccess = httpsCallable(functions, 'getBetaAccess');
+        const requestBetaAccess = httpsCallable(functions, 'requestBetaAccess');
+
+        const ETICHETTE = {
+            active:   { testo: 'ATTIVA',      classe: 'active' },
+            pending:  { testo: 'IN ATTESA',   classe: 'pending' },
+            rejected: { testo: 'NON ACCOLTA', classe: 'rejected' },
+            none:     { testo: 'NON RICHIESTA', classe: 'none' }
+        };
+
+        const NOTE = {
+            active:   'Accesso concesso. La trovi già attiva dove è prevista.',
+            pending:  'Richiesta inviata. Ti avvisiamo nel Terminale appena viene valutata.',
+            rejected: 'Questa richiesta non è stata accolta. Puoi riprovare più avanti.'
+        };
+
+        let programmi = [];
+
+        function render() {
+            const lista = document.getElementById('beta-list');
+            lista.innerHTML = '';
+
+            if (programmi.length === 0) {
+                lista.innerHTML = '<p class="beta-loading">Nessun programma beta disponibile al momento.</p>';
+                return;
+            }
+
+            programmi.forEach(p => {
+                const et = ETICHETTE[p.status] || ETICHETTE.none;
+
+                const card = document.createElement('div');
+                card.className = `beta-item is-${p.status}`;
+
+                const head = document.createElement('div');
+                head.className = 'beta-item-head';
+                const titolo = document.createElement('h4');
+                titolo.textContent = p.name;
+                const stato = document.createElement('span');
+                stato.className = `beta-state ${et.classe}`;
+                stato.textContent = et.testo;
+                head.append(titolo, stato);
+
+                const tagline = document.createElement('div');
+                tagline.className = 'beta-tagline';
+                tagline.textContent = p.tagline || '';
+
+                const desc = document.createElement('p');
+                desc.className = 'beta-desc';
+                desc.textContent = p.description || '';
+
+                card.append(head, tagline, desc);
+
+                if (p.status === 'none' && p.openForRequests) {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-gold';
+                    btn.style.cssText = 'padding:10px 22px; font-size:0.8rem;';
+                    btn.textContent = 'RICHIEDI ACCESSO';
+                    btn.onclick = () => inviaRichiesta(p.id, btn);
+                    card.appendChild(btn);
+                } else if (p.status === 'none') {
+                    const nota = document.createElement('p');
+                    nota.className = 'beta-note';
+                    nota.textContent = 'Candidature chiuse per questo programma.';
+                    card.appendChild(nota);
+                } else {
+                    const nota = document.createElement('p');
+                    nota.className = 'beta-note';
+                    nota.textContent = p.note || NOTE[p.status] || '';
+                    card.appendChild(nota);
+                }
+
+                lista.appendChild(card);
+            });
+        }
+
+        async function inviaRichiesta(programId, btn) {
+            const originale = btn.textContent;
+            btn.textContent = 'INVIO...';
+            btn.style.pointerEvents = 'none';
+            try {
+                await requestBetaAccess({ programId });
+                const p = programmi.find(x => x.id === programId);
+                if (p) p.status = 'pending';
+                render();
+                aggiornaBadge();
+                if (window.kripixNotify) window.kripixNotify('BETA', 'Richiesta trasmessa. Attendi la valutazione.', 'success');
+            } catch (e) {
+                console.error('Richiesta beta fallita:', e);
+                btn.textContent = originale;
+                btn.style.pointerEvents = 'auto';
+                if (window.kripixNotify) window.kripixNotify('ERRORE', 'Richiesta non inviata. Riprova tra poco.', 'error');
+            }
+        }
+
+        /** Pallino rosso sul bottone quando c'è qualcosa di nuovo da vedere. */
+        function aggiornaBadge() {
+            const attive = programmi.filter(p => p.status === 'active').length;
+            const badge = document.getElementById('beta-badge-count');
+            if (attive > 0) {
+                badge.textContent = attive;
+                badge.hidden = false;
+            } else {
+                badge.hidden = true;
+            }
+        }
+
+        async function carica() {
+            try {
+                const res = await getBetaAccess();
+                programmi = (res.data && res.data.programs) || [];
+                render();
+                aggiornaBadge();
+
+                // Medagliere: il badge BETA TESTER si accende con almeno un programma attivo
+                const badge = document.getElementById('badge-beta');
+                if (badge && programmi.some(p => p.status === 'active')) {
+                    badge.classList.add('unlocked');
+                    badge.setAttribute('data-tooltip', 'Partecipi a un programma beta del Network.');
+                }
+            } catch (e) {
+                console.error('Caricamento beta fallito:', e);
+                document.getElementById('beta-list').innerHTML =
+                    '<p class="beta-loading" style="color:#ff5555;">&gt;&gt; Registro programmi non raggiungibile.</p>';
+            }
+        }
+
+        window.closeBetaModal = () => { document.getElementById('beta-modal').style.display = 'none'; };
+
+        document.getElementById('btn-open-beta').addEventListener('click', () => {
+            document.getElementById('beta-modal').style.display = 'flex';
+        });
+
+        onAuthStateChanged(auth, (user) => { if (user) carica(); });
     </script>
 </body>
 </html>

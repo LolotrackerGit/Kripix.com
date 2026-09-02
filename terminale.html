@@ -206,7 +206,9 @@
     <nav id="main-nav" style="border-bottom: 1px solid #222; background: #05070a; position: fixed;"></nav>
 
     <!-- Mobile sidebar toggle -->
-    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Apri contatti">☰</button>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Apri contatti" aria-expanded="false">
+        <svg class="icon icon-md" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+    </button>
     <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
     <div class="chat-app">
@@ -229,7 +231,9 @@
             
             <!-- Questo copre tutto se non clicchi su un amico -->
             <div class="empty-chat" id="empty-state">
-                <span style="font-size: 4rem; opacity: 0.2; margin-bottom: 20px;">✉</span>
+                <span style="opacity: 0.2; margin-bottom: 20px; display: flex;" aria-hidden="true">
+                    <svg class="icon" style="width:4rem; height:4rem; stroke-width:1;" viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg>
+                </span>
                 <h3 style="color: #666; font-family: 'Courier Prime'; font-weight: normal;">SELEZIONA UN CANALE OPERATIVO</h3>
             </div>
 
@@ -621,12 +625,14 @@
     function closeSidebar() {
         sidebarEl.classList.remove('open');
         backdrop.classList.remove('visible');
+        toggleBtn.setAttribute('aria-expanded', 'false');
     }
 
     toggleBtn.addEventListener('click', () => {
         const opening = !sidebarEl.classList.contains('open');
         sidebarEl.classList.toggle('open', opening);
         backdrop.classList.toggle('visible', opening);
+        toggleBtn.setAttribute('aria-expanded', String(opening));
     });
     backdrop.addEventListener('click', closeSidebar);
 

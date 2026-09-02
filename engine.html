@@ -42,7 +42,9 @@
         <div class="container">
             
             <div class="warning-box">
-                <div style="font-size:2rem;">⚠️</div>
+                <div style="color:var(--accent-red);" aria-hidden="true">
+                    <svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                </div>
                 <div>
                     <h4 style="color:var(--accent-red); margin-bottom:10px;">ATTENZIONE: ARCHITETTURA AD ALTO COSTO</h4>
                     <p style="font-size:0.9rem; opacity:0.8;">
@@ -109,9 +111,9 @@
                     checkbox.disabled = true;
                     checkbox.checked = false;
                     label.style.opacity = "0.5";
-                    label.innerHTML = "🚫 <em>Installazione non supportata su architettura mobile.</em>";
-                    
-                    btn.innerText = "❌ WORKSTATION REQUIRED";
+                    label.innerHTML = "<em>Installazione non supportata su architettura mobile.</em>";
+
+                    btn.innerText = "WORKSTATION RICHIESTA";
                     btn.style.borderColor = "#ff4444"; 
                     btn.style.color = "#ff4444";
                     btn.style.background = "rgba(255, 68, 68, 0.05)";

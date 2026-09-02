@@ -161,7 +161,10 @@
 
             <!-- BOTTONI FUORI DAL PDF -->
             <div style="display: flex; gap: 10px; padding: 20px; background: #0a0a0a; border-top: 1px solid #222;">
-                <button class="btn-outline full-width" onclick="downloadPDF()">📄 SCARICA PDF</button>
+                <button class="btn-outline full-width btn-icon" onclick="downloadPDF()">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 17v3h16v-3"/></svg>
+                    <span data-i18n="SCARICA PDF">SCARICA PDF</span>
+                </button>
                 <button class="btn-gold full-width" onclick="document.getElementById('receipt-modal').style.display='none'">CHIUDI</button>
             </div>
         </div>
@@ -238,8 +241,12 @@ function injectGameCard() {
                 
                 <div style="display:flex; gap:10px;" class="btn-container-relative">
                     <button class="btn-gold full-width" onclick="openDlModal()">INSTALLA</button>
-                    <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Visualizza Ricevuta" onclick="showReceipt()">📄</button>
-                    <button class="btn-outline" style="padding:0; width:55px; justify-content:center; font-size:1.2rem;" title="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">🔑</button>
+                    <button class="btn-outline btn-icon" style="padding:0; width:55px;" title="Visualizza Ricevuta" aria-label="Visualizza Ricevuta" onclick="showReceipt()">
+                        <svg class="icon icon-md" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
+                    </button>
+                    <button class="btn-outline btn-icon" style="padding:0; width:55px;" title="Copia Chiave" aria-label="Copia Chiave" onclick="copyKey(this, '${currentGlobalKey}')">
+                        <svg class="icon icon-md" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8-8"/><path d="m17.5 5.5 2 2"/><path d="m14.8 8.2 2 2"/></svg>
+                    </button>
                 </div>
             </div>
         </div>

@@ -116,6 +116,33 @@
     </div>
 </div>
     
+    <!-- MODALE: SFIDA VERIFICA IN DUE PASSAGGI -->
+    <div id="mfa-login-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width:430px;">
+            <span style="display:flex; justify-content:center; color:var(--accent-gold); margin-bottom:15px;" aria-hidden="true">
+                <svg class="icon" style="width:2.6rem; height:2.6rem;" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/></svg>
+            </span>
+            <h3 style="color:var(--accent-gold); margin-bottom:12px;">VERIFICA IN DUE PASSAGGI</h3>
+            <p style="color:#888; font-size:0.88rem; margin-bottom:20px; line-height:1.6;">
+                Apri la tua app di autenticazione e inserisci il codice a 6 cifre.
+            </p>
+
+            <div id="mfa-login-code"></div>
+
+            <p id="mfa-login-msg" class="validation-msg"></p>
+
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
+                <button class="btn-outline" onclick="closeMfaLogin()">ANNULLA</button>
+                <button id="btn-mfa-login" class="btn-gold">CONFERMA</button>
+            </div>
+
+            <p style="color:#555; font-family:'Courier Prime'; font-size:0.75rem; margin-top:20px; line-height:1.6;">
+                Hai perso l'accesso all'app? Scrivi a
+                <a href="mailto:info@kripix.com" style="color:#888;">info@kripix.com</a> dall'email dell'account.
+            </p>
+        </div>
+    </div>
+
     <!-- NUOVO MODALE: REGISTRAZIONE POST-GOOGLE -->
     <div id="google-register-modal" class="modal-overlay">
         <div class="modal-box" style="max-width:400px;">
@@ -133,8 +160,97 @@
     <script type="module">
         // Import da Firebase (inclusi i nuovi per Google e Firestore)
         import { app, auth, db } from './script.js';
-        import { signInWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { signInWithEmailAndPassword, sendEmailVerification, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, getMultiFactorResolver, TotpMultiFactorGenerator } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { doc, getDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { createCodeInput, describeAuthError } from './twofactor.js';
+
+        // ── SFIDA 2FA ───────────────────────────────────────────
+        //  Chiamata quando Firebase risponde che serve il secondo
+        //  fattore: raccoglie le 6 cifre e completa l'accesso.
+
+        let mfaResolver = null;
+        let mfaCodeInput = null;
+        let onMfaResolved = null;
+
+        window.closeMfaLogin = function() {
+            document.getElementById('mfa-login-modal').style.display = 'none';
+            document.getElementById('mfa-login-msg').style.display = 'none';
+            if (mfaCodeInput) mfaCodeInput.clear();
+            mfaResolver = null;
+            onMfaResolved = null;
+        };
+
+        /**
+         * @param {Error} error       errore auth/multi-factor-auth-required
+         * @param {Function} onDone   riceve la UserCredential una volta risolta
+         * @returns {boolean}         false se non c'è un fattore TOTP utilizzabile
+         */
+        function openMfaChallenge(error, onDone) {
+            mfaResolver = getMultiFactorResolver(auth, error);
+            const hint = mfaResolver.hints.find(h => h.factorId === TotpMultiFactorGenerator.FACTOR_ID);
+            if (!hint) return false;
+
+            onMfaResolved = onDone;
+
+            if (!mfaCodeInput) {
+                mfaCodeInput = createCodeInput(document.getElementById('mfa-login-code'), {
+                    onComplete: () => document.getElementById('btn-mfa-login').click(),
+                });
+            }
+            mfaCodeInput.clear();
+            document.getElementById('mfa-login-msg').style.display = 'none';
+            document.getElementById('mfa-login-modal').style.display = 'flex';
+            setTimeout(() => mfaCodeInput.focus(), 120);
+            return true;
+        }
+
+        let mfaChecking = false;
+
+        document.getElementById('btn-mfa-login').addEventListener('click', async () => {
+            // L'inserimento automatico delle 6 cifre può richiamare il click
+            // mentre una verifica è già partita: evitiamo il doppio invio.
+            if (mfaChecking) return;
+
+            const btn = document.getElementById('btn-mfa-login');
+            const msg = document.getElementById('mfa-login-msg');
+            const wrap = document.getElementById('mfa-login-code');
+            msg.style.display = 'none';
+
+            const code = mfaCodeInput.value();
+            if (code.length !== 6) {
+                msg.textContent = '>> SERVONO TUTTE E 6 LE CIFRE.';
+                msg.style.display = 'block';
+                return;
+            }
+
+            mfaChecking = true;
+            btn.textContent = 'VERIFICA...';
+            btn.style.pointerEvents = 'none';
+            mfaCodeInput.setDisabled(true);
+
+            try {
+                const hint = mfaResolver.hints.find(h => h.factorId === TotpMultiFactorGenerator.FACTOR_ID);
+                const assertion = TotpMultiFactorGenerator.assertionForSignIn(hint.uid, code);
+                const credential = await mfaResolver.resolveSignIn(assertion);
+
+                btn.textContent = 'ACCESSO CONSENTITO';
+                btn.classList.add('btn-success');
+                if (onMfaResolved) await onMfaResolved(credential);
+            } catch (error) {
+                console.error('2FA — verifica fallita:', error);
+                msg.textContent = describeAuthError(error);
+                msg.style.display = 'block';
+                wrap.classList.add('error');
+                setTimeout(() => wrap.classList.remove('error'), 400);
+                mfaCodeInput.clear();
+                btn.textContent = 'CONFERMA';
+                btn.classList.remove('btn-success');
+            } finally {
+                mfaChecking = false;
+                mfaCodeInput.setDisabled(false);
+                btn.style.pointerEvents = 'auto';
+            }
+        });
 
         // --- LOGIN CON EMAIL E PASSWORD (invariato) ---
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -148,8 +264,8 @@
             btn.innerHTML = 'VERIFICA NEL CLOUD...';
             btn.style.pointerEvents = 'none';
 
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            // Passaggio finale comune: con o senza secondo fattore
+            const completaAccesso = async (userCredential) => {
                 if (!userCredential.user.emailVerified) {
                     await sendEmailVerification(userCredential.user);
                     await signOut(auth);
@@ -160,9 +276,24 @@
                 btn.innerHTML = 'ACCESSO CONSENTITO';
                 btn.classList.add('btn-success');
                 setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+            };
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                await completaAccesso(userCredential);
             } catch (error) {
+            // Password corretta, ma l'account ha la verifica in due passaggi
+            if (error.code === 'auth/multi-factor-auth-required') {
+                if (openMfaChallenge(error, completaAccesso)) {
+                    btn.innerHTML = 'VERIFICA CREDENZIALI';
+                    btn.style.pointerEvents = 'auto';
+                    return;
+                }
+                msg.innerText = '>> QUESTO ACCOUNT RICHIEDE UN SECONDO FATTORE NON SUPPORTATO QUI.';
+                msg.style.display = 'block';
+            }
             // AGGIUNGI QUESTO CONTROLLO QUI
-            if (error.code === 'auth/user-disabled') {
+            else if (error.code === 'auth/user-disabled') {
                 msg.innerText = '>> ACCESSO REVOCATO: Questo account ha violato i termini di servizio del Kripix Network.';
                 msg.style.display = 'block';
             } 
@@ -180,8 +311,9 @@
         // --- LOGICA ACCESSO CON GOOGLE ---
         document.getElementById('btn-google-login').addEventListener('click', async () => {
             const provider = new GoogleAuthProvider();
-            try {
-                const result = await signInWithPopup(auth, provider);
+
+            // Vale sia dopo il popup, sia dopo l'eventuale codice a 6 cifre
+            const dopoGoogle = async (result) => {
                 const user = result.user;
 
                 // Controlla se l'utente esiste già nel nostro database Firestore
@@ -193,10 +325,17 @@
                     window.location.href = 'index.html';
                 } else {
                     // L'utente NON esiste, è una NUOVA registrazione
+                    closeMfaLogin();
                     document.getElementById('google-email-display').textContent = user.email;
                     document.getElementById('google-register-modal').style.display = 'flex';
                 }
+            };
+
+            try {
+                await dopoGoogle(await signInWithPopup(auth, provider));
             } catch (error) {
+                if (error.code === 'auth/multi-factor-auth-required' && openMfaChallenge(error, dopoGoogle)) return;
+
                 console.error("Errore Google Sign-In:", error);
                 if(window.kripixNotify) window.kripixNotify("ERRORE", "Accesso Google annullato o fallito.", "error");
             }

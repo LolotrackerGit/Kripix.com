@@ -14,6 +14,11 @@ const dizionario_EN = {
     "Chi Siamo": "About Us",
     "Contatti": "Contact",
     "Scarica App": "Download App",
+    "Assistenza": "Support",
+    "Centro assistenza": "Help center",
+    "Torna in cima alla pagina": "Back to top of page",
+    "Apri il menu": "Open the menu",
+    "Apri contatti": "Open contacts",
     "ACCEDI": "LOGIN",
     "IL MIO PROFILO": "MY PROFILE",
     "Libreria Giochi": "Game Library",
@@ -40,11 +45,12 @@ const dizionario_EN = {
     "Dossier E.U.L.A.": "E.U.L.A. Dossier",
     "Privacy Policy": "Privacy Policy",
     "Policy DRM": "DRM Policy",
-    "Supporto Tecnico": "Technical Support",
+    "Domande Frequenti": "Frequently Asked Questions",
     "CONNESSIONI": "CONNECTIONS",
     "Discord Server": "Discord Server",
     "Twitter / X": "Twitter / X",
     "YouTube": "YouTube",
+    "Tutti i diritti riservati.": "All rights reserved.",
 
     // ── Index (Home) ────────────────────────────────────────
     "I Nostri Giochi": "Our Games",
@@ -77,6 +83,9 @@ const dizionario_EN = {
     "MESSAGGIO / DOSSIER": "MESSAGE / DOSSIER",
     "Scrivi qui il tuo feedback o richiesta...": "Write your feedback or request here...",
     "TRASMETTI DATI": "TRANSMIT DATA",
+    "RISPOSTA IMMEDIATA": "INSTANT ANSWER",
+    "Account, acquisti, chiavi e launcher: le domande più comuni hanno già una risposta pronta.": "Account, purchases, keys and launcher: the most common questions already have an answer waiting.",
+    "VAI ALLE FAQ": "GO TO THE FAQ",
 
     // ── Progetti & Pagoda ───────────────────────────────────
     "CATALOGO PROGETTI": "PROJECT CATALOG",
@@ -85,7 +94,7 @@ const dizionario_EN = {
     "Un thriller noir psicologico dove ogni fallimento investigativo rende i tuoi nemici più forti. Harrow ti aspetta.": "A psychological noir thriller where every investigative failure makes your enemies stronger. Harrow awaits.",
     "Edizione Standard": "Standard Edition",
     "MIGLIORE OFFERTA": "BEST VALUE",
-    "★ Include DELUXE EDITION": "★ Includes DELUXE EDITION",
+    "Include DELUXE EDITION": "Includes DELUXE EDITION",
     "(Soundtrack + Artbook + Skin)": "(Soundtrack + Artbook + Skin)",
     "Acquista Ora": "Buy Now",
     "Key Steam Inclusa • 100% Supporto Sviluppatori": "Steam Key Included • 100% Developer Support",
@@ -157,6 +166,8 @@ const dizionario_EN = {
     "Ho letto, compreso e accetto di sacrificare le mie prestazioni per il realismo.": "I have read, understood, and agree to sacrifice my performance for realism.",
     "SCARICA SDK (45 GB)": "DOWNLOAD SDK (45 GB)",
     "INIZIALIZZAZIONE...": "INITIALIZING...",
+    "WORKSTATION RICHIESTA": "WORKSTATION REQUIRED",
+    "Installazione non supportata su architettura mobile.": "Installation not supported on mobile architecture.",
 
     // ── Login, Register, Reset, Verify ──────────────────────
     "ACCESSO": "SYSTEM ACCESS",
@@ -215,7 +226,7 @@ const dizionario_EN = {
     ">  [OGGI] Accesso al terminale effettuato.": ">   [TODAY] Terminal access granted.",
     "> [SISTEMA] Acquisizione licenza \"Harrow\".": "> [SYSTEM] \"Harrow\" license acquired.",
     "> [SYSTEM] Profilo sincronizzato con il server centrale.": "> [SYSTEM] Profile synchronized with central server.",
-    "⚠ INTERROMPI CONNESSIONE": "⚠ SEVER CONNECTION",
+    "INTERROMPI CONNESSIONE": "SEVER CONNECTION",
     "RIMUOVI": "REMOVE",
     "INTEGRAZIONE DISCORD": "DISCORD INTEGRATION",
     "> Sincronizza il tuo Dossier per ottenere i ruoli sul server.": "> Sync your Dossier to get roles on the server.",
@@ -232,7 +243,9 @@ const dizionario_EN = {
     ">> IN ATTESA DI RISPOSTA": ">> AWAITING RESPONSE",
     ">> RICHIESTA CONNESSIONE": ">> CONNECTION REQUEST",
     "FOTOREPORTER": "PHOTOREPORTER",
-    "ACCEDI": "ACCESS",
+    // Chiave dedicata: "ACCEDI" nella navbar significa "LOGIN", qui è
+    // il badge che apre il terminale. Due traduzioni, due chiavi.
+    "profilo_badge_accedi": "ACCESS",
 
     // ── Impostazioni ────────────────────────────────────────
     "CONFIGURAZIONE": "CONFIGURATION",
@@ -252,6 +265,30 @@ const dizionario_EN = {
     "SICUREZZA": "SECURITY",
     "CODICE D'ACCESSO": "ACCESS CODE",
     "MODIFICA PASSWORD": "CHANGE PASSWORD",
+    "VERIFICA IN DUE PASSAGGI": "TWO-STEP VERIFICATION",
+    "Aggiunge un secondo lucchetto all'account: oltre alla password serve un codice a 6 cifre generato dalla tua app di autenticazione, che cambia ogni 30 secondi.": "Adds a second lock to your account: on top of the password you need a 6-digit code from your authenticator app, refreshed every 30 seconds.",
+    "ATTIVA PROTEZIONE": "TURN ON PROTECTION",
+    "DISATTIVA": "TURN OFF",
+    // "ATTIVA" / "NON ATTIVA" sono definite più sotto, nel blocco beta:
+    // stessa parola, stesso significato, una sola voce per entrambi gli usi.
+    "NON ATTIVA": "INACTIVE",
+    "CONFERMA LA TUA IDENTITÀ": "CONFIRM YOUR IDENTITY",
+    "Prima di aggiungere un secondo fattore dobbiamo essere sicuri che sia davvero tu.": "Before adding a second factor we need to be sure it is really you.",
+    "Il tuo account usa l'accesso Google: si aprirà una finestra per confermare.": "Your account uses Google sign-in: a window will open for you to confirm.",
+    "PROSEGUI": "CONTINUE",
+    "COLLEGA L'APP": "CONNECT THE APP",
+    "Non puoi inquadrarlo? Inserisci la chiave a mano:": "Can't scan it? Enter the key manually:",
+    "HO COLLEGATO L'APP": "THE APP IS CONNECTED",
+    "INSERISCI IL CODICE": "ENTER THE CODE",
+    "Digita le 6 cifre che vedi nell'app. Cambiano ogni 30 secondi.": "Type the 6 digits shown in the app. They change every 30 seconds.",
+    "PROTEZIONE ATTIVA": "PROTECTION ACTIVE",
+    "Da adesso, a ogni accesso ti verrà chiesto il codice a 6 cifre.": "From now on, every sign-in will ask for the 6-digit code.",
+    "Tieni l'app installata e, se puoi, salva la chiave in un posto sicuro: perdere il telefono senza backup significa perdere l'accesso all'account.": "Keep the app installed and, if you can, store the key somewhere safe: losing your phone without a backup means losing access to the account.",
+    "HO CAPITO": "GOT IT",
+    "DISATTIVA LA PROTEZIONE": "TURN OFF PROTECTION",
+    "L'account tornerà protetto dalla sola password. Conferma la tua identità per procedere.": "The account will go back to password-only protection. Confirm your identity to continue.",
+    "Inserisci il codice dell'app per confermare.": "Enter the code from your app to confirm.",
+    "Apri la tua app di autenticazione e inserisci il codice a 6 cifre.": "Open your authenticator app and enter the 6-digit code.",
     "ZONA ROSSA": "RED ZONE",
     "L'eliminazione è irreversibile.": "Deletion is irreversible.",
     "ELIMINA ACCOUNT": "DELETE ACCOUNT",
@@ -272,7 +309,7 @@ const dizionario_EN = {
     "INVIA VERIFICA": "SEND VERIFICATION",
     "AGGIORNA PASSWORD": "UPDATE PASSWORD",
     "AGGIORNA": "UPDATE",
-    "⚠ CONFERMA ELIMINAZIONE": "⚠ CONFIRM DELETION",
+    "CONFERMA ELIMINAZIONE": "CONFIRM DELETION",
     "CONFERMA": "CONFIRM",
     "OPERAZIONE RIUSCITA": "OPERATION SUCCESSFUL",
     "Dati aggiornati correttamente.": "Data updated successfully.",
@@ -293,6 +330,9 @@ const dizionario_EN = {
     "ACQUISTO COMPLETATO": "PURCHASE COMPLETED",
     "VAI ALLA LIBRERIA": "GO TO LIBRARY",
     "Resta Qui": "Stay Here",
+    "SCARICA PDF": "DOWNLOAD PDF",
+    "Visualizza Ricevuta": "View Receipt",
+    "Copia Chiave": "Copy Key",
 
     // ── Admin ───────────────────────────────────────────────
     "TERMINALE OVERSEER": "OVERSEER TERMINAL",
@@ -331,9 +371,147 @@ const dizionario_EN = {
     "> LETTO": "> READ",
     "Adesso": "Now",
 
+    // ── FAQ / Centro Assistenza ─────────────────────────────
+    "CENTRO ASSISTENZA": "HELP CENTER",
+    "Domande frequenti, guide rapide e istruzioni operative.": "FAQs, quick guides and operational instructions.",
+    "PRIMI PASSI": "FIRST STEPS",
+    "Guide rapide": "Quick guides",
+    "ARCHIVIO RISPOSTE": "ANSWER ARCHIVE",
+    "Domande frequenti": "Frequently asked questions",
+
+    // Guide rapide
+    "Creare un account": "Create an account",
+    "Apri la pagina di registrazione e inserisci la tua email.": "Open the registration page and enter your email.",
+    "Scegli un Nome in Codice unico, senza spazi.": "Pick a unique Codename, with no spaces.",
+    "Imposta una password di almeno 8 caratteri con un numero.": "Set a password of at least 8 characters including a number.",
+    "Conferma il link di verifica che ricevi via email e accedi.": "Confirm the verification link you receive by email, then log in.",
+    "Crea il tuo Kripix ID →": "Create your Kripix ID →",
+    "Acquistare un gioco": "Buy a game",
+    "Accedi con il tuo Kripix ID: la licenza viene legata all'account.": "Sign in with your Kripix ID: the license is tied to the account.",
+    "Apri il catalogo e scegli l'edizione che preferisci.": "Open the catalog and choose the edition you prefer.",
+    "Completa il pagamento sul terminale protetto da Stripe.": "Complete the payment on the terminal secured by Stripe.",
+    "Trovi subito gioco e chiave nella tua Libreria.": "Game and key appear in your Library right away.",
+    "Vai al catalogo →": "Go to the catalog →",
+    "Installare il launcher": "Install the launcher",
+    "Vai alla pagina di download: il sistema operativo viene riconosciuto da solo.": "Go to the download page: your operating system is detected automatically.",
+    "Scarica il file .exe su Windows oppure .dmg su macOS.": "Download the .exe on Windows or the .dmg on macOS.",
+    "Avvia l'installazione e apri il Kripix Launcher.": "Run the installer and open the Kripix Launcher.",
+    "Accedi con il tuo Kripix ID: la libreria si sincronizza da sola.": "Sign in with your Kripix ID: your library syncs on its own.",
+    "Scarica il launcher →": "Download the launcher →",
+    "Riscattare una chiave": "Redeem a key",
+    "Entra in Configurazione dal menu del tuo avatar.": "Open Settings from your avatar menu.",
+    "Apri la sezione Licenze Esterne.": "Go to the External Licenses section.",
+    "Premi Inserisci Chiave e digita il codice.": "Press Enter Key and type your code.",
+    "Il gioco compare nella Libreria dopo la verifica.": "The game appears in your Library once verified.",
+    "Apri la configurazione →": "Open settings →",
+    "Proteggere l'account": "Protect your account",
+    "In Configurazione apri la sezione Sicurezza.": "In Settings, open the Security section.",
+    "Attiva la Verifica in Due Passaggi e conferma la password.": "Turn on Two-Step Verification and confirm your password.",
+    "Inquadra il QR con la tua app di autenticazione.": "Scan the QR code with your authenticator app.",
+    "Digita il codice a 6 cifre per completare l'attivazione.": "Type the 6-digit code to finish activation.",
+    "Attiva la 2FA →": "Turn on 2FA →",
+    "Recuperare l'accesso": "Recover your access",
+    "Nella pagina di accesso premi Password dimenticata.": "On the login page press Forgot password.",
+    "Inserisci l'email con cui ti sei registrato.": "Enter the email you registered with.",
+    "Apri il link che ricevi, controllando anche lo Spam.": "Open the link you receive, checking your Spam folder too.",
+    "Imposta la nuova password e rientra nel network.": "Set the new password and get back on the network.",
+    "Recupera la password →": "Reset your password →",
+
+    // Ricerca e filtri
+    "Cerca una risposta...": "Search for an answer...",
+    "Tutte": "All",
+    "Account": "Account",
+    "Acquisti": "Purchases",
+    "Launcher": "Launcher",
+    "Tecnico": "Technical",
+    ">> NESSUN RISULTATO NELL'ARCHIVIO": ">> NO RESULTS IN THE ARCHIVE",
+    "Prova con parole diverse oppure scrivici: rispondiamo noi.": "Try different words, or just write to us: we answer personally.",
+    "Non hai trovato la risposta?": "Didn't find your answer?",
+    "Nessun problema: scrivici e ti rispondiamo direttamente.": "No problem: get in touch and we'll answer you directly.",
+    "Chiedi su Discord": "Ask on Discord",
+    "Scrivi allo studio": "Write to the studio",
+
+    // Domande
+    "Come creo un account Kripix?": "How do I create a Kripix account?",
+    "Ho dimenticato la password, cosa faccio?": "I forgot my password, what now?",
+    "Posso cambiare Nome in Codice o email?": "Can I change my Codename or email?",
+    "Non ricevo l'email di verifica.": "I'm not receiving the verification email.",
+    "Come elimino definitivamente il mio account?": "How do I permanently delete my account?",
+    "Come acquisto un gioco sul Kripix Store?": "How do I buy a game on the Kripix Store?",
+    "Quali metodi di pagamento sono accettati?": "Which payment methods do you accept?",
+    "Che differenza c'è tra comprare qui e su Steam?": "What's the difference between buying here and on Steam?",
+    "Dove trovo la mia chiave e la ricevuta?": "Where do I find my key and receipt?",
+    "Ho una chiave comprata altrove: come la attivo?": "I have a key bought elsewhere: how do I activate it?",
+    "Posso chiedere un rimborso?": "Can I request a refund?",
+    "Come installo il Kripix Launcher?": "How do I install the Kripix Launcher?",
+    "Il sistema dice che l'app non è verificata.": "My system says the app is not verified.",
+    "I miei salvataggi sono al sicuro?": "Are my saves safe?",
+    "Il launcher è disponibile per Linux o mobile?": "Is the launcher available for Linux or mobile?",
+    "Quali sono i requisiti di sistema?": "What are the system requirements?",
+    "Quali dati raccogliete su di me?": "What data do you collect about me?",
+    "Come contatto il supporto?": "How do I contact support?",
+    "Come attivo la verifica in due passaggi?": "How do I turn on two-step verification?",
+    "Ho perso il telefono con l'app di autenticazione.": "I lost the phone with my authenticator app.",
+
+    // Risposte (contengono markup: vedi data-i18n-html)
+    "faq_a_crea_account": "Go to <a href=\"register.html\">Create new account</a>, enter your email, pick a unique Codename (no spaces) and a password of at least 8 characters including a number. A verification email will arrive: until you confirm it, access stays locked.",
+    "faq_a_crea_account_2": "You can also use <strong>Sign in with Google</strong>. Even then you will be asked to choose a Codename to complete recruitment: skip that step and the account stays incomplete, so you won't be able to get in.",
+    "faq_a_password": "On the <a href=\"login.html\">login</a> page press <strong>Forgot password?</strong> and enter your email: you will receive a link to set a new one. If you don't see it within a few minutes, check your Spam or Promotions folder.",
+    "faq_a_modifica_id": "Yes. Open <a href=\"impostazioni.html\">Settings</a> and go to <strong>Agent Identity</strong>. The Codename must be unique on the network and cannot contain spaces. If you change your email, a new verification is sent to the new address.",
+    "faq_a_verifica_mail": "Check Spam and Promotions first: automated messages often end up there. If nothing arrives after a few minutes, try logging in again — the system resends the verification email automatically. If it still fails, write to us and we will activate it by hand.",
+    "faq_a_elimina_account": "From <a href=\"impostazioni.html\">Settings</a> → <strong>Red Zone</strong> → Delete Account. Your current password will be requested as confirmation.",
+    "faq_a_elimina_account_2": "The action cannot be undone: profile, purchased licenses, keys and contact network are all wiped. If you need your receipts, download them as PDF from the Library first.",
+    "faq_a_acquisto": "Sign in with your Kripix ID, open the <a href=\"progetti.html\">catalog</a>, pick a game and press <strong>Buy now</strong>. You will be taken to the payment terminal secured by Stripe.",
+    "faq_a_acquisto_2": "Once the payment goes through, the license is assigned immediately: you will find it in your <a href=\"libreria.html\">Library</a> along with the activation key and the receipt.",
+    "faq_a_pagamenti": "Payments run through Stripe and accept credit and debit cards, Apple Pay, Google Pay and PayPal. Displayed prices already include VAT. Your card details never pass through our servers.",
+    "faq_a_store_vs_steam": "The price is the same, but on the Kripix Store you get the <strong>Deluxe Edition</strong> — digital artbook, dossier and extra filters — and the full revenue stays with the studio. Steam carries the standard edition.",
+    "faq_a_chiave": "Both live in your <a href=\"libreria.html\">Library</a>, on the game card: the key icon copies the code to your clipboard, the document icon opens the receipt, which you can also download as a PDF.",
+    "faq_a_riscatto": "Open <a href=\"impostazioni.html\">Settings</a> → <strong>External Licenses</strong> → Enter key. The format is <code>KRPX-XXXX-XXXX-XXXX</code>. After verification the game shows up in your Library: each key can be redeemed only once.",
+    "faq_a_rimborso": "Write to <a href=\"mailto:info@kripix.com\">info@kripix.com</a> with your account email and the purchase date. We review every request within the limits of European law on the right of withdrawal for digital content: a key that has already been redeemed cannot be refunded.",
+    "faq_a_installa_launcher": "From the <a href=\"download.html\">Download App</a> page: the site detects your system and highlights the right build. Grab the <code>.exe</code> on Windows or the <code>.dmg</code> on macOS, finish the install and open the launcher.",
+    "faq_a_installa_launcher_2": "On first launch, sign in with the same Kripix ID you use on the site: your library and licenses sync by themselves.",
+    "faq_a_app_non_verificata": "This happens with software from independent studios until it gathers enough downloads. On Windows press <strong>More info → Run anyway</strong>; on macOS right-click the app and choose <strong>Open</strong>.",
+    "faq_a_app_non_verificata_2": "Only download the launcher from the official page: we do not distribute the program through third-party sites.",
+    "faq_a_salvataggi": "Yes. While you are online, progress is uploaded to the cloud and tied to your Kripix ID, so you find it again on any computer. If you play offline the save stays local and syncs the next time you connect.",
+    "faq_a_linux": "Not at the moment. The launcher runs on 64-bit Windows 10 and 11 and on macOS (Apple Silicon and Intel). There is no phone or tablet version: our games need a workstation.",
+    "faq_a_requisiti": "Every game lists minimum and recommended requirements on its own page. The one hard rule is the <strong>NVMe SSD</strong>: the Pixel Otros engine streams textures straight off the drive, so on a mechanical hard disk the game will not run properly.",
+    "faq_a_privacy": "Only what the account needs in order to work: email, Codename, licenses and contact list. Crash and performance telemetry is optional and can be switched off in <a href=\"impostazioni.html\">Settings</a> → Privacy &amp; Data. Full details are in the <a href=\"cookies.html\">Privacy Dossier</a>.",
+    "faq_a_supporto": "The fastest channel is our <a href=\"https://discord.gg/FwwuYJ4Dn3\" target=\"_blank\" rel=\"noopener noreferrer\">Discord server</a>, where we usually reply the same day. Otherwise use the form on the <a href=\"contatti.html\">Contact</a> page or write to <a href=\"mailto:info@kripix.com\">info@kripix.com</a>.",
+    "faq_a_2fa": "Open <a href=\"impostazioni.html#sicurezza\">Settings → Security</a> and press <strong>Turn on protection</strong>. Once you confirm your password we show you a QR code: scan it with your authenticator app (Google Authenticator, Authy, 1Password and Bitwarden all work) and type the 6-digit code it displays.",
+    "faq_a_2fa_2": "From then on, every sign-in asks for the code as well as the password. The code changes every 30 seconds and is generated on your phone: we never send it by email or SMS.",
+    "faq_a_2fa_perso": "If you saved the key we showed you during setup, enter it in a new authenticator app and it will start producing valid codes again.",
+    "faq_a_2fa_perso_2": "Without that key it takes a manual check: write to <a href=\"mailto:info@kripix.com\">info@kripix.com</a> <strong>from the account's email address</strong>. We verify your identity before removing the second factor, so expect a few days.",
+
+    // ── Accessi beta & Kripix AI ────────────────────────────
+    "ACCESSI BETA": "BETA ACCESS",
+    "> Programmi sperimentali riservati agli agenti selezionati.": "> Experimental programs reserved for selected agents.",
+    "APRI ELENCO": "OPEN LIST",
+    "Funzioni in prova, aperte a pochi agenti per volta.": "Features under test, opened to a few agents at a time.",
+    "RICHIEDI ACCESSO": "REQUEST ACCESS",
+    "ATTIVA": "ACTIVE",
+    "IN ATTESA": "PENDING",
+    "NON ACCOLTA": "DECLINED",
+    "NON RICHIESTA": "NOT REQUESTED",
+    "Accesso concesso. La trovi già attiva dove è prevista.": "Access granted. It is already live wherever it applies.",
+    "Richiesta inviata. Ti avvisiamo nel Terminale appena viene valutata.": "Request sent. We'll notify you in the Terminal as soon as it is reviewed.",
+    "Questa richiesta non è stata accolta. Puoi riprovare più avanti.": "This request was not accepted. You can try again later.",
+    "Candidature chiuse per questo programma.": "Applications are closed for this program.",
+    "Assistente di supporto conversazionale": "Conversational support assistant",
+
+    "BETA CHIUSA": "CLOSED BETA",
+    "Un assistente che conosce il Network e ti accompagna nel problema.": "An assistant that knows the Network and walks you through the problem.",
+    ">> Verifica delle autorizzazioni...": ">> Checking authorizations...",
+    "L'assistente è riservato agli agenti registrati che partecipano alla beta. Accedi al tuo Kripix ID per verificare se hai l'accesso.": "The assistant is reserved for registered agents taking part in the beta. Sign in to your Kripix ID to check whether you have access.",
+    "RICHIEDI L'ACCESSO": "REQUEST ACCESS",
+    "La tua richiesta è in valutazione. Ti avvisiamo nel Terminale appena viene decisa.": "Your request is under review. We'll notify you in the Terminal once it is decided.",
+    "Descrivi il problema...": "Describe the problem...",
+    "Ho perso il telefono con l'app di autenticazione": "I lost the phone with my authenticator app",
+    "Il launcher non parte": "The launcher won't start",
+    "Non trovo la chiave del gioco": "I can't find my game key",
+
     // ── Cookie banner ───────────────────────────────────────
     "cookie_title": "> COOKIE INITIALIZATION",
-    "cookie_text": "The Kripix Operative Network uses essential tracking packets (Cookies) to keep the connection stable and save your preferences. We do not sell your data to corporates. <br><br>You can read the <a href='privacy.html'>Privacy Dossier</a> for full details.",
+    "cookie_text": "The Kripix Operative Network uses essential tracking packets (Cookies) to keep the connection stable and save your preferences. We do not sell your data to corporates. <br><br>You can read the <a href=\"cookies.html\">Privacy Dossier</a> for full details.",
     "ACCETTA TUTTI": "ACCEPT ALL",
     "SOLO ESSENZIALI": "ESSENTIALS ONLY",
 
@@ -358,7 +536,6 @@ const dizionario_EN = {
     "KRPX-XXXX-XXXX-XXXX": "KRPX-XXXX-XXXX-XXXX",
     "Nome in Codice Unico...": "Unique Codename...",
     "Inserisci nuova password": "Enter new password",
-    "latua@email.com": "your@email.com",
 
     // ── Messaggi dinamici JS & Notifiche ────────────────────
     "VERIFICA NEL CLOUD...": "VERIFYING IN CLOUD...",
@@ -423,7 +600,12 @@ function translateNode(node) {
     // 1) Attributo data-i18n (priorità massima)
     const i18nKey = node.getAttribute('data-i18n');
     if (i18nKey && currentDict[i18nKey]) {
-        // Se il nodo ha figli HTML interni (link, ecc.), usa innerHTML; altrimenti textContent
+        if (node.hasAttribute('data-i18n-html')) {
+            // Traduzione che contiene markup (link, <strong>, <br>...).
+            // I valori arrivano solo dal dizionario interno, mai dall'utente.
+            node.innerHTML = currentDict[i18nKey];
+            return;
+        }
         if (node.children.length === 0) {
             node.textContent = currentDict[i18nKey];
         } else {
@@ -456,6 +638,15 @@ function translateNode(node) {
         }
     }
 
+    // 5) aria-label: è il testo che leggono gli screen reader,
+    //    va tradotto come tutto il resto
+    if (node.hasAttribute('aria-label')) {
+        const al = node.getAttribute('aria-label').trim();
+        if (currentDict[al] && al !== currentDict[al]) {
+            node.setAttribute('aria-label', currentDict[al]);
+        }
+    }
+
     // Ricorsione sui figli
     node.childNodes.forEach(translateNode);
 }
@@ -464,18 +655,14 @@ function translateNode(node) {
 // ── FUNZIONE: Evidenzia lingua attiva nel selettore ─────────
 
 function updateLanguageIndicator() {
-    document.querySelectorAll('.lang-switcher span:not(.lang-separator)').forEach(span => {
-        const lang = span.textContent.trim().toLowerCase();
-        if (lang === currentLang) {
-            span.style.color = 'var(--accent-gold)';
-            span.style.fontWeight = 'bold';
-            span.style.textDecoration = 'underline';
-            span.style.textUnderlineOffset = '4px';
-        } else {
-            span.style.color = '';
-            span.style.fontWeight = '';
-            span.style.textDecoration = '';
-        }
+    // Allinea anche l'attributo lang del documento: serve agli screen
+    // reader per pronunciare i testi con la fonetica giusta.
+    document.documentElement.lang = currentLang;
+
+    document.querySelectorAll('.lang-switcher .lang-btn').forEach(btn => {
+        const isCurrent = (btn.dataset.lang || btn.textContent.trim().toLowerCase()) === currentLang;
+        btn.classList.toggle('active', isCurrent);
+        btn.setAttribute('aria-pressed', String(isCurrent));
     });
 }
 
@@ -534,25 +721,9 @@ export function initTranslator() {
 export function switchLanguage(lang) {
     localStorage.setItem('kripix_lang', lang);
 
-    // Redirect per le pagine legali (testo lungo, versioni separate)
-    const path = window.location.pathname;
-
-    const legalRedirects = {
-        'eula.html':        { en: 'eula-eng.html' },
-        'eula-eng.html':    { it: 'eula.html' },
-        'dmr.html':         { en: 'dmr-eng.html' },
-        'dmr-eng.html':     { it: 'dmr.html' },
-        'privacy.html':     { en: 'privacy-eng.html' },
-        'privacy-eng.html': { it: 'privacy.html' },
-    };
-
-    for (const [file, targets] of Object.entries(legalRedirects)) {
-        if (path.includes(file) && targets[lang]) {
-            window.location.href = targets[lang];
-            return;
-        }
-    }
-
+    // NOTA: le versioni inglesi separate delle pagine legali
+    // (eula-eng.html, dmr-eng.html, privacy-eng.html) non esistono ancora.
+    // Finché non ci sono, ricaricare la pagina è meglio di un 404.
     location.reload();
 }
 

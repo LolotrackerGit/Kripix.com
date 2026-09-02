@@ -48,6 +48,16 @@
         .error-msg { color: red; font-size: 0.8rem; margin-bottom: 15px; display: none; font-family: 'Courier Prime'; font-weight: bold; }
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Verifica in due passaggi */
+        .mfa-row { border: 1px solid #222; padding: 22px; background: rgba(0,0,0,0.4); transition: 0.3s; }
+        .mfa-row.is-on { border-color: rgba(76, 175, 80, 0.35); background: rgba(76, 175, 80, 0.03); }
+        .mfa-head { display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
+        .mfa-hint { color:#666; font-family:'Courier Prime'; font-size:0.8rem; line-height:1.6; }
+        .mfa-hint a { color: var(--accent-gold); text-decoration: none; border-bottom: 1px solid rgba(227,198,108,0.35); }
+        .mfa-pane { display: none; }
+        .mfa-pane.active { display: block; animation: fadeIn 0.3s ease; }
+
         @media(max-width:768px) { .settings-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -106,10 +116,28 @@
                     <p style="color:#888; font-size:0.85rem; margin-bottom:10px;">Attiva una licenza acquistata presso fornitori di terze parti (Steam, Retail).</p>
                     <button class="btn-gold" onclick="openRedeemModal()">INSERISCI CHIAVE</button>
                 </div>
-                <h3 class="panel-title" style="margin-top: 50px;">SICUREZZA</h3>
+                <h3 class="panel-title" id="sicurezza" style="margin-top: 50px;">SICUREZZA</h3>
                 <div class="setting-row">
                     <span class="setting-label">CODICE D'ACCESSO</span>
                     <button class="btn-outline" onclick="openPassModal()">MODIFICA PASSWORD</button>
+                </div>
+
+                <!-- VERIFICA IN DUE PASSAGGI -->
+                <div class="setting-row mfa-row">
+                    <div class="mfa-head">
+                        <span class="setting-label" style="margin-bottom:0;">VERIFICA IN DUE PASSAGGI</span>
+                        <span id="mfa-status" class="mfa-status off">
+                            <span class="dot" aria-hidden="true"></span><span id="mfa-status-text">NON ATTIVA</span>
+                        </span>
+                    </div>
+                    <p style="color:#888; font-size:0.85rem; margin:12px 0 18px; line-height:1.5;">
+                        Aggiunge un secondo lucchetto all'account: oltre alla password serve un codice a 6 cifre
+                        generato dalla tua app di autenticazione, che cambia ogni 30 secondi.
+                    </p>
+                    <div id="mfa-actions">
+                        <button id="btn-mfa-enable" class="btn-gold">ATTIVA PROTEZIONE</button>
+                        <button id="btn-mfa-disable" class="btn-danger" style="display:none;">DISATTIVA</button>
+                    </div>
                 </div>
 
                 <div class="setting-row danger-zone">
@@ -191,7 +219,10 @@
     <!-- Modale Custom per Azioni Pericolose (Es. Discord) -->
     <div id="danger-confirm-modal" class="modal-overlay" style="display:none; background:rgba(20,0,0,0.9);">
         <div class="modal-box" style="border-top-color:#ff5555; max-width:400px;">
-            <h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem;">⚠ INTERROMPI CONNESSIONE</h3>
+            <h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem; display:flex; align-items:center; justify-content:center; gap:10px;">
+                <svg class="icon icon-md" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <span data-i18n="INTERROMPI CONNESSIONE">INTERROMPI CONNESSIONE</span>
+            </h3>
             <p id="danger-confirm-text" style="color:#ccc; font-size:0.9rem; margin-bottom: 25px;">
                 Stai per scollegare il tuo account Discord. <br>
                 <strong style="color:var(--accent-red);">Perderai istantaneamente tutti i tuoi ruoli sul server Kripix.</strong>
@@ -206,8 +237,153 @@
     <div id="name-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3 style="color:var(--accent-gold); margin-bottom:10px;">AGGIORNA ID AGENTE</h3><input type="text" id="new-name-input" class="modal-input" placeholder="Nuovo Username..." autocomplete="off"><p id="name-msg" class="error-msg">ERRORE</p><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button class="btn-outline" onclick="closeModal('name-modal')">ANNULLA</button><button id="btn-confirm-name" class="btn-gold" onclick="confirmNameChange()">AGGIORNA ID</button></div></div></div>
     <div id="email-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3 style="color:var(--accent-gold); margin-bottom:15px;">AGGIORNA CANALE (EMAIL)</h3><input type="password" id="auth-pass-input" class="modal-input" placeholder="La tua password attuale..."><input type="email" id="new-email-input" class="modal-input" placeholder="La nuova email..."><p id="email-msg" class="error-msg">ERRORE</p><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button class="btn-outline" onclick="closeModal('email-modal')">ANNULLA</button><button id="btn-confirm-email" class="btn-gold" onclick="confirmEmailChange()">INVIA VERIFICA</button></div></div></div>
     <div id="pass-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px;"><h3 style="color:var(--accent-gold); margin-bottom:20px;">AGGIORNA PASSWORD</h3><input type="password" id="old-pass" class="modal-input" placeholder="Vecchia Password"><input type="password" id="new-pass" class="modal-input" placeholder="Nuova Password (Min 8 + Num)"><input type="password" id="conf-pass" class="modal-input" placeholder="Conferma Nuova Password"><p id="pass-msg" class="error-msg">ERRORE</p><div style="display:flex; gap:10px; justify-content:center; margin-top:20px;"><button class="btn-outline" onclick="closeModal('pass-modal')">ANNULLA</button><button class="btn-gold" onclick="confirmPassChange()">AGGIORNA</button></div></div></div>
-    <div id="delete-modal" class="modal-overlay" style="display:none; background:rgba(20,0,0,0.9);"><div class="modal-box" style="border-top-color:#ff5555; max-width:400px;"><h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem;">⚠ CONFERMA ELIMINAZIONE</h3><input type="password" id="del-password" class="modal-input" placeholder="Password attuale"><p id="del-error" class="error-msg">PASSWORD ERRATA</p><div style="display:flex; gap:10px; justify-content:center;"><button class="btn-outline" onclick="closeModal('delete-modal')">ANNULLA</button><button class="btn-danger" onclick="confirmDelete()">CONFERMA</button></div></div></div>
+    <div id="delete-modal" class="modal-overlay" style="display:none; background:rgba(20,0,0,0.9);"><div class="modal-box" style="border-top-color:#ff5555; max-width:400px;"><h3 style="color:#ff5555; margin-bottom:15px; font-size:1.5rem; display:flex; align-items:center; justify-content:center; gap:10px;"><svg class="icon icon-md" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span data-i18n="CONFERMA ELIMINAZIONE">CONFERMA ELIMINAZIONE</span></h3><input type="password" id="del-password" class="modal-input" placeholder="Password attuale"><p id="del-error" class="error-msg">PASSWORD ERRATA</p><div style="display:flex; gap:10px; justify-content:center;"><button class="btn-outline" onclick="closeModal('delete-modal')">ANNULLA</button><button class="btn-danger" onclick="confirmDelete()">CONFERMA</button></div></div></div>
     <div id="success-modal" class="modal-overlay"><div class="modal-box" style="max-width:400px; border-top-color:#4caf50;"><h3 style="color:#4caf50; margin-bottom:15px;">OPERAZIONE RIUSCITA</h3><p id="success-text" style="color:#ccc;">Dati aggiornati correttamente.</p><button class="btn-outline" style="margin-top:20px;" onclick="location.reload()">CHIUDI</button></div></div>
+
+    <!-- ============ ATTIVAZIONE VERIFICA IN DUE PASSAGGI ============ -->
+    <div id="mfa-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width:460px; text-align:left;">
+
+            <div class="mfa-steps" aria-hidden="true">
+                <span class="mfa-step active" id="mfa-dot-1">1</span>
+                <span class="mfa-step" id="mfa-dot-2">2</span>
+                <span class="mfa-step" id="mfa-dot-3">3</span>
+            </div>
+
+            <!-- Passo 1: conferma identità -->
+            <div class="mfa-pane active" id="mfa-pane-1">
+                <h3 style="color:var(--accent-gold); margin-bottom:12px; text-align:center;">CONFERMA LA TUA IDENTITÀ</h3>
+                <p style="color:#888; font-size:0.88rem; margin-bottom:20px; line-height:1.6;">
+                    Prima di aggiungere un secondo fattore dobbiamo essere sicuri che sia davvero tu.
+                </p>
+
+                <div id="mfa-reauth-password">
+                    <input type="password" id="mfa-pass-input" class="modal-input" placeholder="La tua password attuale..." autocomplete="current-password">
+                </div>
+                <div id="mfa-reauth-google" style="display:none;">
+                    <p style="color:#ccc; font-size:0.85rem; margin-bottom:18px;">
+                        Il tuo account usa l'accesso Google: si aprirà una finestra per confermare.
+                    </p>
+                </div>
+
+                <p id="mfa-msg-1" class="error-msg">ERRORE</p>
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
+                    <button class="btn-outline" onclick="closeModal('mfa-modal')">ANNULLA</button>
+                    <button id="btn-mfa-step1" class="btn-gold">PROSEGUI</button>
+                </div>
+            </div>
+
+            <!-- Passo 2: QR / chiave manuale -->
+            <div class="mfa-pane" id="mfa-pane-2">
+                <h3 style="color:var(--accent-gold); margin-bottom:12px; text-align:center;">COLLEGA L'APP</h3>
+                <p style="color:#888; font-size:0.88rem; margin-bottom:20px; line-height:1.6;">
+                    Apri la tua app di autenticazione (Google Authenticator, Authy, 1Password, Bitwarden…)
+                    e inquadra questo codice.
+                </p>
+
+                <div class="qr-frame" id="mfa-qr"></div>
+
+                <p class="mfa-hint" style="text-align:center; margin-bottom:10px;">Non puoi inquadrarlo? Inserisci la chiave a mano:</p>
+                <div class="secret-key">
+                    <code id="mfa-secret">···· ···· ····</code>
+                    <button class="btn-copy-secret" id="btn-copy-secret" type="button" title="Copia la chiave" aria-label="Copia la chiave">
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1.5 1.5 0 0 1 1.5-1.5H15"/></svg>
+                    </button>
+                </div>
+
+                <p id="mfa-msg-2" class="error-msg">ERRORE</p>
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:18px;">
+                    <button class="btn-outline" onclick="closeModal('mfa-modal')">ANNULLA</button>
+                    <button id="btn-mfa-step2" class="btn-gold">HO COLLEGATO L'APP</button>
+                </div>
+            </div>
+
+            <!-- Passo 3: verifica codice -->
+            <div class="mfa-pane" id="mfa-pane-3">
+                <h3 style="color:var(--accent-gold); margin-bottom:12px; text-align:center;">INSERISCI IL CODICE</h3>
+                <p style="color:#888; font-size:0.88rem; margin-bottom:18px; line-height:1.6; text-align:center;">
+                    Digita le 6 cifre che vedi nell'app. Cambiano ogni 30 secondi.
+                </p>
+
+                <div id="mfa-code"></div>
+
+                <p id="mfa-msg-3" class="error-msg">ERRORE</p>
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
+                    <button class="btn-outline" onclick="closeModal('mfa-modal')">ANNULLA</button>
+                    <button id="btn-mfa-step3" class="btn-gold">ATTIVA PROTEZIONE</button>
+                </div>
+            </div>
+
+            <!-- Esito -->
+            <div class="mfa-pane" id="mfa-pane-done" style="text-align:center;">
+                <span style="display:flex; justify-content:center; color:#4caf50; margin-bottom:15px;" aria-hidden="true">
+                    <svg class="icon" style="width:3rem; height:3rem;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.2 2.8 2.8L16 9.8"/></svg>
+                </span>
+                <h3 style="color:#4caf50; margin-bottom:12px;">PROTEZIONE ATTIVA</h3>
+                <p style="color:#ccc; font-size:0.9rem; line-height:1.6; margin-bottom:20px;">
+                    Da adesso, a ogni accesso ti verrà chiesto il codice a 6 cifre.
+                </p>
+                <p class="mfa-hint" style="border:1px dashed #333; padding:14px; text-align:left;">
+                    Tieni l'app installata e, se puoi, salva la chiave in un posto sicuro:
+                    perdere il telefono senza backup significa perdere l'accesso all'account.
+                </p>
+                <button class="btn-gold" style="margin-top:20px;" onclick="location.reload()">HO CAPITO</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============ SFIDA 2FA PER LE OPERAZIONI SENSIBILI ============
+         Con la verifica in due passaggi attiva, riautenticarsi richiede
+         anche il codice: serve a cambiare password, email o a eliminare
+         l'account. -->
+    <div id="reauth-mfa-modal" class="modal-overlay">
+        <div class="modal-box" style="max-width:420px;">
+            <span style="display:flex; justify-content:center; color:var(--accent-gold); margin-bottom:15px;" aria-hidden="true">
+                <svg class="icon" style="width:2.4rem; height:2.4rem;" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/></svg>
+            </span>
+            <h3 style="color:var(--accent-gold); margin-bottom:12px;">CODICE DI VERIFICA</h3>
+            <p style="color:#888; font-size:0.88rem; margin-bottom:18px; line-height:1.6;">
+                Questa operazione tocca la sicurezza dell'account.
+                Inserisci il codice della tua app di autenticazione.
+            </p>
+
+            <div id="reauth-mfa-code"></div>
+
+            <p id="reauth-mfa-msg" class="error-msg">ERRORE</p>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
+                <button class="btn-outline" id="btn-reauth-cancel">ANNULLA</button>
+                <button class="btn-gold" id="btn-reauth-confirm">CONFERMA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ DISATTIVAZIONE ============ -->
+    <div id="mfa-disable-modal" class="modal-overlay" style="background:rgba(20,0,0,0.9);">
+        <div class="modal-box" style="border-top-color:#ff5555; max-width:420px;">
+            <h3 style="color:#ff5555; margin-bottom:15px; font-size:1.4rem; display:flex; align-items:center; justify-content:center; gap:10px;">
+                <svg class="icon icon-md" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <span>DISATTIVA LA PROTEZIONE</span>
+            </h3>
+            <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px; line-height:1.6;">
+                L'account tornerà protetto dalla sola password.
+                Conferma la tua identità per procedere.
+            </p>
+            <div id="mfa-disable-password">
+                <input type="password" id="mfa-disable-pass" class="modal-input" placeholder="La tua password attuale...">
+            </div>
+            <!-- Con la 2FA già attiva, riautenticarsi richiede a sua volta il codice -->
+            <div id="mfa-disable-code-step" style="display:none;">
+                <p style="color:#888; font-size:0.85rem; margin-bottom:12px;">Inserisci il codice dell'app per confermare.</p>
+                <div id="mfa-disable-code"></div>
+            </div>
+            <p id="mfa-disable-msg" class="error-msg">ERRORE</p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn-outline" onclick="closeModal('mfa-disable-modal')">ANNULLA</button>
+                <button id="btn-mfa-disable-confirm" class="btn-danger">DISATTIVA</button>
+            </div>
+        </div>
+    </div>
     <div id="redeem-modal" class="modal-overlay">
     <div class="modal-box" style="max-width:450px;">
         <h3 style="color:var(--accent-gold); margin-bottom:10px;">ATTIVAZIONE LICENZA</h3>
@@ -341,6 +517,19 @@
         function showError(input, msgEl, text) { input.classList.add('error-border'); msgEl.textContent = '>> ' + text; msgEl.style.display = 'block'; setTimeout(() => input.classList.remove('error-border'), 500); }
         function showSuccess(msg) { document.getElementById('success-text').textContent = msg; document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); document.getElementById('success-modal').style.display = 'flex'; }
 
+        /**
+         * Messaggio d'errore leggibile per le operazioni che richiedono la
+         * password. Prima mostravamo sempre "errore di rete", che nascondeva
+         * la causa vera (spesso la sfida della verifica in due passaggi).
+         */
+        function describeAuthFailure(e) {
+            if (window.kripixDescribeAuthError) {
+                // Togliamo il ">> " perché showError lo antepone già
+                return window.kripixDescribeAuthError(e).replace(/^>>\s*/, '');
+            }
+            return e && e.code === 'auth/wrong-password' ? 'Password errata.' : 'Operazione non riuscita.';
+        }
+
         // Salvataggio Privacy
         window.savePrivacy = async function() {
             try { 
@@ -411,12 +600,16 @@
             if(newPass.value.length < 8) { showError(newPass, msg, "Password troppo corta."); return; }
 
             try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, oldPass.value);
-                await reauthenticateWithCredential(auth.currentUser, credential);
+                // Passa da kripixReauth: con la 2FA attiva serve anche il codice
+                await window.kripixReauth(oldPass.value);
                 await updatePassword(auth.currentUser, newPass.value);
                 closeModal('pass-modal');
                 if(window.kripixNotify) window.kripixNotify("SICUREZZA", "Password aggiornata.", "success");
-            } catch(e) { showError(oldPass, msg, "Password attuale errata o errore di rete."); }
+            } catch(e) {
+                if (e.code === 'kripix/reauth-cancelled') return;
+                console.error('Cambio password fallito:', e);
+                showError(oldPass, msg, describeAuthFailure(e));
+            }
         };
 
         // 3. CAMBIO EMAIL
@@ -427,12 +620,18 @@
             const msg = document.getElementById('email-msg');
             
             try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, passInput.value);
-                await reauthenticateWithCredential(auth.currentUser, credential);
+                await window.kripixReauth(passInput.value);
                 await verifyBeforeUpdateEmail(auth.currentUser, emailInput.value);
                 closeModal('email-modal');
                 showSuccess("Abbiamo inviato un link di conferma alla tua NUOVA email. Cliccalo per completare l'operazione.");
-            } catch(e) { showError(passInput, msg, "Password errata o email non valida."); }
+            } catch(e) {
+                if (e.code === 'kripix/reauth-cancelled') return;
+                console.error('Cambio email fallito:', e);
+                const testo = e.code === 'auth/invalid-new-email' || e.code === 'auth/email-already-in-use'
+                    ? 'Email non valida o già in uso.'
+                    : describeAuthFailure(e);
+                showError(passInput, msg, testo);
+            }
         };
 
         // 4. ELIMINA ACCOUNT (Zona Rossa)
@@ -441,15 +640,18 @@
             const passInput = document.getElementById('del-password');
             const msg = document.getElementById('del-error');
             try {
-                const credential = EmailAuthProvider.credential(auth.currentUser.email, passInput.value);
-                await reauthenticateWithCredential(auth.currentUser, credential);
-                
+                await window.kripixReauth(passInput.value);
+
                 await deleteDoc(userDocRef);
                 await deleteDoc(doc(db, "usernames", userDataCache.username.toLowerCase()));
-                await deleteUser(auth.currentUser); 
-                
-                window.location.href = "index.html"; 
-            } catch(e) { showError(passInput, msg, "Autorizzazione negata. Password errata."); }
+                await deleteUser(auth.currentUser);
+
+                window.location.href = "index.html";
+            } catch(e) {
+                if (e.code === 'kripix/reauth-cancelled') return;
+                console.error('Eliminazione account fallita:', e);
+                showError(passInput, msg, describeAuthFailure(e));
+            }
         };
 
         // 5. RISCATTO CHIAVE
@@ -481,6 +683,368 @@
                 btn.innerText = "DECRIPTA CHIAVE";
                 btn.style.pointerEvents = "auto";
                 showError(keyInput, msgEl, error.message);
+            }
+        });
+    </script>
+
+    <!-- ============================================================
+         VERIFICA IN DUE PASSAGGI (TOTP)
+         Il segreto viene generato da Firebase, mostrato una volta sola
+         e non viene mai salvato da noi: vive solo nell'app dell'utente.
+         ============================================================ -->
+    <script type="module">
+        import { auth } from './script.js';
+        import {
+            onAuthStateChanged, multiFactor, getMultiFactorResolver,
+            TotpMultiFactorGenerator, EmailAuthProvider,
+            reauthenticateWithCredential, reauthenticateWithPopup, GoogleAuthProvider
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { renderQrCode, createCodeInput, describeAuthError } from './twofactor.js';
+
+        const TOTP_ID = TotpMultiFactorGenerator.FACTOR_ID;
+
+        // Stato del flusso di attivazione
+        let currentUser = null;
+        let usesPassword = false;   // true se l'account ha una password (no solo-Google)
+        let totpSecret = null;      // segreto in corso di registrazione
+        let enrollCode = null;      // widget delle 6 cifre (attivazione)
+        let disableCode = null;     // widget delle 6 cifre (disattivazione)
+        let disableResolver = null; // resolver MFA durante la disattivazione
+
+        const $ = (id) => document.getElementById(id);
+
+        // ── Utilità di interfaccia ──────────────────────────────
+
+        function showPane(name) {
+            document.querySelectorAll('#mfa-modal .mfa-pane').forEach(p => p.classList.remove('active'));
+            $('mfa-pane-' + name).classList.add('active');
+
+            const order = ['1', '2', '3'];
+            const idx = order.indexOf(name);
+            order.forEach((n, i) => {
+                const dot = $('mfa-dot-' + n);
+                dot.classList.toggle('active', i === idx);
+                dot.classList.toggle('done', idx === -1 || i < idx);
+            });
+        }
+
+        function paneError(msgId, text) {
+            const el = $(msgId);
+            el.textContent = text;
+            el.style.display = 'block';
+        }
+
+        function clearError(msgId) { $(msgId).style.display = 'none'; }
+
+        function busy(btn, label) {
+            btn.dataset.label = btn.textContent;
+            btn.textContent = label;
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.7';
+        }
+
+        function idle(btn) {
+            if (btn.dataset.label) btn.textContent = btn.dataset.label;
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        }
+
+        /** Aggiorna badge e bottoni in base ai fattori registrati. */
+        function refreshStatus() {
+            const factors = currentUser ? multiFactor(currentUser).enrolledFactors : [];
+            const active = factors.some(f => f.factorId === TOTP_ID);
+
+            $('mfa-status').className = 'mfa-status ' + (active ? 'on' : 'off');
+            $('mfa-status-text').textContent = active ? 'ATTIVA' : 'NON ATTIVA';
+            $('btn-mfa-enable').style.display = active ? 'none' : 'inline-block';
+            $('btn-mfa-disable').style.display = active ? 'inline-block' : 'none';
+            document.querySelector('.mfa-row').classList.toggle('is-on', active);
+        }
+
+        // ── Riautenticazione ────────────────────────────────────
+        //  Firebase pretende un accesso recente prima di toccare i
+        //  fattori di sicurezza. Password o Google a seconda dell'account.
+
+        async function reauthenticate(password) {
+            if (usesPassword) {
+                const credential = EmailAuthProvider.credential(currentUser.email, password);
+                return reauthenticateWithCredential(currentUser, credential);
+            }
+            return reauthenticateWithPopup(currentUser, new GoogleAuthProvider());
+        }
+
+        // ── Riautenticazione completa, sfida 2FA inclusa ────────
+        //  Con la 2FA attiva, reauthenticate() lancia una seconda sfida:
+        //  senza gestirla, cambio password, cambio email ed eliminazione
+        //  account falliscono. Esposta come window.kripixReauth per gli
+        //  altri script della pagina.
+
+        let reauthCode = null;
+
+        function askMfaCode(error) {
+            return new Promise((resolve, reject) => {
+                const resolver = getMultiFactorResolver(auth, error);
+                const hint = resolver.hints.find(h => h.factorId === TOTP_ID);
+                if (!hint) { reject(error); return; }
+
+                const modal = $('reauth-mfa-modal');
+                const confirm = $('btn-reauth-confirm');
+                const cancel = $('btn-reauth-cancel');
+                let working = false;
+
+                const close = () => {
+                    modal.style.display = 'none';
+                    clearError('reauth-mfa-msg');
+                    confirm.onclick = null;
+                    cancel.onclick = null;
+                };
+
+                const submit = async () => {
+                    if (working) return;
+                    const code = reauthCode.value();
+                    if (code.length !== 6) {
+                        paneError('reauth-mfa-msg', '>> SERVONO TUTTE E 6 LE CIFRE.');
+                        return;
+                    }
+                    working = true;
+                    busy(confirm, 'VERIFICA...');
+                    try {
+                        const assertion = TotpMultiFactorGenerator.assertionForSignIn(hint.uid, code);
+                        await resolver.resolveSignIn(assertion);
+                        close();
+                        resolve();
+                    } catch (err) {
+                        paneError('reauth-mfa-msg', describeAuthError(err));
+                        $('reauth-mfa-code').classList.add('error');
+                        setTimeout(() => $('reauth-mfa-code').classList.remove('error'), 400);
+                        reauthCode.clear();
+                    } finally {
+                        working = false;
+                        idle(confirm);
+                    }
+                };
+
+                if (!reauthCode) {
+                    reauthCode = createCodeInput($('reauth-mfa-code'), { onComplete: submit });
+                }
+                reauthCode.clear();
+                clearError('reauth-mfa-msg');
+
+                confirm.onclick = submit;
+                cancel.onclick = () => { close(); reject({ code: 'kripix/reauth-cancelled' }); };
+
+                modal.style.display = 'flex';
+                setTimeout(() => reauthCode.focus(), 120);
+            });
+        }
+
+        window.kripixReauth = async function(password) {
+            try {
+                await reauthenticate(password);
+            } catch (error) {
+                if (error.code !== 'auth/multi-factor-auth-required') throw error;
+                await askMfaCode(error);
+            }
+        };
+
+        window.kripixDescribeAuthError = describeAuthError;
+
+        // ── Avvio ───────────────────────────────────────────────
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) return; // il redirect al login lo fa già l'altro script
+            currentUser = user;
+            usesPassword = user.providerData.some(p => p.providerId === 'password');
+
+            // Se l'account è solo-Google non ha una password da chiedere
+            $('mfa-reauth-password').style.display = usesPassword ? 'block' : 'none';
+            $('mfa-reauth-google').style.display   = usesPassword ? 'none' : 'block';
+            $('mfa-disable-password').style.display = usesPassword ? 'block' : 'none';
+
+            refreshStatus();
+
+            // Se si arriva da faq.html#sicurezza, mostra subito la sezione giusta
+            if (window.location.hash === '#sicurezza') {
+                $('sicurezza').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // ── ATTIVAZIONE ─────────────────────────────────────────
+
+        $('btn-mfa-enable').addEventListener('click', () => {
+            showPane('1');
+            $('mfa-modal').style.display = 'flex';
+            if (usesPassword) $('mfa-pass-input').focus();
+        });
+
+        // Passo 1 → conferma identità e genera il segreto
+        $('btn-mfa-step1').addEventListener('click', async () => {
+            const btn = $('btn-mfa-step1');
+            clearError('mfa-msg-1');
+
+            const password = $('mfa-pass-input').value;
+            if (usesPassword && !password) {
+                paneError('mfa-msg-1', '>> INSERISCI LA PASSWORD.');
+                return;
+            }
+
+            busy(btn, 'VERIFICA...');
+            try {
+                await reauthenticate(password);
+
+                const session = await multiFactor(currentUser).getSession();
+                totpSecret = await TotpMultiFactorGenerator.generateSecret(session);
+
+                const uri = totpSecret.generateQrCodeUrl(currentUser.email, 'Kripix');
+                renderQrCode($('mfa-qr'), uri);
+
+                // Raggruppa la chiave a blocchi di 4: si copia a mano più facilmente
+                $('mfa-secret').textContent = totpSecret.secretKey.replace(/(.{4})/g, '$1 ').trim();
+
+                $('mfa-pass-input').value = '';
+                showPane('2');
+            } catch (error) {
+                console.error('2FA — riautenticazione fallita:', error);
+                paneError('mfa-msg-1', describeAuthError(error));
+            } finally {
+                idle(btn);
+            }
+        });
+
+        // Passo 2 → mostra il campo per il codice
+        $('btn-mfa-step2').addEventListener('click', () => {
+            clearError('mfa-msg-2');
+            if (!enrollCode) {
+                enrollCode = createCodeInput($('mfa-code'), {
+                    onComplete: () => $('btn-mfa-step3').click(),
+                });
+            }
+            enrollCode.clear();
+            showPane('3');
+        });
+
+        // Passo 3 → verifica il codice e registra il fattore
+        let enrolling = false;
+
+        $('btn-mfa-step3').addEventListener('click', async () => {
+            // L'inserimento automatico può richiamare il click a verifica avviata
+            if (enrolling) return;
+
+            const btn = $('btn-mfa-step3');
+            clearError('mfa-msg-3');
+
+            const code = enrollCode.value();
+            if (code.length !== 6) {
+                paneError('mfa-msg-3', '>> SERVONO TUTTE E 6 LE CIFRE.');
+                return;
+            }
+
+            enrolling = true;
+            busy(btn, 'ATTIVAZIONE...');
+            enrollCode.setDisabled(true);
+
+            try {
+                const assertion = TotpMultiFactorGenerator.assertionForEnrollment(totpSecret, code);
+                await multiFactor(currentUser).enroll(assertion, 'App di autenticazione');
+
+                totpSecret = null; // non serve più tenerlo in memoria
+                showPane('done');
+                document.querySelectorAll('#mfa-modal .mfa-step').forEach(d => {
+                    d.classList.remove('active');
+                    d.classList.add('done');
+                });
+                refreshStatus();
+                if (window.kripixNotify) window.kripixNotify('SICUREZZA', 'Verifica in due passaggi attiva.', 'success');
+            } catch (error) {
+                console.error('2FA — attivazione fallita:', error);
+                paneError('mfa-msg-3', describeAuthError(error));
+                $('mfa-code').classList.add('error');
+                setTimeout(() => $('mfa-code').classList.remove('error'), 400);
+                enrollCode.clear();
+            } finally {
+                enrolling = false;
+                enrollCode.setDisabled(false);
+                idle(btn);
+            }
+        });
+
+        // Copia della chiave manuale
+        $('btn-copy-secret').addEventListener('click', async () => {
+            const key = $('mfa-secret').textContent.replace(/\s/g, '');
+            try {
+                await navigator.clipboard.writeText(key);
+                if (window.kripixNotify) window.kripixNotify('SISTEMA', 'Chiave copiata negli appunti.', 'success');
+            } catch (e) {
+                paneError('mfa-msg-2', '>> COPIA NON RIUSCITA. Selezionala a mano.');
+            }
+        });
+
+        // ── DISATTIVAZIONE ──────────────────────────────────────
+
+        $('btn-mfa-disable').addEventListener('click', () => {
+            // Riporta il modale allo stato iniziale: se un tentativo
+            // precedente era arrivato alla sfida, il campo password era nascosto.
+            disableResolver = null;
+            $('mfa-disable-code-step').style.display = 'none';
+            $('mfa-disable-password').style.display = usesPassword ? 'block' : 'none';
+            $('mfa-disable-modal').style.display = 'flex';
+            if (usesPassword) $('mfa-disable-pass').focus();
+        });
+
+        let disabling = false;
+
+        $('btn-mfa-disable-confirm').addEventListener('click', async () => {
+            // onComplete può scattare mentre una verifica è già in corso
+            if (disabling) return;
+
+            const btn = $('btn-mfa-disable-confirm');
+            clearError('mfa-disable-msg');
+            disabling = true;
+            busy(btn, 'VERIFICA...');
+
+            try {
+                // Secondo giro: l'utente ha già inserito il codice richiesto dalla sfida MFA
+                if (disableResolver) {
+                    const code = disableCode.value();
+                    if (code.length !== 6) {
+                        paneError('mfa-disable-msg', '>> SERVONO TUTTE E 6 LE CIFRE.');
+                        return;
+                    }
+                    const hint = disableResolver.hints.find(h => h.factorId === TOTP_ID);
+                    const assertion = TotpMultiFactorGenerator.assertionForSignIn(hint.uid, code);
+                    await disableResolver.resolveSignIn(assertion);
+                } else {
+                    await reauthenticate($('mfa-disable-pass').value);
+                }
+
+                // Riautenticati: ora possiamo rimuovere il fattore
+                const factor = multiFactor(currentUser).enrolledFactors.find(f => f.factorId === TOTP_ID);
+                if (factor) await multiFactor(currentUser).unenroll(factor);
+
+                closeModal('mfa-disable-modal');
+                refreshStatus();
+                if (window.kripixNotify) window.kripixNotify('SICUREZZA', 'Verifica in due passaggi disattivata.', 'info');
+
+            } catch (error) {
+                // Con la 2FA attiva, la riautenticazione stessa chiede il codice
+                if (error.code === 'auth/multi-factor-auth-required') {
+                    disableResolver = getMultiFactorResolver(auth, error);
+                    $('mfa-disable-password').style.display = 'none';
+                    $('mfa-disable-code-step').style.display = 'block';
+                    if (!disableCode) {
+                        disableCode = createCodeInput($('mfa-disable-code'), {
+                            onComplete: () => $('btn-mfa-disable-confirm').click(),
+                        });
+                    }
+                    disableCode.clear();
+                } else {
+                    console.error('2FA — disattivazione fallita:', error);
+                    paneError('mfa-disable-msg', describeAuthError(error));
+                    if (disableCode) disableCode.clear();
+                }
+            } finally {
+                disabling = false;
+                idle(btn);
             }
         });
     </script>

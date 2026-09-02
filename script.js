@@ -12,7 +12,7 @@ import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/fi
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app-check.js";
 
-import { injectNavbar, injectFooter, injectPageLoader } from './components.js';
+import { injectNavbar, injectFooter, injectPageLoader, injectBackToTop } from './components.js';
 import { initTranslator, switchLanguage } from './translator.js';
 
 
@@ -56,7 +56,7 @@ function sanitizeHTML(raw) {
 
     // Ripristina <a> solo verso pagine interne del sito (no URL esterni iniettati)
     safe = safe.replace(
-        /&lt;a href=&quot;((?:terminale|profilo|libreria|index|login|progetti|contatti|download|impostazioni|studio|pagoda|engine|admin)\.html[^&]*)&quot;([^&]*)&gt;(.*?)&lt;\/a&gt;/gi,
+        /&lt;a href=&quot;((?:terminale|profilo|libreria|index|login|progetti|contatti|download|impostazioni|studio|pagoda|engine|admin|faq|cookies|eula|dmr)\.html[^&]*)&quot;([^&]*)&gt;(.*?)&lt;\/a&gt;/gi,
         (_, href, attrs, text) => {
             const cleanAttrs = attrs.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
             return `<a href="${href}"${cleanAttrs}>${text}</a>`;
@@ -74,16 +74,35 @@ document.addEventListener('DOMContentLoaded', () => {
     injectNavbar();
     injectFooter();
     injectPageLoader();
+    injectBackToTop();
 
     // ─ B. Menu hamburger e traduttore ───────────────────────
     const hamburger = document.querySelector(".hamburger");
     const navMenu = document.querySelector(".nav-menu");
 
     if (hamburger && navMenu) {
+        const setMenu = (open) => {
+            hamburger.classList.toggle("active", open);
+            navMenu.classList.toggle("active", open);
+            hamburger.setAttribute("aria-expanded", String(open));
+            document.body.classList.toggle("no-scroll", open);
+        };
+
         hamburger.addEventListener("click", () => {
-            hamburger.classList.toggle("active");
-            navMenu.classList.toggle("active");
-            document.body.classList.toggle("no-scroll", navMenu.classList.contains("active"));
+            setMenu(!navMenu.classList.contains("active"));
+        });
+
+        // Chiudi il menu dopo aver scelto una voce
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => setMenu(false));
+        });
+
+        // Esc chiude il menu mobile
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+                setMenu(false);
+                hamburger.focus();
+            }
         });
     }
 
@@ -411,9 +430,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cookieBanner.id = 'kripix-cookie-banner';
         cookieBanner.innerHTML = `
             <div class="cookie-title" data-i18n="cookie_title">> INIZIALIZZAZIONE COOKIE</div>
-            <div class="cookie-text" data-i18n="cookie_text">
+            <div class="cookie-text" data-i18n="cookie_text" data-i18n-html>
                 Il Network Operativo Kripix utilizza pacchetti di tracciamento (Cookie) essenziali per mantenere la connessione stabile e salvare le tue preferenze. Non vendiamo i tuoi dati ai corporati.
-                <br><br>Puoi leggere il <a href="privacy.html">Dossier Privacy</a> per i dettagli completi.
+                <br><br>Puoi leggere il <a href="cookies.html">Dossier Privacy</a> per i dettagli completi.
             </div>
             <div class="cookie-buttons">
                 <button id="btn-cookie-accept" class="btn-cookie btn-cookie-accept" data-i18n="ACCETTA TUTTI">ACCETTA TUTTI</button>

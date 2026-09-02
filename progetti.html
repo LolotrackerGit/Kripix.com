@@ -73,7 +73,8 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: slideUp 0.3s ease-out;
         }
         .modal-title { font-size: 1.5rem; color: var(--accent-gold); margin-bottom: 15px; font-weight: 800; }
-        .success-icon { font-size: 3rem; margin-bottom: 20px; display: block; color: #4caf50; }
+        .success-icon { margin-bottom: 20px; display: flex; justify-content: center; color: #4caf50; }
+        .success-icon .icon { width: 3rem; height: 3rem; }
         .modal-actions { display: flex; gap: 15px; justify-content: center; }
 
         .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
@@ -139,7 +140,8 @@
                             <div class="best-value-tag">MIGLIORE OFFERTA</div>
                             <div class="option-header"><span class="platform-icon">KRIPIX STORE</span><span class="price">€19.99</span></div>
                             <p class="option-desc" style="color: var(--accent-gold);">
-                                ★ Include DELUXE EDITION<br>
+                                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="fill:var(--accent-gold); stroke:none;"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.2-5.4-3-5.4 3 1-6.2L3.2 9.5l6.1-.9z"/></svg>
+                                <span data-i18n="Include DELUXE EDITION">Include DELUXE EDITION</span><br>
                                 <span style="font-size: 0.8rem; color: #ccc;">(Artbook + Dossier + Filtri Vintage)</span>
                             </p>
                             <!-- Bottone Acquisto -->
@@ -169,7 +171,9 @@
     <!-- MODALE ACQUISTO -->
     <div id="custom-modal" class="modal-overlay">
         <div class="modal-box">
-            <span class="success-icon">✓</span>
+            <span class="success-icon" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.2 2.8 2.8L16 9.8"/></svg>
+            </span>
             <h3 class="modal-title">ACQUISTO COMPLETATO</h3>
             <p style="color:#ccc; margin-bottom:30px;">La licenza per "La Pagoda" è stata aggiunta al tuo account.</p>
             <div class="modal-actions">

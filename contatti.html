@@ -39,6 +39,27 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700;900&family=Courier+Prime&display=swap" rel="stylesheet">
     
+    <style>
+        /* Rimando alle FAQ nella colonna informativa */
+        .faq-shortcut {
+            margin-top: 40px;
+            padding: 25px;
+            border: 1px dashed #333;
+            background: rgba(227, 198, 108, 0.03);
+            transition: 0.3s;
+        }
+        .faq-shortcut:hover { border-color: var(--accent-gold); background: rgba(227, 198, 108, 0.06); }
+        .faq-shortcut h4 {
+            color: var(--accent-gold);
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        .faq-shortcut p { font-size: 0.9rem; color: #888; margin-bottom: 20px; line-height: 1.5; }
+        .small-cta { padding: 10px 20px; font-size: 0.75rem; }
+    </style>
+
     <!-- SCRIPT UFFICIALE EMAILJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="text/javascript">
@@ -62,10 +83,17 @@
                 <h3 class="section-title" style="font-size: 2rem;">INFO</h3>
                 <p>Siamo sempre alla ricerca di collaboratori, feedback o opportunità di publishing.</p>
                 <ul class="contact-links">
-                    <li><a href="https://x.com/KripixEnt">Twitter / X</a></li>
-                    <li><a href="https://www.youtube.com/@KripixEntertainment">YouTube</a></li>
+                    <li><a href="https://x.com/KripixEnt" target="_blank" rel="noopener noreferrer">Twitter / X</a></li>
+                    <li><a href="https://www.youtube.com/@KripixEntertainment" target="_blank" rel="noopener noreferrer">YouTube</a></li>
                     <li><a href="mailto:info@kripix.com">info@kripix.com</a></li>
                 </ul>
+
+                <!-- Scorciatoia: molte richieste hanno già una risposta pronta -->
+                <div class="faq-shortcut">
+                    <h4 data-i18n="RISPOSTA IMMEDIATA">RISPOSTA IMMEDIATA</h4>
+                    <p data-i18n="Account, acquisti, chiavi e launcher: le domande più comuni hanno già una risposta pronta.">Account, acquisti, chiavi e launcher: le domande più comuni hanno già una risposta pronta.</p>
+                    <a href="faq.html" class="btn-outline small-cta" data-i18n="VAI ALLE FAQ">VAI ALLE FAQ</a>
+                </div>
             </div>
             
             <div class="contact-form-wrapper">

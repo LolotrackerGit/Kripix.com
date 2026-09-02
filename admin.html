@@ -343,6 +343,13 @@
                 printToShell("  network unban [uid]              : Rimuove il blocco di accesso.");
                 printToShell("  network suspend [uid] (motivo)   : Applica un avviso rosso sul profilo dell'agente.");
                 printToShell("  network unsuspend [uid]          : Rimuove l'avviso di sospensione.");
+                printToShell("  mfa status [uid]                 : Mostra i fattori 2FA registrati dall'agente.");
+                printToShell("  mfa reset [uid]                  : Rimuove la 2FA (agente che ha perso il telefono).");
+                printToShell("  beta list                        : Richieste di accesso beta in attesa.");
+                printToShell("  beta grant [uid] [programma]     : Concede l'accesso a un programma beta.");
+                printToShell("  beta deny [uid] [programma]      : Rifiuta la richiesta.");
+                printToShell("  ticket list                      : Ticket aperti dalla Kripix AI.");
+                printToShell("  ticket close [codice]            : Chiude un ticket.");
                 printToShell("  clear                            : Pulisce il terminale.");
                 printToShell(" ");
                 return;

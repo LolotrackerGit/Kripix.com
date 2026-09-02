@@ -13,6 +13,32 @@ html { scroll-behavior: smooth; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* --- SET DI ICONE (SVG line-art, ereditano il colore del testo) --- */
+.icon {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: -0.125em;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+/* Varianti dimensionali usate nelle card e nei badge */
+.icon-lg { width: 2.2rem; height: 2.2rem; stroke-width: 1.25; }
+.icon-md { width: 1.5rem; height: 1.5rem; }
+/* Icona affiancata a un testo dentro un bottone */
+.btn-icon { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+/* --- FOCUS DA TASTIERA ---
+   Visibile solo per chi naviga con Tab, invisibile a chi usa il mouse. */
+:focus-visible {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: 3px;
+}
+
 body {
     background-color: var(--bg-main);
     color: var(--text-main);
@@ -46,16 +72,91 @@ nav {
     align-items: center; /* Allineamento verticale perfetto */
 }
 
-.nav-links a { 
-    text-decoration: none; 
-    color: var(--text-main); 
-    font-weight: 600; 
-    font-size: 0.9rem; 
-    text-transform: uppercase; 
-    transition: 0.3s; 
+/* NOTA sul combinatore figlio (`> li >`): le voci del menu sono figlie
+   dirette della lista, mentre i link del menu utente stanno annidati in
+   .user-dropdown. Senza `>` queste regole colpirebbero anche quelli,
+   riempiendo la tendina di linee oro che lì non c'entrano nulla. */
+.nav-links > li > a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    transition: 0.3s;
+    position: relative;
 }
-.nav-links a:hover, .nav-links a.active { 
+.nav-links > li > a:hover, .nav-links > li > a.active {
     color: var(--accent-gold) !important; /* Forza il colore */
+}
+
+/* Linea oro sotto la voce di menu: si "carica" da sinistra a destra.
+   Esclude i link che hanno già una forma propria (bottone Scarica / Accedi). */
+.nav-links > li > a:not(.btn-launcher):not(.btn-login-nav)::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -7px;
+    width: 100%;
+    height: 2px;
+    background: var(--accent-gold);
+    box-shadow: 0 0 8px rgba(227, 198, 108, 0.5);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Hover: la linea si disegna */
+.nav-links > li > a:not(.btn-launcher):not(.btn-login-nav):hover::after {
+    transform: scaleX(1);
+}
+
+/* Pagina corrente: la linea si carica all'ingresso e resta accesa */
+.nav-links > li > a.active:not(.btn-launcher):not(.btn-login-nav)::after {
+    animation: navUnderlineLoad 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes navUnderlineLoad {
+    from { transform: scaleX(0); opacity: 0.3; }
+    to   { transform: scaleX(1); opacity: 1; }
+}
+
+/* Nel menu utente la pagina corrente si segnala col bordo oro a sinistra,
+   lo stesso linguaggio già usato per l'hover: niente linee sotto il testo. */
+.user-dropdown a.active {
+    border-left: 3px solid var(--accent-gold);
+    color: #fff;
+}
+.user-dropdown a#action-logout.active { border-left-color: #ff5555; color: #ff5555; }
+
+/* Accesso al Centro Assistenza: sola icona, così non appesantisce il
+   menu e non ruba spazio verticale alla home (che resta a schermata unica). */
+.nav-links a.nav-help {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+}
+.nav-links a.nav-help:hover { color: var(--accent-gold) !important; }
+.nav-links a.nav-help.active { color: var(--accent-gold) !important; }
+.nav-links a.nav-help::after { bottom: -9px; }
+
+/* L'etichetta serve solo nel menu mobile, dove le voci sono in colonna */
+.nav-help-label { display: none; }
+
+/* Il bottone "Scarica App" segnala la pagina corrente col bordo oro */
+.nav-links a.btn-launcher.active {
+    border-color: var(--accent-gold);
+    background: rgba(227, 198, 108, 0.08);
+    box-shadow: 0 0 12px rgba(227, 198, 108, 0.2);
+}
+
+/* Chi preferisce meno animazioni vede solo la linea, senza il disegno */
+@media (prefers-reduced-motion: reduce) {
+    .nav-links > li > a:not(.btn-launcher):not(.btn-login-nav)::after { transition: none; }
+    .nav-links > li > a.active:not(.btn-launcher):not(.btn-login-nav)::after {
+        animation: none;
+        transform: scaleX(1);
+    }
 }
 
 /* Bottone Login nella Navbar */
@@ -326,6 +427,8 @@ footer {
 .hamburger {
     display: none; cursor: pointer;
     flex-direction: column; gap: 5px;
+    /* Reset dello stile nativo del <button> */
+    background: none; border: none; padding: 0;
 }
 .hamburger span {
     display: block; width: 25px; height: 3px;
@@ -375,7 +478,7 @@ footer {
     border-top: 1px solid #222; padding-top: 50px; 
 }
 .feature-item { text-align: center; }
-.f-icon { font-size: 2.5rem; display: block; margin-bottom: 15px; }
+.f-icon { display: flex; justify-content: center; margin-bottom: 15px; color: var(--accent-gold); }
 .feature-item h4 { color: var(--accent-gold); margin-bottom: 10px; }
 .feature-item p { font-size: 0.9rem; opacity: 0.7; }
 
@@ -473,6 +576,15 @@ footer {
     }
     .nav-menu.active { left: 0; }
     .nav-menu li { margin: 15px 0; }
+
+    /* Nel menu mobile l'icona da sola sarebbe criptica: qui va il testo */
+    .nav-links a.nav-help { justify-content: center; }
+    .nav-help-label {
+        display: inline;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
     
     /* Layout */
     .brand-title { font-size: 3rem; }
@@ -736,7 +848,7 @@ footer {
    ========================================== */
 #kripix-toast-container {
     position: fixed;
-    bottom: 20px;
+    bottom: 90px; /* Lascia libero l'angolo per il tasto "torna su" */
     right: 20px;
     display: flex;
     flex-direction: column;
@@ -874,14 +986,26 @@ footer {
     color: var(--text-muted);
 }
 
-.lang-switcher span:not(.lang-separator) {
+.lang-btn {
     cursor: pointer;
     transition: 0.3s;
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
 }
 
 /* Effetto quando passi sopra col mouse (diventa Oro) */
-.lang-switcher span:not(.lang-separator):hover {
+.lang-btn:hover { color: var(--accent-gold); }
+
+/* Lingua attualmente attiva */
+.lang-btn.active {
     color: var(--accent-gold);
+    font-weight: bold;
+    text-decoration: underline;
+    text-underline-offset: 4px;
 }
 
 /* Stile per la stanghetta divisoria */
@@ -899,6 +1023,21 @@ footer {
     margin-top: 100px;
     position: relative;
     z-index: 10;
+}
+
+/* Se il footer segue una sezione .bg-darker i due sfondi sono identici
+   (#020202): il margine lascerebbe passare --bg-main, più chiaro, come
+   una banda visibile. Qui i due blocchi devono combaciare. */
+.bg-darker + .kripix-footer {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 60px;
+}
+
+/* ...e anche il bordo #111 della sezione va tolto: su #020202 si vede
+   come una riga chiara proprio all'attacco del footer. */
+.bg-darker:has(+ .kripix-footer) {
+    border-bottom: none;
 }
 
 .footer-grid {
@@ -934,7 +1073,17 @@ footer {
 
 .footer-col ul a:hover {
     color: var(--text-main); /* Diventa bianco avorio al passaggio del mouse */
-    transform: translateX(5px); 
+    transform: translateX(5px);
+}
+
+/* Pagina corrente evidenziata anche nel footer */
+.footer-col ul a.active {
+    color: var(--accent-gold);
+    font-weight: 700;
+}
+.footer-col ul a.active::before {
+    content: '> ';
+    font-family: 'Courier Prime', monospace;
 }
 
 .footer-bottom {
@@ -990,6 +1139,185 @@ body.no-scroll {
         }
         .receipt-sent { color: #666; } /* Grigio scuro, non dà nell'occhio */
         .receipt-read { color: var(--accent-gold); } /* Oro Kripix quando viene letto */
+
+
+/* ============================================================
+   VERIFICA IN DUE PASSAGGI (2FA / TOTP)
+   ============================================================ */
+
+/* ── Campo per il codice a 6 cifre ── */
+.code-input {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 5px 0 20px;
+}
+
+.code-digit {
+    width: 48px;
+    height: 58px;
+    text-align: center;
+    font-family: 'Courier Prime', monospace;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--text-main);
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 3px;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    caret-color: var(--accent-gold);
+}
+
+.code-digit.filled {
+    border-color: #555;
+    color: var(--accent-gold);
+    background: rgba(227, 198, 108, 0.04);
+}
+
+.code-digit:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    background: rgba(227, 198, 108, 0.07);
+    box-shadow: 0 0 14px rgba(227, 198, 108, 0.25);
+}
+
+.code-digit:disabled { opacity: .5; }
+
+/* Errore: le caselle vibrano e diventano rosse */
+.code-input.error .code-digit {
+    border-color: #ff5555;
+    animation: shake .3s ease-in-out;
+}
+
+@media (max-width: 420px) {
+    .code-input { gap: 6px; }
+    .code-digit { width: 40px; height: 50px; font-size: 1.3rem; }
+}
+
+/* ── Riquadro del QR ── */
+.qr-frame {
+    width: 190px;
+    height: 190px;
+    margin: 0 auto 18px;
+    padding: 12px;
+    background: #fff;          /* I lettori QR hanno bisogno di contrasto reale */
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px #333, 0 8px 24px rgba(0, 0, 0, .6);
+}
+.qr-frame svg { display: block; width: 100%; height: 100%; }
+
+/* ── Chiave da digitare a mano ── */
+.secret-key {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: rgba(227, 198, 108, 0.05);
+    border: 1px dashed var(--accent-gold);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+}
+.secret-key code {
+    font-family: 'Courier Prime', monospace;
+    font-size: .95rem;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+    word-break: break-all;
+    text-align: left;
+}
+.btn-copy-secret {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: .25s;
+    display: flex;
+    align-items: center;
+}
+.btn-copy-secret:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+/* ── Indicatore di stato nelle impostazioni ── */
+.mfa-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Courier Prime', monospace;
+    font-size: .8rem;
+    font-weight: bold;
+    padding: 5px 12px;
+    border: 1px solid;
+    border-radius: 2px;
+}
+.mfa-status.on  { color: #4caf50; border-color: rgba(76, 175, 80, .5);  background: rgba(76, 175, 80, .07); }
+.mfa-status.off { color: #888;    border-color: #333;                    background: rgba(255, 255, 255, .02); }
+.mfa-status .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+/* ── Passi numerati dentro il modale ── */
+.mfa-steps {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 25px;
+}
+.mfa-step {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Courier Prime', monospace;
+    font-size: .75rem;
+    border: 1px solid #333;
+    color: #555;
+    border-radius: 50%;
+    transition: .3s;
+}
+.mfa-step.active { border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: 0 0 12px rgba(227, 198, 108, .2); }
+.mfa-step.done   { border-color: #4caf50; color: #4caf50; }
+
+
+/* ============================================================
+   TASTO "TORNA SU"
+   Compare solo dopo aver scrollato: fino a quel momento è
+   fuori dal flusso e dall'ordine di tabulazione.
+   ============================================================ */
+#back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 500;
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 7, 10, 0.9);
+    border: 1px solid #333;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity .3s ease, transform .3s ease, visibility .3s, border-color .3s, color .3s;
+}
+
+#back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+#back-to-top:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    box-shadow: 0 0 15px rgba(227, 198, 108, 0.2);
+}
+
+@media (max-width: 600px) {
+    #back-to-top { width: 42px; height: 42px; bottom: 15px; right: 15px; }
+}
 
 
 /* ============================================================
