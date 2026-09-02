@@ -41,11 +41,6 @@
         .network-section { background: rgba(10, 10, 10, 0.8); border: 1px solid #333; border-top: 3px solid var(--accent-gold); padding: 30px; margin-bottom: 40px; position: relative; }
         /* ── Accessi beta ── */
         .beta-access-card { border-color: #444; background: linear-gradient(45deg, rgba(255,255,255,0.03), transparent); }
-        .beta-count {
-            display: inline-block; margin-left: 8px; padding: 1px 7px;
-            background: var(--accent-red); color: #fff; border-radius: 10px;
-            font-size: 0.7rem; font-weight: 900;
-        }
         .beta-loading { color:#666; font-family:'Courier Prime'; text-align:center; padding:20px; }
         .beta-item {
             border: 1px solid #222; border-left: 2px solid #333;
@@ -56,9 +51,9 @@
         .beta-item.is-pending { border-left-color: var(--accent-gold); background: rgba(227,198,108,0.03); }
         .beta-item.is-rejected { opacity: 0.55; }
         .beta-item-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
-        .beta-item h4 { color: #fff; font-size: 1.05rem; letter-spacing: 1px; }
-        .beta-item .beta-tagline { color: var(--accent-gold); font-family: 'Courier Prime'; font-size: 0.75rem; margin-bottom: 12px; }
-        .beta-item p.beta-desc { color: #999; font-size: 0.87rem; line-height: 1.6; margin-bottom: 16px; }
+        .beta-item h4 { color: #fff; font-family: 'Montserrat', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .beta-item .beta-tagline { color: var(--accent-gold); font-family: 'Courier Prime', monospace; font-size: 0.75rem; margin-bottom: 12px; }
+        .beta-item p.beta-desc { color: #999; font-family: 'Montserrat', sans-serif; font-size: 0.87rem; line-height: 1.6; margin-bottom: 16px; }
         .beta-state {
             flex-shrink: 0; font-family: 'Courier Prime', monospace; font-size: 0.7rem;
             font-weight: bold; letter-spacing: 1px; padding: 4px 10px; border: 1px solid; border-radius: 2px;
@@ -209,9 +204,7 @@
             <h4>ACCESSI BETA</h4>
             <p>> Programmi sperimentali riservati agli agenti selezionati.</p>
         </div>
-        <button id="btn-open-beta" class="btn-dev-action" type="button">
-            APRI ELENCO<span id="beta-badge-count" class="beta-count" hidden></span>
-        </button>
+        <button id="btn-open-beta" class="btn-dev-action" type="button">APRI ELENCO</button>
     </div>
 
 <!-- Modulo Programma DEV -->
@@ -826,7 +819,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 const p = programmi.find(x => x.id === programId);
                 if (p) p.status = 'pending';
                 render();
-                aggiornaBadge();
                 if (window.kripixNotify) window.kripixNotify('BETA', 'Richiesta trasmessa. Attendi la valutazione.', 'success');
             } catch (e) {
                 console.error('Richiesta beta fallita:', e);
@@ -836,25 +828,11 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        /** Pallino rosso sul bottone quando c'è qualcosa di nuovo da vedere. */
-        function aggiornaBadge() {
-            const attive = programmi.filter(p => p.status === 'active').length;
-            const badge = document.getElementById('beta-badge-count');
-            if (attive > 0) {
-                badge.textContent = attive;
-                badge.hidden = false;
-            } else {
-                badge.hidden = true;
-            }
-        }
-
         async function carica() {
             try {
                 const res = await getBetaAccess();
                 programmi = (res.data && res.data.programs) || [];
                 render();
-                aggiornaBadge();
-
                 // Medagliere: il badge BETA TESTER si accende con almeno un programma attivo
                 const badge = document.getElementById('badge-beta');
                 if (badge && programmi.some(p => p.status === 'active')) {

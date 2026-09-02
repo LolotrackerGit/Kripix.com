@@ -76,6 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
     injectPageLoader();
     injectBackToTop();
 
+    // Widget Kripix AI: si monta da solo, e solo per chi ha la beta attiva.
+    // Import dinamico così il codice non pesa sulle pagine di chi non lo usa.
+    import('./assistant.js')
+        .then(m => m.initAssistant())
+        .catch(e => console.debug('Assistente non caricato:', e.message));
+
     // ─ B. Menu hamburger e traduttore ───────────────────────
     const hamburger = document.querySelector(".hamburger");
     const navMenu = document.querySelector(".nav-menu");
@@ -109,6 +115,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inizializzazione traduttore e funzione globale per i bottoni HTML
     initTranslator();
     window.cambiaLingua = switchLanguage;
+
+    // ─ B-bis. Invio con INVIO nei modali ────────────────────
+    //  I modali del sito non sono <form>, quindi il tasto Invio non
+    //  faceva nulla: si doveva sempre cliccare col mouse. Qui lo
+    //  colleghiamo al bottone principale del modale aperto.
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+
+        const el = e.target;
+        if (!el || el.tagName !== 'INPUT') return;
+        if (['checkbox', 'radio', 'button', 'submit', 'file'].includes(el.type)) return;
+
+        // Dentro un <form> ci pensa il browser
+        if (el.closest('form')) return;
+
+        const box = el.closest('.modal-box');
+        if (!box) return;
+
+        // Solo i bottoni davvero visibili: i modali a più schermate
+        // tengono in pagina anche i pulsanti dei passi nascosti.
+        const azione = [...box.querySelectorAll('.btn-gold, .btn-danger')]
+            .find(b => !b.disabled && b.offsetParent !== null);
+
+        if (azione) {
+            e.preventDefault();
+            azione.click();
+        }
+    });
 
     // ─ C. Sistema notifiche globali (toast) ─────────────────
     let toastContainer = document.getElementById('kripix-toast-container');

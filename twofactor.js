@@ -102,6 +102,12 @@ export function createCodeInput(container, options = {}) {
         });
 
         box.addEventListener('keydown', (e) => {
+            // Invio conferma il codice senza dover cliccare
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (value().length === LENGTH && options.onComplete) options.onComplete(value());
+                return;
+            }
             if (e.key === 'Backspace' && !box.value && index > 0) {
                 e.preventDefault();
                 boxes[index - 1].value = '';

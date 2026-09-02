@@ -473,6 +473,19 @@ exports.overseerCommand = onCall(europeWest1, async (request) => {
             return { status: 'error', output: 'Sotto-comando sconosciuto. Uso: ticket list | ticket close [codice]' };
         }
 
+        // ==========================================
+        // COMANDO: ai (diagnostica dell'assistente)
+        // ==========================================
+        if (action === 'ai' && args[1] === 'ping') {
+            const esito = await pingGemini();
+            return {
+                status: esito.ok ? 'success' : 'error',
+                output: esito.ok
+                    ? `[OK] ${esito.dettaglio}`
+                    : `[KO] ${esito.dettaglio}`
+            };
+        }
+
         if (action === 'keys' && args[1] === 'purge') {
             const snapshot = await db.collection('game_keys').where('isUsed', '==', false).get();
             if (snapshot.empty) return { status: 'success', output: "Nessuna chiave vergine trovata." };
@@ -934,7 +947,7 @@ exports.requestBetaAccess = onCall(europeWest1, async (request) => {
 //  esattamente la persona da cui la 2FA dovrebbe difendere. Quella
 //  decisione resta a un umano.
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 const AI_DAILY_LIMIT = 40;      // messaggi al giorno per agente
 const AI_MAX_HISTORY = 12;      // turni di conversazione tenuti
 const AI_MAX_CHARS = 1500;      // lunghezza massima di un messaggio
@@ -1007,11 +1020,43 @@ async function callGemini(apiKey, contents) {
     });
 
     if (!res.ok) {
-        const dettaglio = await res.text();
-        console.error('Gemini ha risposto', res.status, dettaglio.slice(0, 500));
-        throw new HttpsError('unavailable', `Il modello non ha risposto (HTTP ${res.status}).`);
+        const grezzo = await res.text();
+        console.error('Gemini ha risposto', res.status, grezzo.slice(0, 800));
+
+        // Riportiamo il motivo di Google, non un generico "non disponibile":
+        // senza questo, diagnosticare una chiave sbagliata o un'API spenta
+        // significa andare a tentoni.
+        let motivo = '';
+        try { motivo = (JSON.parse(grezzo).error || {}).message || ''; } catch (e) { motivo = grezzo.slice(0, 200); }
+
+        throw new HttpsError('unavailable', `Gemini HTTP ${res.status}: ${motivo}`);
     }
     return res.json();
+}
+
+/** Verifica di raggiungibilità del modello, per il comando "ai ping". */
+async function pingGemini() {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { ok: false, dettaglio: 'GEMINI_API_KEY non è presente fra le variabili della function. Aggiungila a functions/.env e rideploya.' };
+
+    try {
+        const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'ping' }] }] })
+            }
+        );
+        const grezzo = await res.text();
+        if (res.ok) return { ok: true, dettaglio: `Modello "${GEMINI_MODEL}" raggiungibile.` };
+
+        let motivo = '';
+        try { motivo = (JSON.parse(grezzo).error || {}).message || grezzo.slice(0, 300); } catch (e) { motivo = grezzo.slice(0, 300); }
+        return { ok: false, dettaglio: `HTTP ${res.status} — ${motivo}` };
+    } catch (e) {
+        return { ok: false, dettaglio: `Chiamata fallita: ${e.message}` };
+    }
 }
 
 exports.kripixAssistant = onCall(europeWest1, async (request) => {

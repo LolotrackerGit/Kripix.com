@@ -895,7 +895,18 @@
                 const session = await multiFactor(currentUser).getSession();
                 totpSecret = await TotpMultiFactorGenerator.generateSecret(session);
 
-                const uri = totpSecret.generateQrCodeUrl(currentUser.email, 'Kripix');
+                let uri = totpSecret.generateQrCodeUrl(currentUser.email, 'Kripix');
+
+                // Logo nell'app di autenticazione.
+                // Il parametro "image" è un'estensione non standard: 2FAS,
+                // Raivo e alcune altre app lo leggono, Google Authenticator
+                // lo ignora e mostra la sua iniziale. Aggiungerlo non fa
+                // danni dove non è supportato.
+                const origine = location.hostname === 'localhost'
+                    ? 'https://kripixent.netlify.app'
+                    : location.origin;
+                uri += `&image=${encodeURIComponent(origine + '/android-chrome-512x512.png')}`;
+
                 renderQrCode($('mfa-qr'), uri);
 
                 // Raggruppa la chiave a blocchi di 4: si copia a mano più facilmente

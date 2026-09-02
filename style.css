@@ -188,7 +188,21 @@ nav {
 .user-header { background-color: rgba(227, 198, 108, 0.05); padding: 15px; border-bottom: 1px solid #333; }
 .user-name { display: block; color: var(--accent-gold); font-weight: 800; font-size: 0.9rem; }
 .user-role { font-family: 'Courier Prime', monospace; font-size: 0.7rem; color: #666; text-transform: uppercase; }
-.user-dropdown a { padding: 12px 15px; text-decoration: none; color: #ccc; border-bottom: 1px solid #1a1a1a; font-size: 0.85rem; transition: 0.2s; }
+/* Tipografia dichiarata per esteso: questi link non ereditano più dalle
+   regole della navbar, e senza indicarla resterebbero fuori sincrono
+   rispetto al resto del sito. */
+.user-dropdown a {
+    padding: 12px 15px;
+    text-decoration: none;
+    color: #ccc;
+    border-bottom: 1px solid #1a1a1a;
+    transition: 0.2s;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 .user-dropdown a:hover { background-color: rgba(255,255,255,0.05); color: white; border-left: 3px solid var(--accent-gold); }
 .user-dropdown a#action-logout { color: #ff5555; border-bottom: none; }
 .user-dropdown a#action-logout:hover { background: rgba(255, 85, 85, 0.1); border-left-color: #ff5555; }
@@ -735,6 +749,12 @@ footer {
     text-decoration: none;
     font-size: 0.8rem;
     transition: 0.3s;
+    /* Serve esplicito: su un <button> il font non si eredita dal body
+       e senza questa riga comparirebbe quello di sistema. */
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
 }
 
 /* --- BOTTONE DISCORD --- */
@@ -1273,6 +1293,227 @@ body.no-scroll {
 }
 .mfa-step.active { border-color: var(--accent-gold); color: var(--accent-gold); box-shadow: 0 0 12px rgba(227, 198, 108, .2); }
 .mfa-step.done   { border-color: #4caf50; color: #4caf50; }
+
+
+/* ============================================================
+   KRIPIX AI — widget fluttuante
+   ============================================================ */
+
+#kripix-assistant { position: fixed; inset: auto 0 0 auto; z-index: 900; }
+
+/* ── Pulsante di richiamo ── */
+.ka-launcher {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-darker);
+    border: 1px solid var(--accent-gold);
+    color: var(--accent-gold);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .7), 0 0 0 0 rgba(227, 198, 108, .35);
+    transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .3s, background .3s;
+    animation: kaPulse 3.5s ease-out infinite;
+}
+.ka-launcher:hover {
+    background: var(--accent-gold);
+    color: var(--bg-darker);
+    transform: translateY(-3px);
+    animation: none;
+}
+.ka-launcher .icon { width: 26px; height: 26px; }
+.ka-launcher .ka-icon-close { display: none; }
+
+/* Un respiro dorato ogni tanto: segnala che c'è, senza urlare */
+@keyframes kaPulse {
+    0%   { box-shadow: 0 6px 24px rgba(0,0,0,.7), 0 0 0 0 rgba(227,198,108,.35); }
+    70%  { box-shadow: 0 6px 24px rgba(0,0,0,.7), 0 0 0 14px rgba(227,198,108,0); }
+    100% { box-shadow: 0 6px 24px rgba(0,0,0,.7), 0 0 0 0 rgba(227,198,108,0); }
+}
+
+#kripix-assistant.is-open .ka-launcher { animation: none; background: var(--accent-gold); color: var(--bg-darker); }
+#kripix-assistant.is-open .ka-icon-bot { display: none; }
+#kripix-assistant.is-open .ka-icon-close { display: block; }
+
+/* ── Pannello ── */
+.ka-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 88px;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+    height: 520px;
+    max-height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    background: rgba(5, 7, 10, .97);
+    backdrop-filter: blur(8px);
+    border: 1px solid #222;
+    border-top: 2px solid var(--accent-gold);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .85);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(.98);
+    transform-origin: bottom right;
+    transition: opacity .25s ease, transform .25s cubic-bezier(.2, .8, .2, 1), visibility .25s;
+}
+#kripix-assistant.is-open .ka-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+/* ── Intestazione ── */
+.ka-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #1c1c1c;
+    background: rgba(227, 198, 108, .04);
+    flex-shrink: 0;
+}
+.ka-avatar {
+    width: 34px; height: 34px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(227, 198, 108, .4);
+    background: rgba(227, 198, 108, .07);
+    color: var(--accent-gold);
+    border-radius: 3px;
+}
+.ka-avatar .icon { width: 20px; height: 20px; }
+.ka-title { flex: 1; line-height: 1.3; }
+.ka-title strong {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: .85rem; font-weight: 900; letter-spacing: 2px;
+    color: var(--text-main);
+}
+.ka-state {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Courier Prime', monospace; font-size: .65rem;
+    color: #4caf50; letter-spacing: 1px;
+}
+.ka-dot { width: 6px; height: 6px; border-radius: 50%; background: #4caf50; }
+.ka-close {
+    background: none; border: none; color: #555; cursor: pointer;
+    padding: 4px; display: flex; transition: color .2s;
+}
+.ka-close:hover { color: var(--accent-gold); }
+.ka-close .icon { width: 18px; height: 18px; }
+
+/* ── Conversazione ── */
+.ka-log {
+    flex: 1; overflow-y: auto;
+    padding: 18px;
+    display: flex; flex-direction: column; gap: 12px;
+}
+.ka-msg {
+    max-width: 88%;
+    padding: 11px 14px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: .85rem; line-height: 1.6;
+    white-space: pre-wrap; word-wrap: break-word;
+}
+.ka-msg.user {
+    align-self: flex-end;
+    background: rgba(227, 198, 108, .1);
+    border: 1px solid rgba(227, 198, 108, .25);
+    color: var(--text-main);
+}
+.ka-msg.bot {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, .03);
+    border: 1px solid #1e1e1e;
+    border-left: 2px solid var(--accent-gold);
+    color: #ccc;
+}
+.ka-msg.error { border-left-color: #ff5555; color: #ff9999; }
+.ka-ticket {
+    display: block; margin-top: 9px; padding-top: 9px;
+    border-top: 1px dashed #333;
+    font-family: 'Courier Prime', monospace; font-size: .7rem;
+    color: var(--accent-gold); letter-spacing: 1px;
+}
+
+.ka-typing { align-self: flex-start; display: flex; gap: 5px; padding: 13px 14px; }
+.ka-typing span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent-gold);
+    animation: kaBlink 1.2s infinite ease-in-out;
+}
+.ka-typing span:nth-child(2) { animation-delay: .15s; }
+.ka-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes kaBlink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
+
+/* ── Domande pronte ── */
+.ka-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 18px 12px; flex-shrink: 0; }
+.ka-chip {
+    background: transparent; border: 1px solid #2a2a2a; color: #888;
+    font-family: 'Courier Prime', monospace; font-size: .68rem;
+    padding: 6px 10px; cursor: pointer; transition: .25s; text-align: left;
+}
+.ka-chip:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+/* ── Riga di scrittura ── */
+.ka-input {
+    display: flex; gap: 8px; padding: 14px 18px;
+    border-top: 1px solid #1c1c1c; background: #020202; flex-shrink: 0;
+}
+.ka-input input {
+    flex: 1; padding: 11px 13px;
+    background: rgba(255, 255, 255, .03); border: 1px solid #2a2a2a;
+    color: var(--text-main);
+    font-family: 'Montserrat', sans-serif; font-size: .85rem;
+    transition: .3s;
+}
+.ka-input input:focus {
+    outline: none; border-color: var(--accent-gold);
+    background: rgba(227, 198, 108, .04);
+    box-shadow: 0 0 12px rgba(227, 198, 108, .15);
+}
+.ka-input input:disabled { opacity: .5; }
+.ka-input button {
+    flex-shrink: 0; width: 42px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--accent-gold);
+    color: var(--accent-gold); cursor: pointer; transition: .25s;
+}
+.ka-input button:hover:not(:disabled) { background: var(--accent-gold); color: var(--bg-darker); }
+.ka-input button:disabled { opacity: .4; cursor: default; }
+.ka-input .icon { width: 18px; height: 18px; }
+
+.ka-foot {
+    padding: 0 18px 14px;
+    font-family: 'Courier Prime', monospace; font-size: .62rem;
+    color: #555; line-height: 1.6; flex-shrink: 0;
+}
+.ka-foot a { color: #777; }
+
+/* Il tasto "torna su" sale sopra il richiamo dell'assistente */
+#kripix-assistant ~ #back-to-top,
+body:has(#kripix-assistant) #back-to-top { bottom: 88px; }
+
+@media (max-width: 600px) {
+    .ka-panel {
+        right: 0; left: 0; bottom: 0;
+        width: 100%; max-width: 100%;
+        height: 80vh; max-height: 80vh;
+        border-left: none; border-right: none;
+        transform-origin: bottom center;
+    }
+    .ka-launcher { right: 15px; bottom: 15px; width: 50px; height: 50px; }
+    body:has(#kripix-assistant) #back-to-top { bottom: 76px; right: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ka-launcher { animation: none; }
+    .ka-panel { transition: opacity .15s ease, visibility .15s; transform: none; }
+    #kripix-assistant.is-open .ka-panel { transform: none; }
+}
 
 
 /* ============================================================

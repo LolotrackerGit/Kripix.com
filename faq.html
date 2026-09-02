@@ -258,114 +258,32 @@
         }
         .guide-link:hover { letter-spacing: 0.5px; }
 
-        /* ── Kripix AI ────────────────────────────────────────── */
-        .ai-block {
-            margin-top: 70px;
-            border: 1px solid #222;
-            border-top: 2px solid var(--accent-gold);
-            background: linear-gradient(160deg, rgba(227, 198, 108, 0.05), transparent 55%);
-            padding: 32px 30px;
-        }
-
-        .ai-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
-        .ai-mark {
-            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-            width: 46px; height: 46px;
-            border: 1px solid rgba(227, 198, 108, 0.4);
-            border-radius: 4px;
-            color: var(--accent-gold);
-            background: rgba(227, 198, 108, 0.06);
-        }
-        .ai-mark .icon { width: 26px; height: 26px; }
-        .ai-head h3 { font-size: 1.15rem; letter-spacing: 2px; color: var(--text-main); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .ai-tag {
-            font-family: 'Courier Prime', monospace; font-size: 0.6rem; letter-spacing: 1px;
-            background: var(--accent-red); color: #fff; padding: 3px 8px; border-radius: 2px; font-weight: bold;
-        }
-        .ai-sub { color: #888; font-size: 0.87rem; margin-top: 6px; }
-
-        .ai-pane { display: none; }
-        .ai-pane.active { display: block; animation: bootSequence 0.4s ease; }
-        .ai-muted { color: #999; font-size: 0.92rem; line-height: 1.7; margin-bottom: 18px; }
-        .ai-muted strong { color: var(--accent-gold); font-weight: 600; }
-        .ai-cta { display: inline-block; padding: 12px 26px; font-size: 0.8rem; }
-
-        /* Conversazione */
-        .ai-chat {
-            height: 320px; overflow-y: auto;
-            border: 1px solid #222; background: rgba(0, 0, 0, 0.4);
-            padding: 20px; margin-bottom: 14px;
-            display: flex; flex-direction: column; gap: 14px;
-        }
-        .ai-msg { max-width: 82%; padding: 12px 16px; font-size: 0.9rem; line-height: 1.65; white-space: pre-wrap; word-wrap: break-word; }
-        .ai-msg.user {
-            align-self: flex-end;
-            background: rgba(227, 198, 108, 0.1);
-            border: 1px solid rgba(227, 198, 108, 0.25);
-            color: var(--text-main);
-        }
-        .ai-msg.bot {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid #222;
-            border-left: 2px solid var(--accent-gold);
-            color: #ccc;
-        }
-        .ai-msg.error { border-left-color: #ff5555; color: #ff9999; }
-        .ai-msg .ai-ticket {
-            display: block; margin-top: 10px; padding-top: 10px;
-            border-top: 1px dashed #333;
-            font-family: 'Courier Prime', monospace; font-size: 0.75rem; color: var(--accent-gold);
-        }
-
-        /* Puntini di attesa */
-        .ai-typing { align-self: flex-start; display: flex; gap: 5px; padding: 14px 16px; }
-        .ai-typing span {
-            width: 6px; height: 6px; border-radius: 50%; background: var(--accent-gold);
-            animation: aiBlink 1.2s infinite ease-in-out;
-        }
-        .ai-typing span:nth-child(2) { animation-delay: 0.15s; }
-        .ai-typing span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes aiBlink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
-
-        /* Domande pronte */
-        .ai-suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-        .ai-chip {
-            background: transparent; border: 1px solid #333; color: #888;
-            font-family: 'Courier Prime', monospace; font-size: 0.72rem;
-            padding: 7px 13px; cursor: pointer; transition: 0.25s; text-align: left;
-        }
-        .ai-chip:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
-
-        /* Riga di input */
-        .ai-input { display: flex; gap: 10px; }
-        .ai-input input {
-            flex: 1; padding: 14px 16px;
-            background: rgba(255, 255, 255, 0.03); border: 1px solid #333;
-            color: var(--text-main); font-family: 'Montserrat', sans-serif; font-size: 0.92rem;
+        /* ── Rimando alla Kripix AI ─────────────────────────── */
+        .ai-teaser {
+            margin-top: 60px;
+            display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+            border: 1px dashed #333;
+            background: rgba(227, 198, 108, 0.03);
+            padding: 24px 26px;
             transition: 0.3s;
         }
-        .ai-input input:focus {
-            outline: none; border-color: var(--accent-gold);
-            background: rgba(227, 198, 108, 0.04);
-            box-shadow: 0 0 14px rgba(227, 198, 108, 0.15);
+        .ai-teaser:hover { border-color: var(--accent-gold); background: rgba(227, 198, 108, 0.05); }
+        .ai-teaser-mark {
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            width: 42px; height: 42px;
+            border: 1px solid rgba(227, 198, 108, 0.35);
+            background: rgba(227, 198, 108, 0.06);
+            color: var(--accent-gold); border-radius: 4px;
         }
-        .ai-input .btn-gold { padding: 14px 24px; font-size: 0.8rem; }
-        .ai-hidden-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-
-        .ai-disclaimer {
-            margin-top: 16px; font-family: 'Courier Prime', monospace;
-            font-size: 0.72rem; color: #666; line-height: 1.7;
+        .ai-teaser-mark .icon { width: 24px; height: 24px; }
+        .ai-teaser-text { flex: 1; min-width: 220px; }
+        .ai-teaser h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem; font-weight: 900; letter-spacing: 2px;
+            color: var(--text-main); margin-bottom: 5px;
         }
-        .ai-disclaimer strong { color: #999; }
-        .ai-disclaimer a { color: #888; }
-
-        @media (max-width: 600px) {
-            .ai-block { padding: 24px 18px; }
-            .ai-chat { height: 280px; padding: 15px; }
-            .ai-msg { max-width: 92%; }
-            .ai-input { flex-direction: column; }
-        }
+        .ai-teaser p { color: #888; font-size: 0.87rem; line-height: 1.6; }
+        .ai-teaser-cta { flex-shrink: 0; padding: 11px 22px; font-size: 0.75rem; }
 
         /* ── Box finale di contatto ───────────────────────────── */
         .help-cta {
@@ -806,73 +724,15 @@
             </div>
 
             <!-- ============ KRIPIX AI ============ -->
-            <section class="ai-block" id="ai-block">
-
-                <div class="ai-head">
-                    <span class="ai-mark" aria-hidden="true">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v3"/><rect x="4" y="6" width="16" height="12" rx="3"/><circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/><path d="M2 11v3"/><path d="M22 11v3"/><path d="M9.5 21h5"/></svg>
-                    </span>
-                    <div>
-                        <h3>KRIPIX AI <span class="ai-tag">BETA CHIUSA</span></h3>
-                        <p class="ai-sub">Un assistente che conosce il Network e ti accompagna nel problema.</p>
-                    </div>
+            <section class="ai-teaser" id="ai-teaser" hidden>
+                <span class="ai-teaser-mark" aria-hidden="true">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v3"/><rect x="4" y="6" width="16" height="12" rx="3"/><circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/><path d="M2 11v3"/><path d="M22 11v3"/><path d="M9.5 21h5"/></svg>
+                </span>
+                <div class="ai-teaser-text">
+                    <h3 data-i18n="KRIPIX AI">KRIPIX AI</h3>
+                    <p id="ai-teaser-msg"></p>
                 </div>
-
-                <!-- Stato: in caricamento -->
-                <div class="ai-pane active" id="ai-pane-loading">
-                    <p class="ai-muted">&gt;&gt; Verifica delle autorizzazioni...</p>
-                </div>
-
-                <!-- Stato: non autenticato -->
-                <div class="ai-pane" id="ai-pane-anon">
-                    <p class="ai-muted">
-                        L'assistente è riservato agli agenti registrati che partecipano alla beta.
-                        Accedi al tuo Kripix ID per verificare se hai l'accesso.
-                    </p>
-                    <a href="login.html" class="btn-outline ai-cta">ACCEDI</a>
-                </div>
-
-                <!-- Stato: nessun accesso -->
-                <div class="ai-pane" id="ai-pane-locked">
-                    <p class="ai-muted">
-                        In questo momento la Kripix AI è aperta a un gruppo ristretto di agenti.
-                        Puoi candidarti dal tuo profilo, alla voce <strong>Accessi Beta</strong>:
-                        le richieste vengono valutate una per una.
-                    </p>
-                    <a href="profilo.html" class="btn-gold ai-cta">RICHIEDI L'ACCESSO</a>
-                </div>
-
-                <!-- Stato: richiesta in attesa -->
-                <div class="ai-pane" id="ai-pane-pending">
-                    <p class="ai-muted">
-                        La tua richiesta è in valutazione. Ti avvisiamo nel Terminale appena viene decisa.
-                    </p>
-                </div>
-
-                <!-- Stato: accesso attivo -->
-                <div class="ai-pane" id="ai-pane-chat">
-                    <div class="ai-chat" id="ai-chat" role="log" aria-live="polite" aria-label="Conversazione con Kripix AI"></div>
-
-                    <div class="ai-suggestions" id="ai-suggestions">
-                        <button type="button" class="ai-chip">Ho perso il telefono con l'app di autenticazione</button>
-                        <button type="button" class="ai-chip">Il launcher non parte</button>
-                        <button type="button" class="ai-chip">Non trovo la chiave del gioco</button>
-                    </div>
-
-                    <form class="ai-input" id="ai-form">
-                        <label for="ai-text" class="ai-hidden-label">Scrivi all'assistente</label>
-                        <input type="text" id="ai-text" placeholder="Descrivi il problema..." autocomplete="off" maxlength="1500">
-                        <button type="submit" class="btn-gold" id="ai-send">INVIA</button>
-                    </form>
-
-                    <p class="ai-disclaimer">
-                        Kripix AI è un assistente automatico: può sbagliare e <strong>non esegue operazioni sul tuo account</strong>.
-                        Quando serve un intervento reale prepara una richiesta per lo staff, che la valuta a mano.
-                        Le conversazioni vengono elaborate dai modelli Gemini di Google — non scriverci password o codici di accesso.
-                        Dettagli nel <a href="cookies.html">Dossier Privacy</a>.
-                    </p>
-                </div>
-
+                <a href="profilo.html" class="btn-outline ai-teaser-cta" id="ai-teaser-cta" data-i18n="RICHIEDI L'ACCESSO">RICHIEDI L'ACCESSO</a>
             </section>
 
             <!-- Box contatto finale -->
@@ -997,133 +857,58 @@
     </script>
 
     <!-- ============================================================
-         KRIPIX AI — chat riservata alla beta
+         Rimando alla Kripix AI: la chat vera è il widget fluttuante
+         (assistant.js), qui c'è solo l'indicazione per chi non ce l'ha.
          ============================================================ -->
     <script type="module">
         import { app, auth } from './script.js';
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-functions.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        const functions = getFunctions(app, 'europe-west1');
-        const getBetaAccess = httpsCallable(functions, 'getBetaAccess');
-        const kripixAssistant = httpsCallable(functions, 'kripixAssistant');
+        const teaser = document.getElementById('ai-teaser');
+        const messaggio = document.getElementById('ai-teaser-msg');
+        const cta = document.getElementById('ai-teaser-cta');
 
-        const chat = document.getElementById('ai-chat');
-        const form = document.getElementById('ai-form');
-        const input = document.getElementById('ai-text');
-        const sendBtn = document.getElementById('ai-send');
-        const suggestions = document.getElementById('ai-suggestions');
-
-        let history = [];      // gli stessi turni che rimandiamo al modello
-        let inviando = false;
-
-        function showPane(nome) {
-            document.querySelectorAll('#ai-block .ai-pane').forEach(p => p.classList.remove('active'));
-            const pane = document.getElementById('ai-pane-' + nome);
-            if (pane) pane.classList.add('active');
-        }
-
-        /** Aggiunge un messaggio. Usa textContent: la risposta del modello
-         *  non deve poter iniettare markup nella pagina. */
-        function addMessage(role, text, ticketCode) {
-            const div = document.createElement('div');
-            div.className = 'ai-msg ' + role;
-            div.textContent = text;
-
-            if (ticketCode) {
-                const nota = document.createElement('span');
-                nota.className = 'ai-ticket';
-                nota.textContent = `RICHIESTA APERTA — CODICE ${ticketCode}`;
-                div.appendChild(nota);
+        function mostra(testo, ctaTesto, ctaHref) {
+            messaggio.textContent = testo;
+            if (ctaTesto) {
+                cta.textContent = ctaTesto;
+                cta.href = ctaHref;
+                cta.hidden = false;
+            } else {
+                cta.hidden = true;
             }
-
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-            return div;
+            teaser.hidden = false;
         }
 
-        function showTyping() {
-            const div = document.createElement('div');
-            div.className = 'ai-typing';
-            div.innerHTML = '<span></span><span></span><span></span>';
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-            return div;
-        }
-
-        async function invia(testo) {
-            if (inviando || !testo.trim()) return;
-            inviando = true;
-
-            addMessage('user', testo);
-            history.push({ role: 'user', text: testo });
-            input.value = '';
-            suggestions.style.display = 'none';
-            sendBtn.textContent = '...';
-            sendBtn.style.pointerEvents = 'none';
-            input.disabled = true;
-
-            const typing = showTyping();
-
-            try {
-                // Lo storico che mandiamo esclude il messaggio corrente:
-                // lo aggiunge il server come turno finale.
-                const res = await kripixAssistant({
-                    message: testo,
-                    history: history.slice(0, -1)
-                });
-
-                typing.remove();
-                const data = res.data || {};
-                addMessage('bot', data.reply || 'Nessuna risposta.', data.ticketCode);
-                history.push({ role: 'model', text: data.reply || '' });
-
-            } catch (e) {
-                typing.remove();
-                console.error('Kripix AI:', e);
-                const messaggi = {
-                    'permission-denied': 'Il tuo accesso alla beta non risulta attivo. Ricarica la pagina.',
-                    'failed-precondition': "L'assistente non è ancora configurato. Riprova più tardi.",
-                    'unavailable': 'Il modello non risponde in questo momento. Riprova tra qualche istante.',
-                    'invalid-argument': 'Messaggio non valido: prova a riformularlo più corto.'
-                };
-                addMessage('bot error', messaggi[e.code] || 'Assistente non raggiungibile. Riprova tra poco.');
-            } finally {
-                inviando = false;
-                sendBtn.textContent = 'INVIA';
-                sendBtn.style.pointerEvents = 'auto';
-                input.disabled = false;
-                input.focus();
-            }
-        }
-
-        form.addEventListener('submit', (e) => { e.preventDefault(); invia(input.value); });
-
-        suggestions.querySelectorAll('.ai-chip').forEach(chip => {
-            chip.addEventListener('click', () => invia(chip.textContent));
-        });
-
-        // ── Determina lo stato all'avvio ────────────────────────
         onAuthStateChanged(auth, async (user) => {
-            if (!user) { showPane('anon'); return; }
+            if (!user) {
+                mostra(
+                    "Un assistente che conosce il Network e ti accompagna nel problema. È in beta chiusa: accedi per vedere se hai l'accesso.",
+                    'ACCEDI', 'login.html'
+                );
+                return;
+            }
 
             try {
-                const res = await getBetaAccess();
-                const programmi = (res.data && res.data.programs) || [];
-                const ai = programmi.find(p => p.id === 'kripix-ai');
+                const functions = getFunctions(app, 'europe-west1');
+                const res = await httpsCallable(functions, 'getBetaAccess')();
+                const ai = ((res.data && res.data.programs) || []).find(p => p.id === 'kripix-ai');
                 const stato = ai ? ai.status : 'none';
 
                 if (stato === 'active') {
-                    showPane('chat');
-                    addMessage('bot', 'Ciao. Dimmi cosa non funziona e vediamo di risolverlo. Se serve l\'intervento di una persona, preparo io la richiesta.');
+                    // La chat è già raggiungibile dal pulsante in basso a destra
+                    mostra("Hai accesso alla beta: trovi l'assistente nel pulsante in basso a destra, su qualsiasi pagina.", null);
                 } else if (stato === 'pending') {
-                    showPane('pending');
+                    mostra('La tua richiesta di accesso è in valutazione. Ti avvisiamo nel Terminale appena viene decisa.', null);
                 } else {
-                    showPane('locked');
+                    mostra(
+                        'Un assistente che conosce il Network e ti accompagna nel problema. In questo momento è aperto a un gruppo ristretto di agenti.',
+                        "RICHIEDI L'ACCESSO", 'profilo.html'
+                    );
                 }
             } catch (e) {
-                console.error('Verifica accesso beta fallita:', e);
-                showPane('locked');
+                console.debug('Stato beta non recuperabile:', e.code || e.message);
             }
         });
     </script>
